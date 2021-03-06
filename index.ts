@@ -1,3 +1,8 @@
-import { setup } from "./src/setup";
+import Game from "./src/game";
 
-setup(document.getElementById('app'));
+function main() {
+  const root = document.getElementById("app");
+  const game = new Game();
+  root.appendChild(game.app.view);
+}
+main();
