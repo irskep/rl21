@@ -1,11 +1,11 @@
 import * as PIXI from "pixi.js";
 import webfontloader from "webfontloader";
+import { LevelScene } from "./LevelScene";
 import { MenuScene } from "./MenuScene";
 import { GameScene, GameInterface } from "./types";
 
 export default class Game implements GameInterface {
   app: PIXI.Application;
-  loader: PIXI.Loader;
   scenes = new Array<GameScene>();
   isFontLoaded = false;
 
@@ -15,7 +15,6 @@ export default class Game implements GameInterface {
       pathname = pathname.slice(0, pathname.length - 1);
     }
 
-    this.loader = new PIXI.Loader();
     this.app = new PIXI.Application({
       autoDensity: true,
       resolution: window.devicePixelRatio,
@@ -35,7 +34,9 @@ export default class Game implements GameInterface {
       },
     });
 
-    this.loader.add([{ name: "sprites", url: "sprites.png" }]).load(this.setup);
+    this.app.loader
+      .add([{ name: "sprites", url: "sprites.png" }])
+      .load(this.setup);
 
     // window.addEventListener("resize", this.handleResize);
   }
@@ -46,10 +47,10 @@ export default class Game implements GameInterface {
 
   setup = () => {
     if (!this.isFontLoaded) return;
-    if (this.loader.progress < 1) return;
+    if (this.app.loader.progress < 100) return;
 
-    this.pushScene(new MenuScene(this));
-    // this.pushScene(new SongScene(this.app, this, false));
+    // this.pushScene(new MenuScene(this));
+    this.pushScene(new LevelScene(this));
   };
 
   teardown() {
