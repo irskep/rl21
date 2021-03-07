@@ -61,8 +61,6 @@ export default class Game implements GameInterface {
       this.assets[asset.name] = loadFilmstrip(asset.name);
     }
 
-    this.app.stage.setTransform(undefined, undefined, 0.5, 0.5);
-
     // this.pushScene(new MenuScene(this));
     this.pushScene(new LevelScene(this));
   };

@@ -4,9 +4,11 @@ import {
   System,
   FamilyBuilder,
   Family,
+  Entity,
 } from "@nova-engine/ecs";
 import { Container, Sprite } from "pixi.js";
 import * as Vec2D from "vector2d";
+import { Vector } from "vector2d";
 import { GameInterface } from "../types";
 
 export class SpriteC implements Component {
@@ -69,5 +71,15 @@ export class SpriteSystem extends System {
         spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
       }
     }
+  }
+
+  /* helpers */
+
+  findEntity(pos: Vector): Entity | null {
+    for (let entity of this.family.entities) {
+      const spriteC = entity.getComponent(SpriteC);
+      if (spriteC.pos.equals(pos)) return entity;
+    }
+    return null;
   }
 }

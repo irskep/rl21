@@ -1,56 +1,33 @@
 // import Mousetrap from "mousetrap";
-import * as PIXI from "pixi.js";
-import { InteractionEvent, Sprite } from "pixi.js";
+import { Container, InteractionEvent, Sprite, TextStyle, Text } from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
+import { Tilemap, isAdjacent } from "./tilemap";
 import { ECS, makeECS } from "./ecs/ecs";
 import { SpriteC } from "./ecs/sprite";
 import { GameScene, GameInterface } from "./types";
-
-class Cell {
-  sprite?: Sprite = null;
-  index: number = 0;
-  pos: Vector;
-  constructor(pos: Vector, index: number) {
-    this.index = index;
-    this.pos = pos;
-  }
-}
-
-class Tilemap {
-  contents: Cell[][];
-  size: Vector;
-  constructor(size: Vector) {
-    this.size = size;
-    this.contents = new Array(size.y);
-
-    for (let y = 0; y < size.y; y++) {
-      this.contents[y] = new Array(size.x);
-      for (let x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(
-          new Vector(x, y),
-          x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0
-        );
-      }
-    }
-  }
-}
-
-function isAdjacent(a: Vector, b: Vector): boolean {
-  if (a.equals(b)) return false;
-  return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
-}
+import { ALL_MOVES, Move, MoveCheckResult } from "./ecs/moveEngine";
 
 export class LevelScene implements GameScene {
-  container = new PIXI.Container();
+  /* pixi stuff */
+  container = new Container();
 
-  tilemapContainer = new PIXI.Container();
-  arena = new PIXI.Container();
-  overlayContainer = new PIXI.Container();
-  ecs: ECS;
-  map = new Tilemap(new Vector(16, 16));
+  tilemapContainer = new Container();
+  arena = new Container();
+  overlayContainer = new Container();
+  hudContainer = new Container();
 
   hoverSprite = new Sprite();
+  dbgText = new Text("");
+
+  /* state management */
+
+  ecs: ECS;
+  map = new Tilemap(new Vector(16, 16));
+  possibleMoves: [Move, MoveCheckResult][] = [];
+
+  // debug state
+  hoveredPos: Vector | null = null;
 
   constructor(private game: GameInterface) {
     this.container.interactive = true;
@@ -72,12 +49,28 @@ export class LevelScene implements GameScene {
     this.container.addChild(this.tilemapContainer);
     this.container.addChild(this.arena);
     this.container.addChild(this.overlayContainer);
+    this.container.addChild(this.hudContainer);
 
     this.tilemapContainer.interactive = true;
+
+    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
+    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
 
     this.hoverSprite.texture = this.game.assets.env[EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
+
+    this.dbgText.position.set(10, 10);
+    this.dbgText.style = new TextStyle({
+      fontSize: 18,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "left",
+      wordWrap: true,
+      wordWrapWidth: 320,
+    });
+    this.hudContainer.addChild(this.dbgText);
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
@@ -109,16 +102,53 @@ export class LevelScene implements GameScene {
   }
 
   updateHoverCell(pos: Vector | null) {
-    const playerPos = this.ecs.player.getComponent(SpriteC).pos;
-    if (pos === null || !isAdjacent(pos, playerPos)) {
-      this.hoverSprite.visible = false;
-    } else {
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
+    this.updateDbgText();
+
+    if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
       this.hoverSprite.visible = true;
       this.hoverSprite.position.set(
-        pos.x * this.game.tileSize,
-        pos.y * this.game.tileSize
+        this.hoveredPos.x * this.game.tileSize,
+        this.hoveredPos.y * this.game.tileSize
       );
+    } else {
+      this.hoverSprite.visible = false;
     }
+  }
+
+  updatePossibleMoves() {
+    this.possibleMoves = ALL_MOVES.map((m) => [
+      m,
+      m.check(
+        { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
+        this.hoveredPos
+      ),
+    ]);
+
+    this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
+      if (resultA.success == resultB.success) {
+        return moveA.name.localeCompare(moveB.name);
+      } else if (resultA.success) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+  }
+
+  updateDbgText() {
+    this.dbgText.text =
+      `${this.hoveredPos}\n` +
+      this.possibleMoves
+        .map(([move, result]) => {
+          if (result.success) {
+            return `${move.name} (${move.help})`;
+          } else {
+            return `X ${move.name} (${result.message || "?"})`;
+          }
+        })
+        .join("\n");
   }
 
   gameLoop = (dt: number) => {
@@ -142,12 +172,12 @@ export class LevelScene implements GameScene {
 
   movePlayer(pos: Vector) {
     const playerSpriteC = this.ecs.player.getComponent(SpriteC);
-    let didFind = false;
+    // let didFind = false;
     const direction = new Vector(pos.x, pos.y).subtract(playerSpriteC.pos);
     for (const d2 of DIRECTIONS) {
       if (d2[0].equals(direction)) {
         playerSpriteC.orientation = d2[1];
-        didFind = true;
+        // didFind = true;
         break;
       }
     }
