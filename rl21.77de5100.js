@@ -50018,7 +50018,7 @@ exports.SpriteIndices = {
 exports.EnvIndices = {
   FLOOR: 0,
   WALL: 1,
-  HOVER: 17
+  HOVER: 8
 };
 exports.ALL_ASSETS = [{
   name: "sprites",
@@ -51311,6 +51311,8 @@ var SpriteC =
 function () {
   function SpriteC() {
     this.pos = new Vec2D.Vector(0, 0);
+    this.orientation = 0; // clockwise from up
+
     this._spriteIndex = 0;
     this.needsTextureReplacement = false;
   }
@@ -51368,6 +51370,7 @@ function (_super) {
       }
 
       spriteC.sprite.position.set(spriteC.pos.x * this.game.tileSize + this.game.tileSize / 2, spriteC.pos.y * this.game.tileSize + this.game.tileSize / 2);
+      spriteC.sprite.angle = 90 * spriteC.orientation;
 
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
@@ -51397,10 +51400,12 @@ function makeECS(game, container) {
   var engine = new ecs_1.Engine();
   var spriteSystem = new SpriteSystem(game, container);
   engine.addSystems(spriteSystem);
-  engine.addEntity(makePlayer());
+  var player = makePlayer();
+  engine.addEntity(player);
   return {
     engine: engine,
-    spriteSystem: spriteSystem
+    spriteSystem: spriteSystem,
+    player: player
   };
 }
 
@@ -51453,15 +51458,18 @@ var pixi_js_1 = require("pixi.js");
 
 var vector2d_1 = require("vector2d");
 
+var assets_1 = require("./assets");
+
 var ecs_1 = require("./ecs");
 
 var Cell =
 /** @class */
 function () {
-  function Cell(index) {
+  function Cell(pos, index) {
     this.sprite = null;
     this.index = 0;
     this.index = index;
+    this.pos = pos;
   }
 
   return Cell;
@@ -51478,13 +51486,18 @@ function () {
       this.contents[y] = new Array(size.x);
 
       for (var x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
+        this.contents[y][x] = new Cell(new vector2d_1.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
       }
     }
   }
 
   return Tilemap;
 }();
+
+function isAdjacent(a, b) {
+  if (a.equals(b)) return false;
+  return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+}
 
 var LevelScene =
 /** @class */
@@ -51494,20 +51507,15 @@ function () {
     this.container = new PIXI.Container();
     this.tilemapContainer = new PIXI.Container();
     this.arena = new PIXI.Container();
+    this.overlayContainer = new PIXI.Container();
     this.map = new Tilemap(new vector2d_1.Vector(16, 16));
+    this.hoverSprite = new pixi_js_1.Sprite();
 
     this.gameLoop = function (dt) {
       /* hi */
     };
 
-    this.handleTouchStart = function () {// this.game.pushScene(new SongScene(this.app, this.game, true));
-    };
-
-    this.handleKeyPress = function () {// this.game.pushScene(new SongScene(this.app, this.game, false));
-    };
-
     this.container.interactive = true;
-    console.log(this.map);
   }
 
   LevelScene.prototype.enter = function () {
@@ -51523,17 +51531,37 @@ function () {
   };
 
   LevelScene.prototype.addChildren = function () {
+    var _this = this;
+
     this.container.addChild(this.tilemapContainer);
     this.container.addChild(this.arena);
+    this.container.addChild(this.overlayContainer);
+    this.tilemapContainer.interactive = true;
+    this.hoverSprite.texture = this.game.assets.env[assets_1.EnvIndices.HOVER];
+    this.hoverSprite.visible = false;
+    this.overlayContainer.addChild(this.hoverSprite);
 
     for (var y = 0; y < this.map.size.y; y++) {
-      for (var x = 0; x < this.map.size.x; x++) {
+      var _loop_1 = function _loop_1(x) {
         var cellSprite = new pixi_js_1.Sprite();
-        var cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.assets.env[cell.index];
-        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+        var cell = this_1.map.contents[y][x];
+        cellSprite.texture = this_1.game.assets.env[cell.index];
+        cellSprite.position.set(x * this_1.game.tileSize, y * this_1.game.tileSize);
+        cellSprite.interactive = true;
+        cellSprite.on("mouseover", function (e) {
+          _this.updateHoverCell(cell.pos);
+        });
+        cellSprite.on("click", function (e) {
+          _this.handleClick(cell.pos);
+        });
         cell.sprite = cellSprite;
-        this.tilemapContainer.addChild(cellSprite);
+        this_1.tilemapContainer.addChild(cellSprite);
+      };
+
+      var this_1 = this;
+
+      for (var x = 0; x < this.map.size.x; x++) {
+        _loop_1(x);
       }
     }
 
@@ -51548,11 +51576,58 @@ function () {
     this.game.app.stage.removeChild(this.container);
   };
 
+  LevelScene.prototype.updateHoverCell = function (pos) {
+    var playerPos = this.ecs.player.getComponent(ecs_1.SpriteC).pos;
+
+    if (pos === null || !isAdjacent(pos, playerPos)) {
+      this.hoverSprite.visible = false;
+    } else {
+      this.hoverSprite.visible = true;
+      this.hoverSprite.position.set(pos.x * this.game.tileSize, pos.y * this.game.tileSize);
+    }
+  };
+
+  LevelScene.prototype.tick = function () {
+    this.ecs.engine.update(1);
+  };
+
+  LevelScene.prototype.handleClick = function (pos) {
+    var playerSpriteC = this.ecs.player.getComponent(ecs_1.SpriteC);
+    var playerPos = playerSpriteC.pos;
+
+    if (!isAdjacent(playerPos, pos)) {
+      console.log("Discard", pos, playerPos);
+      return;
+    }
+
+    this.movePlayer(pos);
+  };
+
+  LevelScene.prototype.movePlayer = function (pos) {
+    var playerSpriteC = this.ecs.player.getComponent(ecs_1.SpriteC);
+    var didFind = false;
+    var direction = new vector2d_1.Vector(pos.x, pos.y).subtract(playerSpriteC.pos);
+
+    for (var _i = 0, DIRECTIONS_1 = DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
+      var d2 = DIRECTIONS_1[_i];
+
+      if (d2[0].equals(direction)) {
+        playerSpriteC.orientation = d2[1];
+        didFind = true;
+        break;
+      }
+    }
+
+    playerSpriteC.pos = pos;
+    this.tick();
+  };
+
   return LevelScene;
 }();
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./ecs":"src/ecs.ts"}],"src/game.ts":[function(require,module,exports) {
+var DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
+},{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./assets":"src/assets.ts","./ecs":"src/ecs.ts"}],"src/game.ts":[function(require,module,exports) {
 "use strict";
 
 var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -51767,7 +51842,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60501" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63186" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -51943,4 +52018,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.ts"], null)
-//# sourceMappingURL=rl21.77de5100.js.map
+//# sourceMappingURL=/rl21.77de5100.js.map
