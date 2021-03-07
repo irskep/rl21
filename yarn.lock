@@ -650,7 +650,7 @@
   dependencies:
     regenerator-runtime "^0.12.0"
 
-"@babel/runtime@^7.8.4":
+"@babel/runtime@^7.11.2", "@babel/runtime@^7.8.4":
   version "7.13.9"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.13.9.tgz#97dbe2116e2630c489f22e0656decd60aaa1fcee"
   integrity sha512-aY2kU+xgJ3dJ1eU6FMB9EH8dIe8dmusF1xEku52joLvw6eAFN0AI+WxCLDnpev2LEejWBAy2sBvBOBAjI3zmvA==
@@ -2995,6 +2995,13 @@ humanize-url@^1.0.0:
     normalize-url "^1.0.0"
     strip-url-auth "^1.0.0"
 
+hypergiant@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/hypergiant/-/hypergiant-3.1.0.tgz#7ec3884afa67561e1911d02741873fcb811a6924"
+  integrity sha512-ddDjI/p+peymGseSuiWbyyiPhmCmuAyWzrZHefR2zBBE0BX2g/a0+De7zkS0qq5QUmpIAkQGXpoB71wKNinBvg==
+  dependencies:
+    "@babel/runtime" "^7.11.2"
+
 iconv-lite@0.4.24:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
@@ -4196,6 +4203,13 @@ pinkie@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/pinkie/-/pinkie-2.0.4.tgz#72556b80cfa0d48a974e80e77248e80ed4f7f870"
   integrity sha1-clVrgM+g1IqXToDnckjoDtT3+HA=
+
+pixi-game-camera@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/pixi-game-camera/-/pixi-game-camera-1.0.2.tgz#4b65c6991a3880190614ac333a24073999d53888"
+  integrity sha512-3uaR5dVV7CzMXM8zuS5NSl7cK74jVj7aHhwUuoxZDSmmZhwQGIJLSXwHdTKMzbXkMbGboplzhtaaLSldfKfjNQ==
+  dependencies:
+    hypergiant "^3.1.0"
 
 pixi.js@*, pixi.js@^6.0.0:
   version "6.0.0"

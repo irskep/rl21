@@ -1,6 +1,5 @@
 import {
   Engine,
-  Entity,
   Component,
   System,
   FamilyBuilder,
@@ -8,9 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { Container, Sprite } from "pixi.js";
 import * as Vec2D from "vector2d";
-import { SpriteIndices } from "./assets";
-import getID from "./getID";
-import { GameInterface } from "./types";
+import { GameInterface } from "../types";
 
 export class SpriteC implements Component {
   pos = new Vec2D.Vector(0, 0);
@@ -73,41 +70,4 @@ export class SpriteSystem extends System {
       }
     }
   }
-}
-
-export interface ECS {
-  engine: Engine;
-  spriteSystem: SpriteSystem;
-  player: Entity;
-}
-
-function makePlayer(): Entity {
-  const player = new Entity();
-  player.id = getID();
-  if (player.id != 0) {
-    throw new Error("player should always be 0");
-  }
-
-  player
-    .putComponent(SpriteC)
-    .build(new Vec2D.Vector(4, 4), SpriteIndices.BM_STAND);
-
-  return player;
-}
-
-export function makeECS(game: GameInterface, container: Container): ECS {
-  const engine = new Engine();
-
-  const spriteSystem = new SpriteSystem(game, container);
-
-  engine.addSystems(spriteSystem);
-
-  const player = makePlayer();
-  engine.addEntity(player);
-
-  return {
-    engine: engine,
-    spriteSystem: spriteSystem,
-    player,
-  };
 }

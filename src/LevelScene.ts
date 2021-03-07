@@ -3,7 +3,8 @@ import * as PIXI from "pixi.js";
 import { InteractionEvent, Sprite } from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
-import { ECS, makeECS, SpriteC } from "./ecs";
+import { ECS, makeECS } from "./ecs/ecs";
+import { SpriteC } from "./ecs/sprite";
 import { GameScene, GameInterface } from "./types";
 
 class Cell {
