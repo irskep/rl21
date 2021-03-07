@@ -4,8 +4,12 @@
   "main": "index.html",
   "license": "MIT",
   "dependencies": {
+    "@nova-engine/ecs": "^1.1.1",
+    "@types/rot-js": "^2.0.1",
     "mousetrap": "^1.6.5",
     "pixi.js": "^6.0.0",
+    "rot-js": "^2.1.5",
+    "vector2d": "^3.0.0",
     "webfontloader": "^1.6.28"
   },
   "scripts": {

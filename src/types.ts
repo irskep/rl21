@@ -12,4 +12,5 @@ export interface GameInterface {
   popScene: () => void;
   replaceScenes: (scenes: GameScene[]) => void;
   assets: Record<string, Texture[]>;
+  tileSize: number;
 }

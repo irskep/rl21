@@ -11,6 +11,7 @@ export default class Game implements GameInterface {
   scenes = new Array<GameScene>();
   isFontLoaded = false;
   assets: Record<string, Texture[]> = {};
+  tileSize = 128;
 
   constructor() {
     let pathname = location.pathname;
@@ -53,7 +54,7 @@ export default class Game implements GameInterface {
     const loadFilmstrip = (name: string) => {
       const texture = (this.app.loader.resources[`${name}`] as any)
         ?.texture as PIXI.Texture;
-      return filmstrip(texture, 128, 128);
+      return filmstrip(texture, this.tileSize, this.tileSize);
     };
 
     for (const asset of ALL_ASSETS) {
