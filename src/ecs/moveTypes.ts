@@ -15,6 +15,7 @@ export interface Move {
   help: string;
   action?: Action;
   check: (ctx: MoveContext, target: Vector) => MoveCheckResult;
+  computeValue?: (ctx: MoveContext, target: Vector) => number;
   apply: (ctx: MoveContext, target: Vector) => boolean;
 }
 

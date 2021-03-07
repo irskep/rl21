@@ -31,6 +31,16 @@ export class SpriteC implements Component {
     this._spriteIndex = value;
     this.needsTextureReplacement = true;
   }
+
+  turnToward(target: Vector) {
+    const direction = target.clone().subtract(this.pos);
+    for (const d2 of DIRECTIONS) {
+      if (d2[0].equals(direction)) {
+        this.orientation = d2[1];
+        break;
+      }
+    }
+  }
 }
 
 export class SpriteSystem extends System {
@@ -83,3 +93,14 @@ export class SpriteSystem extends System {
     return null;
   }
 }
+
+const DIRECTIONS: [Vector, number][] = [
+  [new Vector(0, -1), 0],
+  [new Vector(1, -1), 0.5],
+  [new Vector(1, 0), 1],
+  [new Vector(1, 1), 1.5],
+  [new Vector(0, 1), 2],
+  [new Vector(-1, 1), 2.5],
+  [new Vector(-1, 0), 3],
+  [new Vector(-1, -1), 3.5],
+];

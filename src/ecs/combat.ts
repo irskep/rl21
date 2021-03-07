@@ -10,7 +10,7 @@ import { GameInterface } from "../types";
 import { Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
 
-enum CombatState {
+export enum CombatState {
   Normal = "Normal",
   PunchTelegraph = "PunchTelegraph",
   PunchFollowthrough = "PunchFollowthrough",

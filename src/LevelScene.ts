@@ -162,7 +162,7 @@ export class LevelScene implements GameScene {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
     const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
     this.dbgText.text =
-      `${this.hoveredPos}\n` +
+      `${this.hoveredPos || "(no selection)"}\n` +
       okMoves
         .map(([move]) => `${move.action} ${move.name} (${move.help})`)
         .join("\n") +

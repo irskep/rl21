@@ -1,17 +1,10 @@
 import { Vector } from "vector2d";
-import { EnvIndices } from "../assets";
 import { Action } from "../input";
 import { isAdjacent } from "../tilemap";
+import { CombatC, CombatState, CombatSystem } from "./combat";
+import { ensureTargetClear, ensureTargetIsEnemy } from "./moveHelpers";
 import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
-
-function ensureTargetClear(ctx: MoveContext, target: Vector): MoveCheckResult {
-  if (ctx.tilemap.getCell(target).index !== EnvIndices.FLOOR)
-    return { success: false, message: "Target is not floor" };
-  if (ctx.ecs.spriteSystem.findEntity(target) !== null)
-    return { success: false, message: "Target is occupied" };
-  return { success: true };
-}
 
 export class Walk implements Move {
   name = "Walk";
@@ -31,34 +24,49 @@ export class Walk implements Move {
 
   apply(ctx: MoveContext, target: Vector): boolean {
     const c = ctx.entity.getComponent(SpriteC);
-
-    const direction = target.clone().subtract(c.pos);
-    for (const d2 of DIRECTIONS) {
-      if (d2[0].equals(direction)) {
-        c.orientation = d2[1];
-        break;
-      }
-    }
+    c.turnToward(target);
     c.pos = target;
 
     return true;
   }
 }
 
-// export class TelegraphedPunch implements Move {
+export class TelegraphedPunchPrepare implements Move {
+  name = "Henchman Punch";
+  help = "?";
 
-// }
+  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+    const combatC = ctx.entity.getComponent(CombatC);
+    if (combatC.state != CombatState.Normal) {
+      return { success: false, message: "Not in the right state" };
+    }
+    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
 
-const DIRECTIONS: [Vector, number][] = [
-  [new Vector(0, -1), 0],
-  [new Vector(1, -1), 0.5],
-  [new Vector(1, 0), 1],
-  [new Vector(1, 1), 1.5],
-  [new Vector(0, 1), 2],
-  [new Vector(-1, 1), 2.5],
-  [new Vector(-1, 0), 3],
-  [new Vector(-1, -1), 3.5],
-];
+    if (!checkResult.success) return checkResult;
+
+    if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
+      return { success: false, message: "Not adjacent" };
+    }
+
+    return { success: true };
+  }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 100; // henchmen really want to punch Batman.
+  }
+
+  apply(ctx: MoveContext, target: Vector): boolean {
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity
+      .getComponent(CombatC)
+      .setState(CombatState.PunchTelegraph, spriteC);
+    return true;
+  }
+}
 
 export const BM_MOVES: Move[] = [new Walk()];
-export const HENCHMAN_MOVES: Move[] = [new Walk()];
+export const HENCHMAN_MOVES: Move[] = [
+  new TelegraphedPunchPrepare(),
+  // new TelegraphedPunchFollowthrough(),
+];
