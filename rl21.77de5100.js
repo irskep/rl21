@@ -50017,6 +50017,7 @@ exports.SpriteIndices = {
   STUMBLING: 1,
   STUNNED: 2,
   CHARGING: 3,
+  DODGE_FORWARD: 4,
   PRONE: 8,
   DEAD: 9,
   DODGING: 10,
@@ -50037,7 +50038,7 @@ exports.SpriteIndices = {
   BM_STAND: 40,
   BM_PARRY_BEFORE: 41,
   BM_PARRY_AFTER: 42,
-  BM_DODGE: 43,
+  BM_DODGE_FORWARD: 43,
   BM_THROW_BEFORE: 44,
   BM_THROW_AFTER: 45,
   BM_PUNCH_BEFORE: 46,
@@ -50045,7 +50046,9 @@ exports.SpriteIndices = {
   BM_CATCH: 48,
   BM_TAKING_WEAPON: 49,
   BM_DISABLING_WEAPON: 50,
-  BM_PICKING_UP: 51
+  BM_PICKING_UP: 51,
+  BM_DODGE_BACKWARD: 52,
+  BM_DEAD: 53
 };
 exports.EnvIndices = {
   FLOOR: 0,
@@ -51324,7 +51327,59 @@ function getID() {
 }
 
 exports.default = getID;
-},{}],"src/ecs/sprite.ts":[function(require,module,exports) {
+},{}],"src/ecs/direction.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getNeighbors = exports.getDirectionVector = exports.DIRECTIONS = void 0;
+
+var vector2d_1 = require("vector2d");
+
+exports.DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
+
+function getDirectionVector(direction) {
+  switch (direction) {
+    case 0:
+      return new vector2d_1.Vector(0, -1);
+
+    case 0.5:
+      return new vector2d_1.Vector(1, -1);
+
+    case 1:
+      return new vector2d_1.Vector(1, 0);
+
+    case 1.5:
+      return new vector2d_1.Vector(1, 1);
+
+    case 2:
+      return new vector2d_1.Vector(0, 1);
+
+    case 2.5:
+      return new vector2d_1.Vector(-1, 1);
+
+    case 3:
+      return new vector2d_1.Vector(-1, 0);
+
+    case 3.5:
+      return new vector2d_1.Vector(-1, -1);
+
+    default:
+      return new vector2d_1.Vector(0, -1);
+  }
+}
+
+exports.getDirectionVector = getDirectionVector;
+
+function getNeighbors(v) {
+  return exports.DIRECTIONS.map(function (d) {
+    return new vector2d_1.Vector(v.x, v.y).add(d[0]);
+  });
+}
+
+exports.getNeighbors = getNeighbors;
+},{"vector2d":"node_modules/vector2d/src/Vec2D.js"}],"src/ecs/sprite.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -51400,7 +51455,7 @@ var pixi_js_1 = require("pixi.js");
 
 var Vec2D = __importStar(require("vector2d"));
 
-var vector2d_1 = require("vector2d");
+var direction_1 = require("./direction");
 
 var SpriteC =
 /** @class */
@@ -51434,7 +51489,7 @@ function () {
   SpriteC.prototype.turnToward = function (target) {
     var direction = target.clone().subtract(this.pos);
 
-    for (var _i = 0, DIRECTIONS_1 = DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
+    for (var _i = 0, DIRECTIONS_1 = direction_1.DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
       var d2 = DIRECTIONS_1[_i];
 
       if (d2[0].equals(direction)) {
@@ -51505,8 +51560,7 @@ function (_super) {
 }(ecs_1.System);
 
 exports.SpriteSystem = SpriteSystem;
-var DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
-},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js"}],"src/input.ts":[function(require,module,exports) {
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./direction":"src/ecs/direction.ts"}],"src/input.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -51583,11 +51637,13 @@ var __extends = this && this.__extends || function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CombatSystem = exports.CombatC = exports.CombatState = void 0;
+exports.CombatSystem = exports.CombatC = exports.UnreachableCaseError = exports.CombatState = void 0;
 
 var ecs_1 = require("@nova-engine/ecs");
 
 var assets_1 = require("../assets");
+
+var direction_1 = require("./direction");
 
 var sprite_1 = require("./sprite");
 
@@ -51597,7 +51653,60 @@ var CombatState;
   CombatState["Normal"] = "Normal";
   CombatState["PunchTelegraph"] = "PunchTelegraph";
   CombatState["PunchFollowthrough"] = "PunchFollowthrough";
+  CombatState["Punched"] = "Punched";
 })(CombatState = exports.CombatState || (exports.CombatState = {}));
+
+var UnreachableCaseError =
+/** @class */
+function (_super) {
+  __extends(UnreachableCaseError, _super);
+
+  function UnreachableCaseError(val) {
+    return _super.call(this, "Unreachable case: " + JSON.stringify(val)) || this;
+  }
+
+  return UnreachableCaseError;
+}(Error);
+
+exports.UnreachableCaseError = UnreachableCaseError;
+
+function stateToPlayerSpriteIndex(state) {
+  switch (state) {
+    case CombatState.Normal:
+      return assets_1.SpriteIndices.BM_STAND;
+
+    case CombatState.PunchTelegraph:
+      return assets_1.SpriteIndices.BM_PUNCH_BEFORE;
+
+    case CombatState.PunchFollowthrough:
+      return assets_1.SpriteIndices.BM_PUNCH_AFTER;
+
+    case CombatState.Punched:
+      return assets_1.SpriteIndices.STUMBLING;
+
+    default:
+      throw new UnreachableCaseError(state);
+  }
+}
+
+function stateToHenchmanSpriteIndex(state) {
+  switch (state) {
+    case CombatState.Normal:
+      return assets_1.SpriteIndices.STAND;
+
+    case CombatState.PunchTelegraph:
+      return assets_1.SpriteIndices.PUNCH_BEFORE;
+
+    case CombatState.PunchFollowthrough:
+      return assets_1.SpriteIndices.PUNCH_AFTER;
+
+    case CombatState.Punched:
+      return assets_1.SpriteIndices.STUMBLING;
+
+    default:
+      throw new UnreachableCaseError(state);
+  }
+}
 
 var CombatC =
 /** @class */
@@ -51624,27 +51733,9 @@ function () {
     }
 
     if (this.isPlayer) {
-      switch (newState) {
-        case CombatState.Normal:
-          spriteC.spriteIndex = assets_1.SpriteIndices.BM_STAND;
-
-        case CombatState.PunchTelegraph:
-          spriteC.spriteIndex = assets_1.SpriteIndices.BM_PUNCH_BEFORE;
-
-        case CombatState.PunchFollowthrough:
-          spriteC.spriteIndex = assets_1.SpriteIndices.BM_PUNCH_AFTER;
-      }
+      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
     } else {
-      switch (newState) {
-        case CombatState.Normal:
-          spriteC.spriteIndex = assets_1.SpriteIndices.STAND;
-
-        case CombatState.PunchTelegraph:
-          spriteC.spriteIndex = assets_1.SpriteIndices.PUNCH_BEFORE;
-
-        case CombatState.PunchFollowthrough:
-          spriteC.spriteIndex = assets_1.SpriteIndices.PUNCH_AFTER;
-      }
+      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
     }
   };
 
@@ -51675,9 +51766,50 @@ function (_super) {
   CombatSystem.prototype.update = function (engine, delta) {
     this.isProcessing = true;
 
+    var _loop_1 = function _loop_1(entity) {
+      var combatC = entity.getComponent(CombatC);
+      if (combatC.isPlayer) return "continue";
+      if (!combatC.needsToMove) return "continue";
+      combatC.needsToMove = false;
+      var spriteC = entity.getComponent(sprite_1.SpriteC);
+      var moveContext = {
+        entity: entity,
+        ecs: this_1.ecs,
+        tilemap: this_1.tilemap
+      };
+      var availableMoves = [];
+
+      for (var _b = 0, _c = combatC.moves; _b < _c.length; _b++) {
+        var m = _c[_b];
+
+        for (var _d = 0, _e = direction_1.getNeighbors(spriteC.pos).concat(spriteC.pos); _d < _e.length; _d++) {
+          var n = _e[_d];
+
+          if (m.check(moveContext, n).success) {
+            availableMoves.push([m, n]);
+          }
+        }
+      }
+
+      availableMoves.sort(function (a, b) {
+        return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
+      });
+
+      if (availableMoves.length > 0) {
+        var _f = availableMoves[0],
+            m = _f[0],
+            target = _f[1];
+        console.log("Apply", m, "from", entity, "to", target);
+        m.apply(moveContext, target);
+      }
+    };
+
+    var this_1 = this;
+
     for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
-      var entity = _a[_i]; // const combatC = entity.getComponent(CombatC);
-      // do combat logic here
+      var entity = _a[_i];
+
+      _loop_1(entity);
     }
 
     this.isProcessing = false;
@@ -51690,11 +51822,22 @@ function (_super) {
     }
   };
 
+  CombatSystem.prototype.applyPunch = function (attacker, defender) {
+    var defenderCombatC = defender.getComponent(CombatC);
+
+    switch (defenderCombatC.state) {
+      case CombatState.Normal:
+      case CombatState.PunchTelegraph:
+      case CombatState.PunchFollowthrough:
+        defenderCombatC.setState(CombatState.Punched, defender.getComponent(sprite_1.SpriteC));
+    }
+  };
+
   return CombatSystem;
 }(ecs_1.System);
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./direction":"src/ecs/direction.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -51753,13 +51896,15 @@ exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.TelegraphedPunchPrepare = exports.Walk = void 0;
+exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
 
 var input_1 = require("../input");
 
 var tilemap_1 = require("../tilemap");
 
 var combat_1 = require("./combat");
+
+var direction_1 = require("./direction");
 
 var moveHelpers_1 = require("./moveHelpers");
 
@@ -51797,16 +51942,57 @@ function () {
     return true;
   };
 
+  Walk.prototype.computeValue = function (ctx, target) {
+    return 0;
+  };
+
   return Walk;
 }();
 
 exports.Walk = Walk;
 
+var Wait =
+/** @class */
+function () {
+  function Wait() {
+    this.name = "Wait";
+    this.help = "no combat";
+    this.action = input_1.Action.X;
+  }
+
+  Wait.prototype.check = function (ctx, target) {
+    if (ctx.entity.getComponent(sprite_1.SpriteC).pos.equals(target)) {
+      return {
+        success: true
+      };
+    } else {
+      return {
+        success: false,
+        message: "Must click on yourself"
+      };
+    }
+  };
+
+  Wait.prototype.apply = function (ctx, target) {
+    // Upon waiting, return to normal state
+    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.Normal, ctx.entity.getComponent(sprite_1.SpriteC));
+    return true;
+  };
+
+  Wait.prototype.computeValue = function (ctx, target) {
+    return 0;
+  };
+
+  return Wait;
+}();
+
+exports.Wait = Wait;
+
 var TelegraphedPunchPrepare =
 /** @class */
 function () {
   function TelegraphedPunchPrepare() {
-    this.name = "Henchman Punch";
+    this.name = "Telegraphed Punch Prepare";
     this.help = "?";
   }
 
@@ -51850,10 +52036,107 @@ function () {
 }();
 
 exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
-exports.BM_MOVES = [new Walk()];
-exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare() // new TelegraphedPunchFollowthrough(),
-];
-},{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
+
+var TelegraphedPunchFollowthroughHit =
+/** @class */
+function () {
+  function TelegraphedPunchFollowthroughHit() {
+    this.name = "Telegraphed Punch Followthrough (hit)";
+    this.help = "?";
+  }
+
+  TelegraphedPunchFollowthroughHit.prototype.check = function (ctx, target) {
+    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+
+    if (combatC.state != combat_1.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    var isTargetInTheRightDirection = spriteC.pos.clone().add(direction_1.getDirectionVector(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    }
+
+    return moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+  };
+
+  TelegraphedPunchFollowthroughHit.prototype.computeValue = function (ctx, target) {
+    return 100;
+  };
+
+  TelegraphedPunchFollowthroughHit.prototype.apply = function (ctx, target) {
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+    combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC);
+    var enemy = ctx.ecs.spriteSystem.findEntity(target);
+    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+    return true;
+  };
+
+  return TelegraphedPunchFollowthroughHit;
+}();
+
+exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
+
+var TelegraphedPunchFollowthroughMiss =
+/** @class */
+function () {
+  function TelegraphedPunchFollowthroughMiss() {
+    this.name = "Telegraphed Punch Followthrough (miss)";
+    this.help = "?";
+  }
+
+  TelegraphedPunchFollowthroughMiss.prototype.check = function (ctx, target) {
+    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+
+    if (combatC.state != combat_1.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    var isTargetInTheRightDirection = spriteC.pos.clone().add(direction_1.getDirectionVector(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    } // TODO: allow punching allies?
+
+
+    return moveHelpers_1.ensureTargetClear(ctx, target);
+  };
+
+  TelegraphedPunchFollowthroughMiss.prototype.computeValue = function (ctx, target) {
+    return 100;
+  };
+
+  TelegraphedPunchFollowthroughMiss.prototype.apply = function (ctx, target) {
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    var combatC = ctx.entity.getComponent(combat_1.CombatC); // stumble forward
+
+    spriteC.pos = spriteC.pos.add(direction_1.getDirectionVector(spriteC.orientation));
+    return true;
+  };
+
+  return TelegraphedPunchFollowthroughMiss;
+}();
+
+exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
+exports.BM_MOVES = [new Wait(), new Walk()];
+exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
+},{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./direction":"src/ecs/direction.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -51913,17 +52196,19 @@ function makeECS(game, container) {
   var engine = new ecs_1.Engine();
   var spriteSystem = new sprite_1.SpriteSystem(game, container);
   var combatSystem = new combat_1.CombatSystem(game);
-  engine.addSystems(spriteSystem);
   engine.addSystems(combatSystem);
+  engine.addSystems(spriteSystem);
   var player = makePlayer(new vector2d_1.Vector(7, 14), 0);
   engine.addEntity(player);
   engine.addEntity(makeThug(new vector2d_1.Vector(7, 11), 2));
-  return {
+  var ecs = {
     engine: engine,
     combatSystem: combatSystem,
     spriteSystem: spriteSystem,
     player: player
   };
+  combatSystem.ecs = ecs;
+  return ecs;
 }
 
 exports.makeECS = makeECS;
@@ -52024,6 +52309,7 @@ function () {
     }
 
     this.ecs = ecs_1.makeECS(this.game, this.arena);
+    this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateDbgText();
   };
@@ -52145,7 +52431,7 @@ function () {
         tilemap: this.map
       }, pos);
       this.tick();
-      this.updateHoverCell(null);
+      this.updateHoverCell(this.hoveredPos);
     }
   };
 
@@ -52371,7 +52657,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58776" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58517" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
