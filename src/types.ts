@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { Texture } from "pixi.js";
 
 export interface GameScene {
   enter: () => void;
@@ -10,4 +11,5 @@ export interface GameInterface {
   pushScene: (scene: GameScene) => void;
   popScene: () => void;
   replaceScenes: (scenes: GameScene[]) => void;
+  assets: Record<string, Texture[]>;
 }

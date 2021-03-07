@@ -1,13 +1,16 @@
 import * as PIXI from "pixi.js";
+import { Texture } from "pixi.js";
 import webfontloader from "webfontloader";
+import { ALL_ASSETS } from "./assets";
+import filmstrip from "./filmstrip";
 import { LevelScene } from "./LevelScene";
-import { MenuScene } from "./MenuScene";
 import { GameScene, GameInterface } from "./types";
 
 export default class Game implements GameInterface {
   app: PIXI.Application;
   scenes = new Array<GameScene>();
   isFontLoaded = false;
+  assets: Record<string, Texture[]> = {};
 
   constructor() {
     let pathname = location.pathname;
@@ -34,9 +37,7 @@ export default class Game implements GameInterface {
       },
     });
 
-    this.app.loader
-      .add([{ name: "sprites", url: "sprites.png" }])
-      .load(this.setup);
+    this.app.loader.add(ALL_ASSETS.map((asset) => asset)).load(this.setup);
 
     // window.addEventListener("resize", this.handleResize);
   }
@@ -48,6 +49,16 @@ export default class Game implements GameInterface {
   setup = () => {
     if (!this.isFontLoaded) return;
     if (this.app.loader.progress < 100) return;
+
+    const loadFilmstrip = (name: string) => {
+      const texture = (this.app.loader.resources[`${name}`] as any)
+        ?.texture as PIXI.Texture;
+      return filmstrip(texture, 128, 128);
+    };
+
+    for (const asset of ALL_ASSETS) {
+      this.assets[asset.name] = loadFilmstrip(asset.name);
+    }
 
     // this.pushScene(new MenuScene(this));
     this.pushScene(new LevelScene(this));

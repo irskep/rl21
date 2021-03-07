@@ -1,5 +1,6 @@
 import Mousetrap from "mousetrap";
 import * as PIXI from "pixi.js";
+import { SpriteIndices } from "./assets";
 import filmstrip from "./filmstrip";
 import { GameScene, GameInterface } from "./types";
 
@@ -23,12 +24,9 @@ export class LevelScene implements GameScene {
   }
 
   addChildren() {
-    const texture = (this.game.app.loader.resources["sprites"] as any)
-      ?.texture as PIXI.Texture;
-    console.log(texture);
-    const textures = filmstrip(texture, 128, 128);
-    console.log(textures);
-    const sprite = new PIXI.Sprite(textures[0]);
+    const sprite = new PIXI.Sprite(
+      this.game.assets.sprites[SpriteIndices.BM_STAND]
+    );
     sprite.anchor.set(0.5, 0.5);
     sprite.position.set(
       this.game.app.screen.width / 2,
