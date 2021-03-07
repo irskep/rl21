@@ -2,10 +2,12 @@
 import { Container, InteractionEvent, Sprite, TextStyle, Text } from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
-import { Tilemap } from "./tilemap";
-import { ECS, makeECS } from "./ecs/ecs";
+import { Cell, Tilemap } from "./tilemap";
+import { makeECS } from "./ecs/ecs";
+import { CombatC } from "./ecs/combat";
+import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
-import { ALL_MOVES, Move, MoveCheckResult } from "./ecs/moveEngine";
+import { Move, MoveCheckResult } from "./ecs/moveTypes";
 import { Action, interpretEvent } from "./input";
 
 export class LevelScene implements GameScene {
@@ -79,14 +81,7 @@ export class LevelScene implements GameScene {
         cellSprite.texture = this.game.assets.env[cell.index];
         cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
         cellSprite.interactive = true;
-        cellSprite.on("mouseover", (e: InteractionEvent) => {
-          this.updateHoverCell(cell.pos);
-        });
-        cellSprite.on("click", (e: InteractionEvent) => {
-          const action = interpretEvent(e);
-          if (!action) return;
-          this.handleClick(cell.pos, action);
-        });
+        this.bindEvents(cell, cellSprite);
         cell.sprite = cellSprite;
         this.tilemapContainer.addChild(cellSprite);
       }
@@ -94,6 +89,21 @@ export class LevelScene implements GameScene {
 
     this.ecs = makeECS(this.game, this.arena);
     this.ecs.engine.update(1);
+    this.updateDbgText();
+  }
+
+  bindEvents(cell: Cell, cellSprite: Sprite) {
+    cellSprite.on("mouseover", (e: InteractionEvent) => {
+      if (this.ecs.combatSystem.isProcessing) return;
+      this.updateHoverCell(cell.pos);
+    });
+
+    cellSprite.on("click", (e: InteractionEvent) => {
+      if (this.ecs.combatSystem.isProcessing) return;
+      const action = interpretEvent(e);
+      if (!action) return;
+      this.handleClick(cell.pos, action);
+    });
   }
 
   exit() {
@@ -120,13 +130,22 @@ export class LevelScene implements GameScene {
   }
 
   updatePossibleMoves() {
-    this.possibleMoves = ALL_MOVES.map((m) => [
-      m,
-      m.check(
-        { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
-        this.hoveredPos
-      ),
-    ]);
+    if (!this.hoveredPos) {
+      this.possibleMoves = this.ecs.player
+        .getComponent(CombatC)
+        .moves.map((m) => [m, { success: false }]);
+      return;
+    }
+
+    this.possibleMoves = this.ecs.player
+      .getComponent(CombatC)
+      .moves.map((m) => [
+        m,
+        m.check(
+          { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
+          this.hoveredPos
+        ),
+      ]);
 
     this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
       if (resultA.success == resultB.success) {
@@ -170,11 +189,13 @@ export class LevelScene implements GameScene {
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
     if (actionMoves.length === 1) {
+      this.ecs.combatSystem.reset(this.ecs.engine);
       actionMoves[0][0].apply(
         { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
         pos
       );
       this.tick();
+      this.updateHoverCell(null);
     }
   }
 }

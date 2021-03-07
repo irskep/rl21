@@ -8,7 +8,6 @@ export enum Action {
 }
 
 export function interpretEvent(e: InteractionEvent): Action | null {
-  console.log(e);
   const mouseEvent = e.data.originalEvent as MouseEvent;
   if (mouseEvent.button === 0) {
     if (mouseEvent.shiftKey) {

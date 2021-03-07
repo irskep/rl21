@@ -1,29 +1,9 @@
-import { Entity } from "@nova-engine/ecs";
 import { Vector } from "vector2d";
 import { EnvIndices } from "../assets";
 import { Action } from "../input";
-import { isAdjacent, Tilemap } from "../tilemap";
-import { ECS } from "./ecs";
+import { isAdjacent } from "../tilemap";
+import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
-
-export interface MoveContext {
-  entity: Entity;
-  ecs: ECS;
-  tilemap: Tilemap;
-}
-
-export interface Move {
-  name: string;
-  help: string;
-  action: Action;
-  check: (ctx: MoveContext, target: Vector) => MoveCheckResult;
-  apply: (ctx: MoveContext, target: Vector) => boolean;
-}
-
-export interface MoveCheckResult {
-  success: boolean;
-  message?: string;
-}
 
 function ensureTargetClear(ctx: MoveContext, target: Vector): MoveCheckResult {
   if (ctx.tilemap.getCell(target).index !== EnvIndices.FLOOR)
@@ -33,7 +13,7 @@ function ensureTargetClear(ctx: MoveContext, target: Vector): MoveCheckResult {
   return { success: true };
 }
 
-class Walk implements Move {
+export class Walk implements Move {
   name = "Walk";
   help = "no combat";
   action = Action.X;
@@ -65,6 +45,10 @@ class Walk implements Move {
   }
 }
 
+// export class TelegraphedPunch implements Move {
+
+// }
+
 const DIRECTIONS: [Vector, number][] = [
   [new Vector(0, -1), 0],
   [new Vector(1, -1), 0.5],
@@ -76,4 +60,5 @@ const DIRECTIONS: [Vector, number][] = [
   [new Vector(-1, -1), 3.5],
 ];
 
-export const ALL_MOVES: Move[] = [new Walk()];
+export const BM_MOVES: Move[] = [new Walk()];
+export const HENCHMAN_MOVES: Move[] = [new Walk()];
