@@ -43,18 +43,20 @@ export function makeECS(game: GameInterface, container: Container): ECS {
   const spriteSystem = new SpriteSystem(game, container);
   const combatSystem = new CombatSystem(game);
 
-  engine.addSystems(spriteSystem);
   engine.addSystems(combatSystem);
+  engine.addSystems(spriteSystem);
 
   const player = makePlayer(new Vector(7, 14), 0);
   engine.addEntity(player);
 
   engine.addEntity(makeThug(new Vector(7, 11), 2));
 
-  return {
+  const ecs = {
     engine: engine,
     combatSystem: combatSystem,
     spriteSystem: spriteSystem,
     player,
   };
+  combatSystem.ecs = ecs;
+  return ecs;
 }

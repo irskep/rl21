@@ -33,3 +33,7 @@ export function getDirectionVector(direction: number): Vector {
       return new Vector(0, -1);
   }
 }
+
+export function getNeighbors(v: Vector): Vector[] {
+  return DIRECTIONS.map((d) => new Vector(v.x, v.y).add(d[0]));
+}

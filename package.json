@@ -15,7 +15,8 @@
   },
   "scripts": {
     "deploy": "parcel build index.html --public-url ./ && gh-pages -d dist",
-    "watch": "parcel serve index.html --out-dir=dist"
+    "watch": "parcel serve index.html --out-dir=dist",
+    "build": "parcel build index.html --out-dir=dist"
   },
   "devDependencies": {
     "@types/pixi.js": "^5.0.0",

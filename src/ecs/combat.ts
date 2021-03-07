@@ -6,8 +6,12 @@ import {
   FamilyBuilder,
   System,
 } from "@nova-engine/ecs";
+import { Vector } from "vector2d";
 import { SpriteIndices } from "../assets";
+import { Tilemap } from "../tilemap";
 import { GameInterface } from "../types";
+import { getNeighbors } from "./direction";
+import { ECS } from "./ecsTypes";
 import { Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
 
@@ -90,6 +94,8 @@ export class CombatSystem extends System {
   family: Family;
   game: GameInterface;
   isProcessing = false;
+  ecs: ECS;
+  tilemap: Tilemap;
 
   constructor(game: GameInterface) {
     super();
@@ -111,6 +117,31 @@ export class CombatSystem extends System {
       if (combatC.isPlayer) continue;
       if (!combatC.needsToMove) continue;
       combatC.needsToMove = false;
+
+      const spriteC = entity.getComponent(SpriteC);
+
+      const moveContext = { entity, ecs: this.ecs, tilemap: this.tilemap };
+      const availableMoves: [Move, Vector][] = [];
+      for (let m of combatC.moves) {
+        for (let n of getNeighbors(spriteC.pos).concat(spriteC.pos)) {
+          if (m.check(moveContext, n).success) {
+            availableMoves.push([m, n]);
+          }
+        }
+      }
+
+      availableMoves.sort((a, b) => {
+        return (
+          b[0].computeValue(moveContext, b[1]) -
+          a[0].computeValue(moveContext, a[1])
+        );
+      });
+
+      if (availableMoves.length > 0) {
+        const [m, target] = availableMoves[0];
+        console.log("Apply", m, "from", entity, "to", target);
+        m.apply(moveContext, target);
+      }
     }
     this.isProcessing = false;
   }
@@ -127,7 +158,10 @@ export class CombatSystem extends System {
       case CombatState.Normal:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
-        defenderCombatC;
+        defenderCombatC.setState(
+          CombatState.Punched,
+          defender.getComponent(SpriteC)
+        );
     }
   }
 }

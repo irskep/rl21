@@ -88,17 +88,18 @@ export class LevelScene implements GameScene {
     }
 
     this.ecs = makeECS(this.game, this.arena);
+    this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateDbgText();
   }
 
   bindEvents(cell: Cell, cellSprite: Sprite) {
-    cellSprite.on("mouseover", (e: InteractionEvent) => {
+    (cellSprite as any).on("mouseover", (e: InteractionEvent) => {
       if (this.ecs.combatSystem.isProcessing) return;
       this.updateHoverCell(cell.pos);
     });
 
-    cellSprite.on("click", (e: InteractionEvent) => {
+    (cellSprite as any).on("click", (e: InteractionEvent) => {
       if (this.ecs.combatSystem.isProcessing) return;
       const action = interpretEvent(e);
       if (!action) return;
@@ -195,7 +196,7 @@ export class LevelScene implements GameScene {
         pos
       );
       this.tick();
-      this.updateHoverCell(null);
+      this.updateHoverCell(this.hoveredPos);
     }
   }
 }

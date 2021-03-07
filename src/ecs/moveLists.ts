@@ -30,6 +30,10 @@ export class Walk implements Move {
 
     return true;
   }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 0;
+  }
 }
 
 export class Wait implements Move {
@@ -52,6 +56,10 @@ export class Wait implements Move {
       .setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
 
     return true;
+  }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 0;
   }
 }
 
@@ -88,8 +96,8 @@ export class TelegraphedPunchPrepare implements Move {
   }
 }
 
-export class TelegraphedPunchFollowthrough implements Move {
-  name = "Telegraphed Punch Followthrough";
+export class TelegraphedPunchFollowthroughHit implements Move {
+  name = "Telegraphed Punch Followthrough (hit)";
   help = "?";
 
   check(ctx: MoveContext, target: Vector): MoveCheckResult {
@@ -111,36 +119,61 @@ export class TelegraphedPunchFollowthrough implements Move {
       };
     }
 
-    const isEmptyResult = ensureTargetClear(ctx, target);
-    const isEnemyResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
-
-    if (isEmptyResult.success) return isEmptyResult;
-    if (isEnemyResult.success) return isEnemyResult;
-
-    return { success: false, message: "Target is not empty or an enemy" };
+    return ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
   }
 
   computeValue(ctx: MoveContext, target: Vector): number {
-    return 100; // henchmen really want to punch Batman.
+    return 100;
   }
 
   apply(ctx: MoveContext, target: Vector): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
 
-    const isEmptyResult = ensureTargetClear(ctx, target);
-    const isEnemyResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
-
     combatC.setState(CombatState.PunchFollowthrough, spriteC);
 
-    if (isEnemyResult.success) {
-      const enemy = ctx.ecs.spriteSystem.findEntity(target);
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-    } else if (isEmptyResult.success) {
-      // stumble forward
-      spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+    return true;
+  }
+}
+
+export class TelegraphedPunchFollowthroughMiss implements Move {
+  name = "Telegraphed Punch Followthrough (miss)";
+  help = "?";
+
+  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+    const combatC = ctx.entity.getComponent(CombatC);
+    if (combatC.state != CombatState.PunchTelegraph) {
+      return { success: false, message: "Not in the right state" };
     }
 
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos
+      .clone()
+      .add(getDirectionVector(spriteC.orientation))
+      .equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction",
+      };
+    }
+
+    // TODO: allow punching allies?
+    return ensureTargetClear(ctx, target);
+  }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 100;
+  }
+
+  apply(ctx: MoveContext, target: Vector): boolean {
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    const combatC = ctx.entity.getComponent(CombatC);
+    // stumble forward
+    spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
     return true;
   }
 }
@@ -148,5 +181,7 @@ export class TelegraphedPunchFollowthrough implements Move {
 export const BM_MOVES: Move[] = [new Wait(), new Walk()];
 export const HENCHMAN_MOVES: Move[] = [
   new TelegraphedPunchPrepare(),
-  new TelegraphedPunchFollowthrough(),
+  new TelegraphedPunchFollowthroughHit(),
+  new TelegraphedPunchFollowthroughMiss(),
+  new Wait(),
 ];
