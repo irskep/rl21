@@ -2,11 +2,11 @@
 import { Container, InteractionEvent, Sprite, TextStyle, Text } from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
-import { Tilemap, isAdjacent } from "./tilemap";
+import { Tilemap } from "./tilemap";
 import { ECS, makeECS } from "./ecs/ecs";
-import { SpriteC } from "./ecs/sprite";
 import { GameScene, GameInterface } from "./types";
 import { ALL_MOVES, Move, MoveCheckResult } from "./ecs/moveEngine";
+import { Action, interpretEvent } from "./input";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -83,7 +83,9 @@ export class LevelScene implements GameScene {
           this.updateHoverCell(cell.pos);
         });
         cellSprite.on("click", (e: InteractionEvent) => {
-          this.handleClick(cell.pos);
+          const action = interpretEvent(e);
+          if (!action) return;
+          this.handleClick(cell.pos, action);
         });
         cell.sprite = cellSprite;
         this.tilemapContainer.addChild(cellSprite);
@@ -138,16 +140,16 @@ export class LevelScene implements GameScene {
   }
 
   updateDbgText() {
+    const okMoves = this.possibleMoves.filter((x) => x[1].success);
+    const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
     this.dbgText.text =
       `${this.hoveredPos}\n` +
-      this.possibleMoves
-        .map(([move, result]) => {
-          if (result.success) {
-            return `${move.name} (${move.help})`;
-          } else {
-            return `X ${move.name} (${result.message || "?"})`;
-          }
-        })
+      okMoves
+        .map(([move]) => `${move.action} ${move.name} (${move.help})`)
+        .join("\n") +
+      "\n\nOmitted:\n" +
+      notOkMoves
+        .map(([move, result]) => `${move.name} (${result.message || "?"})`)
         .join("\n");
   }
 
@@ -159,40 +161,20 @@ export class LevelScene implements GameScene {
     this.ecs.engine.update(1);
   }
 
-  handleClick(pos: Vector) {
-    const playerSpriteC = this.ecs.player.getComponent(SpriteC);
-    const playerPos = playerSpriteC.pos;
-    if (!isAdjacent(playerPos, pos)) {
-      console.log("Discard", pos, playerPos);
-      return;
+  handleClick(pos: Vector, action: Action) {
+    const actionMoves = this.possibleMoves.filter(
+      ([move, result]) => result.success && move.action == action
+    );
+    if (actionMoves.length > 1) {
+      console.log(actionMoves);
+      throw new Error(`Conflicting moves: ${actionMoves}`);
     }
-
-    this.movePlayer(pos);
-  }
-
-  movePlayer(pos: Vector) {
-    const playerSpriteC = this.ecs.player.getComponent(SpriteC);
-    // let didFind = false;
-    const direction = new Vector(pos.x, pos.y).subtract(playerSpriteC.pos);
-    for (const d2 of DIRECTIONS) {
-      if (d2[0].equals(direction)) {
-        playerSpriteC.orientation = d2[1];
-        // didFind = true;
-        break;
-      }
+    if (actionMoves.length === 1) {
+      actionMoves[0][0].apply(
+        { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
+        pos
+      );
+      this.tick();
     }
-    playerSpriteC.pos = pos;
-    this.tick();
   }
 }
-
-const DIRECTIONS: [Vector, number][] = [
-  [new Vector(0, -1), 0],
-  [new Vector(1, -1), 0.5],
-  [new Vector(1, 0), 1],
-  [new Vector(1, 1), 1.5],
-  [new Vector(0, 1), 2],
-  [new Vector(-1, 1), 2.5],
-  [new Vector(-1, 0), 3],
-  [new Vector(-1, -1), 3.5],
-];

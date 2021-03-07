@@ -40,6 +40,8 @@ export default class Game implements GameInterface {
 
     this.app.loader.add(ALL_ASSETS.map((asset) => asset)).load(this.setup);
 
+    this.app.view.addEventListener("contextmenu", (e) => e.preventDefault());
+
     // window.addEventListener("resize", this.handleResize);
   }
 
