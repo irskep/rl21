@@ -51603,7 +51603,7 @@ function interpretEvent(e) {
 }
 
 exports.interpretEvent = interpretEvent;
-},{}],"src/ecs/combat.ts":[function(require,module,exports) {
+},{}],"src/ecs/UnreachableCaseError.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -51637,24 +51637,6 @@ var __extends = this && this.__extends || function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CombatSystem = exports.CombatC = exports.UnreachableCaseError = exports.CombatState = void 0;
-
-var ecs_1 = require("@nova-engine/ecs");
-
-var assets_1 = require("../assets");
-
-var direction_1 = require("./direction");
-
-var sprite_1 = require("./sprite");
-
-var CombatState;
-
-(function (CombatState) {
-  CombatState["Normal"] = "Normal";
-  CombatState["PunchTelegraph"] = "PunchTelegraph";
-  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
-  CombatState["Punched"] = "Punched";
-})(CombatState = exports.CombatState || (exports.CombatState = {}));
 
 var UnreachableCaseError =
 /** @class */
@@ -51668,7 +51650,67 @@ function (_super) {
   return UnreachableCaseError;
 }(Error);
 
-exports.UnreachableCaseError = UnreachableCaseError;
+exports.default = UnreachableCaseError;
+},{}],"src/ecs/combat.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatSystem = exports.CombatC = exports.CombatState = void 0;
+
+var ecs_1 = require("@nova-engine/ecs");
+
+var assets_1 = require("../assets");
+
+var direction_1 = require("./direction");
+
+var sprite_1 = require("./sprite");
+
+var UnreachableCaseError_1 = __importDefault(require("./UnreachableCaseError"));
+
+var CombatState;
+
+(function (CombatState) {
+  CombatState["Normal"] = "Normal";
+  CombatState["PunchTelegraph"] = "PunchTelegraph";
+  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
+  CombatState["Punched"] = "Punched";
+})(CombatState = exports.CombatState || (exports.CombatState = {}));
 
 function stateToPlayerSpriteIndex(state) {
   switch (state) {
@@ -51685,7 +51727,7 @@ function stateToPlayerSpriteIndex(state) {
       return assets_1.SpriteIndices.STUMBLING;
 
     default:
-      throw new UnreachableCaseError(state);
+      throw new UnreachableCaseError_1.default(state);
   }
 }
 
@@ -51704,7 +51746,7 @@ function stateToHenchmanSpriteIndex(state) {
       return assets_1.SpriteIndices.STUMBLING;
 
     default:
-      throw new UnreachableCaseError(state);
+      throw new UnreachableCaseError_1.default(state);
   }
 }
 
@@ -51852,7 +51894,7 @@ function (_super) {
 }(ecs_1.System);
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./direction":"src/ecs/direction.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./direction":"src/ecs/direction.ts","./sprite":"src/ecs/sprite.ts","./UnreachableCaseError":"src/ecs/UnreachableCaseError.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -51908,6 +51950,12 @@ exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 },{"../assets":"src/assets.ts","./combat":"src/ecs/combat.ts"}],"src/ecs/moveLists.ts":[function(require,module,exports) {
 "use strict";
 
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -51924,6 +51972,8 @@ var direction_1 = require("./direction");
 var moveHelpers_1 = require("./moveHelpers");
 
 var sprite_1 = require("./sprite");
+
+var UnreachableCaseError_1 = __importDefault(require("./UnreachableCaseError"));
 
 var Walk =
 /** @class */
@@ -51945,9 +51995,30 @@ function () {
       };
     }
 
-    return {
-      success: true
-    };
+    var state = ctx.entity.getComponent(combat_1.CombatC).state;
+
+    switch (state) {
+      case combat_1.CombatState.Normal:
+        return {
+          success: true
+        };
+
+      case combat_1.CombatState.Punched:
+        return {
+          success: false,
+          message: "Reeling from punch"
+        };
+
+      case combat_1.CombatState.PunchFollowthrough:
+      case combat_1.CombatState.PunchTelegraph:
+        return {
+          success: false,
+          message: "?"
+        };
+
+      default:
+        throw new UnreachableCaseError_1.default(state);
+    }
   };
 
   Walk.prototype.apply = function (ctx, target) {
@@ -52223,7 +52294,7 @@ function () {
 exports.FastPunch = FastPunch;
 exports.BM_MOVES = [new Wait(), new Walk(), new FastPunch()];
 exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
-},{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./direction":"src/ecs/direction.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
+},{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./direction":"src/ecs/direction.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts","./UnreachableCaseError":"src/ecs/UnreachableCaseError.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -52753,7 +52824,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62855" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54216" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
