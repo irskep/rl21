@@ -10,7 +10,7 @@ export const SpriteIndices = {
 export const EnvIndices = {
   FLOOR: 0,
   WALL: 1,
-  HOVER: 17,
+  HOVER: 8,
 };
 
 export const ALL_ASSETS: Asset[] = [

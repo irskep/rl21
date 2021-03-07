@@ -14,6 +14,7 @@ import { GameInterface } from "./types";
 
 export class SpriteC implements Component {
   pos = new Vec2D.Vector(0, 0);
+  orientation = 0; // clockwise from up
   private _spriteIndex = 0;
   needsTextureReplacement = false;
   sprite?: Sprite;
@@ -64,6 +65,7 @@ export class SpriteSystem extends System {
         spriteC.pos.x * this.game.tileSize + this.game.tileSize / 2,
         spriteC.pos.y * this.game.tileSize + this.game.tileSize / 2
       );
+      spriteC.sprite.angle = 90 * spriteC.orientation;
 
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
@@ -76,6 +78,7 @@ export class SpriteSystem extends System {
 export interface ECS {
   engine: Engine;
   spriteSystem: SpriteSystem;
+  player: Entity;
 }
 
 function makePlayer(): Entity {
@@ -99,10 +102,12 @@ export function makeECS(game: GameInterface, container: Container): ECS {
 
   engine.addSystems(spriteSystem);
 
-  engine.addEntity(makePlayer());
+  const player = makePlayer();
+  engine.addEntity(player);
 
   return {
     engine: engine,
     spriteSystem: spriteSystem,
+    player,
   };
 }
