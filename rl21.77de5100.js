@@ -50013,7 +50013,39 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ALL_ASSETS = exports.EnvIndices = exports.SpriteIndices = void 0;
 exports.SpriteIndices = {
-  BM_STAND: 0
+  STAND: 0,
+  STUMBLING: 1,
+  STUNNED: 2,
+  CHARGING: 3,
+  PRONE: 8,
+  DEAD: 9,
+  DODGING: 10,
+  BLOCKING: 11,
+  PUNCH_BEFORE: 16,
+  PUNCH_AFTER: 17,
+  KNIFE_BEFORE: 18,
+  KNIFE_AFTER: 19,
+  SHOOT_BEFORE: 24,
+  SHOOT_AFTER: 25,
+  SUPERPUNCH_BEFORE: 26,
+  SUPERPUNCH_AFTER: 27,
+  PICKING_UP: 32,
+  THROW_BEFORE: 33,
+  THROW_AFTER: 34,
+  BOX_FLYING: 35,
+  LOSING_WEAPON: 36,
+  BM_STAND: 40,
+  BM_PARRY_BEFORE: 41,
+  BM_PARRY_AFTER: 42,
+  BM_DODGE: 43,
+  BM_THROW_BEFORE: 44,
+  BM_THROW_AFTER: 45,
+  BM_PUNCH_BEFORE: 46,
+  BM_PUNCH_AFTER: 47,
+  BM_CATCH: 48,
+  BM_TAKING_WEAPON: 49,
+  BM_DISABLING_WEAPON: 50,
+  BM_PICKING_UP: 51
 };
 exports.EnvIndices = {
   FLOOR: 0,
@@ -50739,7 +50771,79 @@ __export(require("./ArrayVector"));
 __export(require("./Float32Vector"));
 
 __export(require("./Vector"));
-},{"./AbstractVector":"node_modules/vector2d/src/AbstractVector.js","./ArrayVector":"node_modules/vector2d/src/ArrayVector.js","./Float32Vector":"node_modules/vector2d/src/Float32Vector.js","./Vector":"node_modules/vector2d/src/Vector.js"}],"node_modules/@nova-engine/ecs/lib/Engine.js":[function(require,module,exports) {
+},{"./AbstractVector":"node_modules/vector2d/src/AbstractVector.js","./ArrayVector":"node_modules/vector2d/src/ArrayVector.js","./Float32Vector":"node_modules/vector2d/src/Float32Vector.js","./Vector":"node_modules/vector2d/src/Vector.js"}],"src/tilemap.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.neighbors = exports.isAdjacent = exports.Tilemap = exports.Cell = void 0;
+
+var vector2d_1 = require("vector2d");
+
+var Cell =
+/** @class */
+function () {
+  function Cell(pos, index) {
+    this.sprite = null;
+    this.index = 0;
+    this.index = index;
+    this.pos = pos;
+  }
+
+  return Cell;
+}();
+
+exports.Cell = Cell;
+
+var Tilemap =
+/** @class */
+function () {
+  function Tilemap(size) {
+    this.size = size;
+    this.contents = new Array(size.y);
+
+    for (var y = 0; y < size.y; y++) {
+      this.contents[y] = new Array(size.x);
+
+      for (var x = 0; x < size.x; x++) {
+        this.contents[y][x] = new Cell(new vector2d_1.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
+      }
+    }
+  }
+
+  Tilemap.prototype.getCell = function (pos) {
+    if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y) return null;
+    return this.contents[pos.y][pos.x];
+  };
+
+  return Tilemap;
+}();
+
+exports.Tilemap = Tilemap;
+
+function isAdjacent(a, b) {
+  if (a.equals(b)) return false;
+  return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+}
+
+exports.isAdjacent = isAdjacent;
+
+function neighbors(a) {
+  var val = [];
+
+  for (var i = -1; i <= 1; i++) {
+    for (var j = -1; j <= 1; j++) {
+      if (i == 0 && j == 0) continue;
+      val.push(new vector2d_1.Vector(a.x + i, a.y + j));
+    }
+  }
+
+  return val;
+}
+
+exports.neighbors = neighbors;
+},{"vector2d":"node_modules/vector2d/src/Vec2D.js"}],"node_modules/@nova-engine/ecs/lib/Engine.js":[function(require,module,exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Engine = (function () {
@@ -51220,7 +51324,7 @@ function getID() {
 }
 
 exports.default = getID;
-},{}],"src/ecs.ts":[function(require,module,exports) {
+},{}],"src/ecs/sprite.ts":[function(require,module,exports) {
 "use strict";
 
 var __extends = this && this.__extends || function () {
@@ -51285,16 +51389,10 @@ var __importStar = this && this.__importStar || function (mod) {
   return result;
 };
 
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.makeECS = exports.SpriteSystem = exports.SpriteC = void 0;
+exports.SpriteSystem = exports.SpriteC = void 0;
 
 var ecs_1 = require("@nova-engine/ecs");
 
@@ -51302,9 +51400,7 @@ var pixi_js_1 = require("pixi.js");
 
 var Vec2D = __importStar(require("vector2d"));
 
-var assets_1 = require("./assets");
-
-var getID_1 = __importDefault(require("./getID"));
+var vector2d_1 = require("vector2d");
 
 var SpriteC =
 /** @class */
@@ -51334,6 +51430,20 @@ function () {
     enumerable: false,
     configurable: true
   });
+
+  SpriteC.prototype.turnToward = function (target) {
+    var direction = target.clone().subtract(this.pos);
+
+    for (var _i = 0, DIRECTIONS_1 = DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
+      var d2 = DIRECTIONS_1[_i];
+
+      if (d2[0].equals(direction)) {
+        this.orientation = d2[1];
+        break;
+      }
+    }
+  };
+
   return SpriteC;
 }();
 
@@ -51378,81 +51488,452 @@ function (_super) {
       }
     }
   };
+  /* helpers */
+
+
+  SpriteSystem.prototype.findEntity = function (pos) {
+    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
+      var entity = _a[_i];
+      var spriteC = entity.getComponent(SpriteC);
+      if (spriteC.pos.equals(pos)) return entity;
+    }
+
+    return null;
+  };
 
   return SpriteSystem;
 }(ecs_1.System);
 
 exports.SpriteSystem = SpriteSystem;
+var DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js"}],"src/input.ts":[function(require,module,exports) {
+"use strict";
 
-function makePlayer() {
-  var player = new ecs_1.Entity();
-  player.id = getID_1.default();
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.interpretEvent = exports.Action = void 0;
+var Action;
 
-  if (player.id != 0) {
+(function (Action) {
+  Action["A"] = "A";
+  Action["B"] = "B";
+  Action["X"] = "X";
+  Action["Y"] = "Y";
+})(Action = exports.Action || (exports.Action = {}));
+
+function interpretEvent(e) {
+  var mouseEvent = e.data.originalEvent;
+
+  if (mouseEvent.button === 0) {
+    if (mouseEvent.shiftKey) {
+      return Action.A;
+    } else {
+      return Action.X;
+    }
+  }
+
+  if (mouseEvent.button === 1) {
+    return Action.B;
+  }
+
+  if (mouseEvent.button === 2) {
+    if (mouseEvent.shiftKey) {
+      return Action.B;
+    } else {
+      return Action.Y;
+    }
+  }
+
+  return null;
+}
+
+exports.interpretEvent = interpretEvent;
+},{}],"src/ecs/combat.ts":[function(require,module,exports) {
+"use strict";
+
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatSystem = exports.CombatC = exports.CombatState = void 0;
+
+var ecs_1 = require("@nova-engine/ecs");
+
+var assets_1 = require("../assets");
+
+var sprite_1 = require("./sprite");
+
+var CombatState;
+
+(function (CombatState) {
+  CombatState["Normal"] = "Normal";
+  CombatState["PunchTelegraph"] = "PunchTelegraph";
+  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
+})(CombatState = exports.CombatState || (exports.CombatState = {}));
+
+var CombatC =
+/** @class */
+function () {
+  function CombatC() {
+    this.state = CombatState.Normal;
+    this.spriteIndexOverride = null;
+    this.needsToMove = true;
+    this.moves = [];
+    this.isPlayer = false;
+  }
+
+  CombatC.prototype.build = function (moves) {
+    this.moves = moves;
+    return this;
+  };
+
+  CombatC.prototype.setState = function (newState, spriteC, spriteIndexOverride) {
+    this.state = newState;
+
+    if (spriteIndexOverride) {
+      spriteC.spriteIndex = spriteIndexOverride;
+      return;
+    }
+
+    if (this.isPlayer) {
+      switch (newState) {
+        case CombatState.Normal:
+          spriteC.spriteIndex = assets_1.SpriteIndices.BM_STAND;
+
+        case CombatState.PunchTelegraph:
+          spriteC.spriteIndex = assets_1.SpriteIndices.BM_PUNCH_BEFORE;
+
+        case CombatState.PunchFollowthrough:
+          spriteC.spriteIndex = assets_1.SpriteIndices.BM_PUNCH_AFTER;
+      }
+    } else {
+      switch (newState) {
+        case CombatState.Normal:
+          spriteC.spriteIndex = assets_1.SpriteIndices.STAND;
+
+        case CombatState.PunchTelegraph:
+          spriteC.spriteIndex = assets_1.SpriteIndices.PUNCH_BEFORE;
+
+        case CombatState.PunchFollowthrough:
+          spriteC.spriteIndex = assets_1.SpriteIndices.PUNCH_AFTER;
+      }
+    }
+  };
+
+  return CombatC;
+}();
+
+exports.CombatC = CombatC;
+
+var CombatSystem =
+/** @class */
+function (_super) {
+  __extends(CombatSystem, _super);
+
+  function CombatSystem(game) {
+    var _this = _super.call(this) || this;
+
+    _this.isProcessing = false;
+    _this.game = game;
+    return _this;
+  }
+
+  CombatSystem.prototype.onAttach = function (engine) {
+    _super.prototype.onAttach.call(this, engine);
+
+    this.family = new ecs_1.FamilyBuilder(engine).include(CombatC).include(sprite_1.SpriteC).build();
+  };
+
+  CombatSystem.prototype.update = function (engine, delta) {
+    this.isProcessing = true;
+
+    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
+      var entity = _a[_i]; // const combatC = entity.getComponent(CombatC);
+      // do combat logic here
+    }
+
+    this.isProcessing = false;
+  };
+
+  CombatSystem.prototype.reset = function (engine) {
+    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
+      var entity = _a[_i];
+      entity.getComponent(CombatC).needsToMove = true;
+    }
+  };
+
+  return CombatSystem;
+}(ecs_1.System);
+
+exports.CombatSystem = CombatSystem;
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ensureTargetIsEnemy = exports.ensureTargetClear = void 0;
+
+var assets_1 = require("../assets");
+
+var combat_1 = require("./combat");
+
+function ensureTargetClear(ctx, target) {
+  if (ctx.tilemap.getCell(target).index !== assets_1.EnvIndices.FLOOR) return {
+    success: false,
+    message: "Target is not floor"
+  };
+  if (ctx.ecs.spriteSystem.findEntity(target) !== null) return {
+    success: false,
+    message: "Target is occupied"
+  };
+  return {
+    success: true
+  };
+}
+
+exports.ensureTargetClear = ensureTargetClear;
+
+function ensureTargetIsEnemy(ctx, target, isPlayer) {
+  if (ctx.tilemap.getCell(target).index !== assets_1.EnvIndices.FLOOR) return {
+    success: false,
+    message: "Target is not floor"
+  };
+  var entity = ctx.ecs.spriteSystem.findEntity(target);
+
+  if (!entity) {
+    return {
+      success: false,
+      message: "Target does not contain an entity"
+    };
+  }
+
+  var combatC = entity.getComponent(combat_1.CombatC);
+  if (!combatC || combatC.isPlayer == isPlayer) return {
+    success: false,
+    message: "Target does not contain enemy"
+  };
+  return {
+    success: true
+  };
+}
+
+exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
+},{"../assets":"src/assets.ts","./combat":"src/ecs/combat.ts"}],"src/ecs/moveLists.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.TelegraphedPunchPrepare = exports.Walk = void 0;
+
+var input_1 = require("../input");
+
+var tilemap_1 = require("../tilemap");
+
+var combat_1 = require("./combat");
+
+var moveHelpers_1 = require("./moveHelpers");
+
+var sprite_1 = require("./sprite");
+
+var Walk =
+/** @class */
+function () {
+  function Walk() {
+    this.name = "Walk";
+    this.help = "no combat";
+    this.action = input_1.Action.X;
+  }
+
+  Walk.prototype.check = function (ctx, target) {
+    var checkResult = moveHelpers_1.ensureTargetClear(ctx, target);
+    if (!checkResult.success) return checkResult;
+
+    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    return {
+      success: true
+    };
+  };
+
+  Walk.prototype.apply = function (ctx, target) {
+    var c = ctx.entity.getComponent(sprite_1.SpriteC);
+    c.turnToward(target);
+    c.pos = target;
+    return true;
+  };
+
+  return Walk;
+}();
+
+exports.Walk = Walk;
+
+var TelegraphedPunchPrepare =
+/** @class */
+function () {
+  function TelegraphedPunchPrepare() {
+    this.name = "Henchman Punch";
+    this.help = "?";
+  }
+
+  TelegraphedPunchPrepare.prototype.check = function (ctx, target) {
+    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+
+    if (combatC.state != combat_1.CombatState.Normal) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    var checkResult = moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    return {
+      success: true
+    };
+  };
+
+  TelegraphedPunchPrepare.prototype.computeValue = function (ctx, target) {
+    return 100; // henchmen really want to punch Batman.
+  };
+
+  TelegraphedPunchPrepare.prototype.apply = function (ctx, target) {
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.PunchTelegraph, spriteC);
+    return true;
+  };
+
+  return TelegraphedPunchPrepare;
+}();
+
+exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
+exports.BM_MOVES = [new Walk()];
+exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare() // new TelegraphedPunchFollowthrough(),
+];
+},{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
+"use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeECS = void 0;
+
+var ecs_1 = require("@nova-engine/ecs");
+
+var assets_1 = require("../assets");
+
+var getID_1 = __importDefault(require("../getID"));
+
+var sprite_1 = require("./sprite");
+
+var vector2d_1 = require("vector2d");
+
+var moveLists_1 = require("./moveLists");
+
+var combat_1 = require("./combat");
+
+function makeEntity() {
+  var e = new ecs_1.Entity();
+  e.id = getID_1.default();
+  return e;
+}
+
+function makePlayer(pos, orientation) {
+  var e = makeEntity();
+
+  if (e.id != 0) {
     throw new Error("player should always be 0");
   }
 
-  player.putComponent(SpriteC).build(new Vec2D.Vector(4, 4), assets_1.SpriteIndices.BM_STAND);
-  return player;
+  e.putComponent(sprite_1.SpriteC).build(pos, assets_1.SpriteIndices.BM_STAND);
+  e.getComponent(sprite_1.SpriteC).orientation = orientation;
+  e.putComponent(combat_1.CombatC).build(moveLists_1.BM_MOVES);
+  e.getComponent(combat_1.CombatC).isPlayer = true;
+  return e;
+}
+
+function makeThug(pos, orientation) {
+  var e = makeEntity();
+  e.putComponent(sprite_1.SpriteC).build(pos, assets_1.SpriteIndices.STAND);
+  e.getComponent(sprite_1.SpriteC).orientation = orientation;
+  e.putComponent(combat_1.CombatC).build(moveLists_1.HENCHMAN_MOVES);
+  return e;
 }
 
 function makeECS(game, container) {
   var engine = new ecs_1.Engine();
-  var spriteSystem = new SpriteSystem(game, container);
+  var spriteSystem = new sprite_1.SpriteSystem(game, container);
+  var combatSystem = new combat_1.CombatSystem(game);
   engine.addSystems(spriteSystem);
-  var player = makePlayer();
+  engine.addSystems(combatSystem);
+  var player = makePlayer(new vector2d_1.Vector(7, 14), 0);
   engine.addEntity(player);
+  engine.addEntity(makeThug(new vector2d_1.Vector(7, 11), 2));
   return {
     engine: engine,
+    combatSystem: combatSystem,
     spriteSystem: spriteSystem,
     player: player
   };
 }
 
 exports.makeECS = makeECS;
-},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./assets":"src/assets.ts","./getID":"src/getID.ts"}],"src/LevelScene.ts":[function(require,module,exports) {
+},{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","../getID":"src/getID.ts","./sprite":"src/ecs/sprite.ts","vector2d":"node_modules/vector2d/src/Vec2D.js","./moveLists":"src/ecs/moveLists.ts","./combat":"src/ecs/combat.ts"}],"src/LevelScene.ts":[function(require,module,exports) {
 "use strict";
-
-var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  Object.defineProperty(o, k2, {
-    enumerable: true,
-    get: function get() {
-      return m[k];
-    }
-  });
-} : function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  o[k2] = m[k];
-});
-
-var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
-  Object.defineProperty(o, "default", {
-    enumerable: true,
-    value: v
-  });
-} : function (o, v) {
-  o["default"] = v;
-});
-
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) {
-    if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-  }
-
-  __setModuleDefault(result, mod);
-
-  return result;
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.LevelScene = void 0; // import Mousetrap from "mousetrap";
-
-var PIXI = __importStar(require("pixi.js"));
 
 var pixi_js_1 = require("pixi.js");
 
@@ -51460,56 +51941,32 @@ var vector2d_1 = require("vector2d");
 
 var assets_1 = require("./assets");
 
-var ecs_1 = require("./ecs");
+var tilemap_1 = require("./tilemap");
 
-var Cell =
-/** @class */
-function () {
-  function Cell(pos, index) {
-    this.sprite = null;
-    this.index = 0;
-    this.index = index;
-    this.pos = pos;
-  }
+var ecs_1 = require("./ecs/ecs");
 
-  return Cell;
-}();
+var combat_1 = require("./ecs/combat");
 
-var Tilemap =
-/** @class */
-function () {
-  function Tilemap(size) {
-    this.size = size;
-    this.contents = new Array(size.y);
-
-    for (var y = 0; y < size.y; y++) {
-      this.contents[y] = new Array(size.x);
-
-      for (var x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(new vector2d_1.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
-      }
-    }
-  }
-
-  return Tilemap;
-}();
-
-function isAdjacent(a, b) {
-  if (a.equals(b)) return false;
-  return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
-}
+var input_1 = require("./input");
 
 var LevelScene =
 /** @class */
 function () {
   function LevelScene(game) {
     this.game = game;
-    this.container = new PIXI.Container();
-    this.tilemapContainer = new PIXI.Container();
-    this.arena = new PIXI.Container();
-    this.overlayContainer = new PIXI.Container();
-    this.map = new Tilemap(new vector2d_1.Vector(16, 16));
+    /* pixi stuff */
+
+    this.container = new pixi_js_1.Container();
+    this.tilemapContainer = new pixi_js_1.Container();
+    this.arena = new pixi_js_1.Container();
+    this.overlayContainer = new pixi_js_1.Container();
+    this.hudContainer = new pixi_js_1.Container();
     this.hoverSprite = new pixi_js_1.Sprite();
+    this.dbgText = new pixi_js_1.Text("");
+    this.map = new tilemap_1.Tilemap(new vector2d_1.Vector(16, 16));
+    this.possibleMoves = []; // debug state
+
+    this.hoveredPos = null;
 
     this.gameLoop = function (dt) {
       /* hi */
@@ -51531,42 +51988,61 @@ function () {
   };
 
   LevelScene.prototype.addChildren = function () {
-    var _this = this;
-
     this.container.addChild(this.tilemapContainer);
     this.container.addChild(this.arena);
     this.container.addChild(this.overlayContainer);
+    this.container.addChild(this.hudContainer);
     this.tilemapContainer.interactive = true;
+    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
+    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
     this.hoverSprite.texture = this.game.assets.env[assets_1.EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
+    this.dbgText.position.set(10, 10);
+    this.dbgText.style = new pixi_js_1.TextStyle({
+      fontSize: 18,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "left",
+      wordWrap: true,
+      wordWrapWidth: 320
+    });
+    this.hudContainer.addChild(this.dbgText);
 
     for (var y = 0; y < this.map.size.y; y++) {
-      var _loop_1 = function _loop_1(x) {
-        var cellSprite = new pixi_js_1.Sprite();
-        var cell = this_1.map.contents[y][x];
-        cellSprite.texture = this_1.game.assets.env[cell.index];
-        cellSprite.position.set(x * this_1.game.tileSize, y * this_1.game.tileSize);
-        cellSprite.interactive = true;
-        cellSprite.on("mouseover", function (e) {
-          _this.updateHoverCell(cell.pos);
-        });
-        cellSprite.on("click", function (e) {
-          _this.handleClick(cell.pos);
-        });
-        cell.sprite = cellSprite;
-        this_1.tilemapContainer.addChild(cellSprite);
-      };
-
-      var this_1 = this;
-
       for (var x = 0; x < this.map.size.x; x++) {
-        _loop_1(x);
+        var cellSprite = new pixi_js_1.Sprite();
+        var cell = this.map.contents[y][x];
+        cellSprite.texture = this.game.assets.env[cell.index];
+        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+        cellSprite.interactive = true;
+        this.bindEvents(cell, cellSprite);
+        cell.sprite = cellSprite;
+        this.tilemapContainer.addChild(cellSprite);
       }
     }
 
     this.ecs = ecs_1.makeECS(this.game, this.arena);
     this.ecs.engine.update(1);
+    this.updateDbgText();
+  };
+
+  LevelScene.prototype.bindEvents = function (cell, cellSprite) {
+    var _this = this;
+
+    cellSprite.on("mouseover", function (e) {
+      if (_this.ecs.combatSystem.isProcessing) return;
+
+      _this.updateHoverCell(cell.pos);
+    });
+    cellSprite.on("click", function (e) {
+      if (_this.ecs.combatSystem.isProcessing) return;
+      var action = input_1.interpretEvent(e);
+      if (!action) return;
+
+      _this.handleClick(cell.pos, action);
+    });
   };
 
   LevelScene.prototype.exit = function () {
@@ -51577,57 +52053,107 @@ function () {
   };
 
   LevelScene.prototype.updateHoverCell = function (pos) {
-    var playerPos = this.ecs.player.getComponent(ecs_1.SpriteC).pos;
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
+    this.updateDbgText();
 
-    if (pos === null || !isAdjacent(pos, playerPos)) {
-      this.hoverSprite.visible = false;
-    } else {
+    if (this.possibleMoves.filter(function (_a) {
+      var m = _a[0],
+          r = _a[1];
+      return r.success;
+    }).length > 0) {
       this.hoverSprite.visible = true;
-      this.hoverSprite.position.set(pos.x * this.game.tileSize, pos.y * this.game.tileSize);
+      this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
+    } else {
+      this.hoverSprite.visible = false;
     }
+  };
+
+  LevelScene.prototype.updatePossibleMoves = function () {
+    var _this = this;
+
+    if (!this.hoveredPos) {
+      this.possibleMoves = this.ecs.player.getComponent(combat_1.CombatC).moves.map(function (m) {
+        return [m, {
+          success: false
+        }];
+      });
+      return;
+    }
+
+    this.possibleMoves = this.ecs.player.getComponent(combat_1.CombatC).moves.map(function (m) {
+      return [m, m.check({
+        ecs: _this.ecs,
+        entity: _this.ecs.player,
+        tilemap: _this.map
+      }, _this.hoveredPos)];
+    });
+    this.possibleMoves.sort(function (_a, _b) {
+      var moveA = _a[0],
+          resultA = _a[1];
+      var moveB = _b[0],
+          resultB = _b[1];
+
+      if (resultA.success == resultB.success) {
+        return moveA.name.localeCompare(moveB.name);
+      } else if (resultA.success) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+  };
+
+  LevelScene.prototype.updateDbgText = function () {
+    var okMoves = this.possibleMoves.filter(function (x) {
+      return x[1].success;
+    });
+    var notOkMoves = this.possibleMoves.filter(function (x) {
+      return !x[1].success;
+    });
+    this.dbgText.text = (this.hoveredPos || "(no selection)") + "\n" + okMoves.map(function (_a) {
+      var move = _a[0];
+      return move.action + " " + move.name + " (" + move.help + ")";
+    }).join("\n") + "\n\nOmitted:\n" + notOkMoves.map(function (_a) {
+      var move = _a[0],
+          result = _a[1];
+      return move.name + " (" + (result.message || "?") + ")";
+    }).join("\n");
   };
 
   LevelScene.prototype.tick = function () {
     this.ecs.engine.update(1);
   };
 
-  LevelScene.prototype.handleClick = function (pos) {
-    var playerSpriteC = this.ecs.player.getComponent(ecs_1.SpriteC);
-    var playerPos = playerSpriteC.pos;
+  LevelScene.prototype.handleClick = function (pos, action) {
+    var actionMoves = this.possibleMoves.filter(function (_a) {
+      var move = _a[0],
+          result = _a[1];
+      return result.success && move.action == action;
+    });
 
-    if (!isAdjacent(playerPos, pos)) {
-      console.log("Discard", pos, playerPos);
-      return;
+    if (actionMoves.length > 1) {
+      console.log(actionMoves);
+      throw new Error("Conflicting moves: " + actionMoves);
     }
 
-    this.movePlayer(pos);
-  };
-
-  LevelScene.prototype.movePlayer = function (pos) {
-    var playerSpriteC = this.ecs.player.getComponent(ecs_1.SpriteC);
-    var didFind = false;
-    var direction = new vector2d_1.Vector(pos.x, pos.y).subtract(playerSpriteC.pos);
-
-    for (var _i = 0, DIRECTIONS_1 = DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
-      var d2 = DIRECTIONS_1[_i];
-
-      if (d2[0].equals(direction)) {
-        playerSpriteC.orientation = d2[1];
-        didFind = true;
-        break;
-      }
+    if (actionMoves.length === 1) {
+      this.ecs.combatSystem.reset(this.ecs.engine);
+      actionMoves[0][0].apply({
+        ecs: this.ecs,
+        entity: this.ecs.player,
+        tilemap: this.map
+      }, pos);
+      this.tick();
+      this.updateHoverCell(null);
     }
-
-    playerSpriteC.pos = pos;
-    this.tick();
   };
 
   return LevelScene;
 }();
 
 exports.LevelScene = LevelScene;
-var DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
-},{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./assets":"src/assets.ts","./ecs":"src/ecs.ts"}],"src/game.ts":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./assets":"src/assets.ts","./tilemap":"src/tilemap.ts","./ecs/ecs":"src/ecs/ecs.ts","./ecs/combat":"src/ecs/combat.ts","./input":"src/input.ts"}],"src/game.ts":[function(require,module,exports) {
 "use strict";
 
 var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -51741,7 +52267,10 @@ function () {
     });
     this.app.loader.add(assets_1.ALL_ASSETS.map(function (asset) {
       return asset;
-    })).load(this.setup); // window.addEventListener("resize", this.handleResize);
+    })).load(this.setup);
+    this.app.view.addEventListener("contextmenu", function (e) {
+      return e.preventDefault();
+    }); // window.addEventListener("resize", this.handleResize);
   }
 
   Object.defineProperty(Game.prototype, "scene", {
@@ -51842,7 +52371,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63186" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58776" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
