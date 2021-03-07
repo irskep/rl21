@@ -1,6 +1,7 @@
 import {
   Component,
   Engine,
+  Entity,
   Family,
   FamilyBuilder,
   System,
@@ -14,6 +15,43 @@ export enum CombatState {
   Normal = "Normal",
   PunchTelegraph = "PunchTelegraph",
   PunchFollowthrough = "PunchFollowthrough",
+  Punched = "Punched",
+}
+
+export class UnreachableCaseError extends Error {
+  constructor(val: never) {
+    super(`Unreachable case: ${JSON.stringify(val)}`);
+  }
+}
+
+function stateToPlayerSpriteIndex(state: CombatState): number {
+  switch (state) {
+    case CombatState.Normal:
+      return SpriteIndices.BM_STAND;
+    case CombatState.PunchTelegraph:
+      return SpriteIndices.BM_PUNCH_BEFORE;
+    case CombatState.PunchFollowthrough:
+      return SpriteIndices.BM_PUNCH_AFTER;
+    case CombatState.Punched:
+      return SpriteIndices.STUMBLING;
+    default:
+      throw new UnreachableCaseError(state);
+  }
+}
+
+function stateToHenchmanSpriteIndex(state: CombatState): number {
+  switch (state) {
+    case CombatState.Normal:
+      return SpriteIndices.STAND;
+    case CombatState.PunchTelegraph:
+      return SpriteIndices.PUNCH_BEFORE;
+    case CombatState.PunchFollowthrough:
+      return SpriteIndices.PUNCH_AFTER;
+    case CombatState.Punched:
+      return SpriteIndices.STUMBLING;
+    default:
+      throw new UnreachableCaseError(state);
+  }
 }
 
 export class CombatC implements Component {
@@ -41,23 +79,9 @@ export class CombatC implements Component {
     }
 
     if (this.isPlayer) {
-      switch (newState) {
-        case CombatState.Normal:
-          spriteC.spriteIndex = SpriteIndices.BM_STAND;
-        case CombatState.PunchTelegraph:
-          spriteC.spriteIndex = SpriteIndices.BM_PUNCH_BEFORE;
-        case CombatState.PunchFollowthrough:
-          spriteC.spriteIndex = SpriteIndices.BM_PUNCH_AFTER;
-      }
+      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
     } else {
-      switch (newState) {
-        case CombatState.Normal:
-          spriteC.spriteIndex = SpriteIndices.STAND;
-        case CombatState.PunchTelegraph:
-          spriteC.spriteIndex = SpriteIndices.PUNCH_BEFORE;
-        case CombatState.PunchFollowthrough:
-          spriteC.spriteIndex = SpriteIndices.PUNCH_AFTER;
-      }
+      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
     }
   }
 }
@@ -83,8 +107,10 @@ export class CombatSystem extends System {
   update(engine: Engine, delta: number) {
     this.isProcessing = true;
     for (let entity of this.family.entities) {
-      // const combatC = entity.getComponent(CombatC);
-      // do combat logic here
+      const combatC = entity.getComponent(CombatC);
+      if (combatC.isPlayer) continue;
+      if (!combatC.needsToMove) continue;
+      combatC.needsToMove = false;
     }
     this.isProcessing = false;
   }
@@ -92,6 +118,16 @@ export class CombatSystem extends System {
   reset(engine: Engine) {
     for (let entity of this.family.entities) {
       entity.getComponent(CombatC).needsToMove = true;
+    }
+  }
+
+  applyPunch(attacker: Entity, defender: Entity) {
+    const defenderCombatC = defender.getComponent(CombatC);
+    switch (defenderCombatC.state) {
+      case CombatState.Normal:
+      case CombatState.PunchTelegraph:
+      case CombatState.PunchFollowthrough:
+        defenderCombatC;
     }
   }
 }

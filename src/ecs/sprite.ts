@@ -10,6 +10,7 @@ import { Container, Sprite } from "pixi.js";
 import * as Vec2D from "vector2d";
 import { Vector } from "vector2d";
 import { GameInterface } from "../types";
+import { DIRECTIONS } from "./direction";
 
 export class SpriteC implements Component {
   pos = new Vec2D.Vector(0, 0);
@@ -93,14 +94,3 @@ export class SpriteSystem extends System {
     return null;
   }
 }
-
-const DIRECTIONS: [Vector, number][] = [
-  [new Vector(0, -1), 0],
-  [new Vector(1, -1), 0.5],
-  [new Vector(1, 0), 1],
-  [new Vector(1, 1), 1.5],
-  [new Vector(0, 1), 2],
-  [new Vector(-1, 1), 2.5],
-  [new Vector(-1, 0), 3],
-  [new Vector(-1, -1), 3.5],
-];

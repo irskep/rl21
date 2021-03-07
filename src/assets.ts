@@ -8,6 +8,7 @@ export const SpriteIndices = {
   STUMBLING: 1,
   STUNNED: 2,
   CHARGING: 3,
+  DODGE_FORWARD: 4,
   PRONE: 8,
   DEAD: 9,
   DODGING: 10,
@@ -29,7 +30,7 @@ export const SpriteIndices = {
   BM_STAND: 40,
   BM_PARRY_BEFORE: 41,
   BM_PARRY_AFTER: 42,
-  BM_DODGE: 43,
+  BM_DODGE_FORWARD: 43,
   BM_THROW_BEFORE: 44,
   BM_THROW_AFTER: 45,
   BM_PUNCH_BEFORE: 46,
@@ -38,6 +39,8 @@ export const SpriteIndices = {
   BM_TAKING_WEAPON: 49,
   BM_DISABLING_WEAPON: 50,
   BM_PICKING_UP: 51,
+  BM_DODGE_BACKWARD: 52,
+  BM_DEAD: 53,
 };
 
 export const EnvIndices = {
