@@ -131,14 +131,18 @@ export class LevelScene implements GameScene {
   handleClick(pos: Vector) {
     const playerSpriteC = this.ecs.player.getComponent(SpriteC);
     const playerPos = playerSpriteC.pos;
-    if (!isAdjacent(playerPos, pos)) return;
+    if (!isAdjacent(playerPos, pos)) {
+      console.log("Discard", pos, playerPos);
+      return;
+    }
 
-    this.movePlayer(pos.subtract(playerPos));
+    this.movePlayer(pos);
   }
 
-  movePlayer(direction: Vector) {
+  movePlayer(pos: Vector) {
     const playerSpriteC = this.ecs.player.getComponent(SpriteC);
     let didFind = false;
+    const direction = new Vector(pos.x, pos.y).subtract(playerSpriteC.pos);
     for (const d2 of DIRECTIONS) {
       if (d2[0].equals(direction)) {
         playerSpriteC.orientation = d2[1];
@@ -146,7 +150,7 @@ export class LevelScene implements GameScene {
         break;
       }
     }
-    playerSpriteC.pos = playerSpriteC.pos.add(direction);
+    playerSpriteC.pos = pos;
     this.tick();
   }
 }
