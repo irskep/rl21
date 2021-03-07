@@ -14,18 +14,13 @@ import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
 import { Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
+import UnreachableCaseError from "./UnreachableCaseError";
 
 export enum CombatState {
   Normal = "Normal",
   PunchTelegraph = "PunchTelegraph",
   PunchFollowthrough = "PunchFollowthrough",
   Punched = "Punched",
-}
-
-export class UnreachableCaseError extends Error {
-  constructor(val: never) {
-    super(`Unreachable case: ${JSON.stringify(val)}`);
-  }
 }
 
 function stateToPlayerSpriteIndex(state: CombatState): number {

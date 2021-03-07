@@ -6,6 +6,7 @@ import { getDirectionVector } from "./direction";
 import { ensureTargetClear, ensureTargetIsEnemy } from "./moveHelpers";
 import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
 import { SpriteC } from "./sprite";
+import UnreachableCaseError from "./UnreachableCaseError";
 
 export class Walk implements Move {
   name = "Walk";
@@ -20,7 +21,18 @@ export class Walk implements Move {
       return { success: false, message: "Not adjacent" };
     }
 
-    return { success: true };
+    const state = ctx.entity.getComponent(CombatC).state;
+    switch (state) {
+      case CombatState.Normal:
+        return { success: true };
+      case CombatState.Punched:
+        return { success: false, message: "Reeling from punch" };
+      case CombatState.PunchFollowthrough:
+      case CombatState.PunchTelegraph:
+        return { success: false, message: "?" };
+      default:
+        throw new UnreachableCaseError(state);
+    }
   }
 
   apply(ctx: MoveContext, target: Vector): boolean {
