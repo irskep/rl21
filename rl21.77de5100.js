@@ -51753,6 +51753,66 @@ function (_super) {
     var _this = _super.call(this) || this;
 
     _this.isProcessing = false;
+    _this.entitiesToProcess = []; // LevelScene may set this
+
+    _this.onProcessingFinished = null;
+
+    _this.processNextEntity = function () {
+      if (_this.entitiesToProcess.length < 1) {
+        _this.isProcessing = false;
+
+        if (_this.onProcessingFinished) {
+          _this.onProcessingFinished();
+        }
+
+        return;
+      }
+
+      var entity = _this.entitiesToProcess.shift();
+
+      var combatC = entity.getComponent(CombatC);
+      if (combatC.isPlayer) return _this.processNextEntity();
+      if (!combatC.needsToMove) return _this.processNextEntity();
+      combatC.needsToMove = false;
+      var spriteC = entity.getComponent(sprite_1.SpriteC);
+      var moveContext = {
+        entity: entity,
+        ecs: _this.ecs,
+        tilemap: _this.tilemap
+      };
+      var availableMoves = [];
+
+      for (var _i = 0, _a = combatC.moves; _i < _a.length; _i++) {
+        var m_1 = _a[_i];
+
+        for (var _b = 0, _c = direction_1.getNeighbors(spriteC.pos).concat(spriteC.pos); _b < _c.length; _b++) {
+          var n = _c[_b];
+
+          if (m_1.check(moveContext, n).success) {
+            availableMoves.push([m_1, n]);
+          }
+        }
+      }
+
+      if (availableMoves.length < 1) {
+        return _this.processNextEntity();
+      }
+
+      availableMoves.sort(function (a, b) {
+        return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
+      });
+      var _d = availableMoves[0],
+          m = _d[0],
+          target = _d[1];
+      console.log("Apply", m, "from", entity, "to", target);
+      var isAsync = m.apply(moveContext, target, _this.processNextEntity); // if stack growth becomes a problem, this function can be refactored to use
+      // a while loop instead of recursion.
+
+      if (!isAsync) {
+        _this.processNextEntity();
+      }
+    };
+
     _this.game = game;
     return _this;
   }
@@ -51765,54 +51825,8 @@ function (_super) {
 
   CombatSystem.prototype.update = function (engine, delta) {
     this.isProcessing = true;
-
-    var _loop_1 = function _loop_1(entity) {
-      var combatC = entity.getComponent(CombatC);
-      if (combatC.isPlayer) return "continue";
-      if (!combatC.needsToMove) return "continue";
-      combatC.needsToMove = false;
-      var spriteC = entity.getComponent(sprite_1.SpriteC);
-      var moveContext = {
-        entity: entity,
-        ecs: this_1.ecs,
-        tilemap: this_1.tilemap
-      };
-      var availableMoves = [];
-
-      for (var _b = 0, _c = combatC.moves; _b < _c.length; _b++) {
-        var m = _c[_b];
-
-        for (var _d = 0, _e = direction_1.getNeighbors(spriteC.pos).concat(spriteC.pos); _d < _e.length; _d++) {
-          var n = _e[_d];
-
-          if (m.check(moveContext, n).success) {
-            availableMoves.push([m, n]);
-          }
-        }
-      }
-
-      availableMoves.sort(function (a, b) {
-        return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
-      });
-
-      if (availableMoves.length > 0) {
-        var _f = availableMoves[0],
-            m = _f[0],
-            target = _f[1];
-        console.log("Apply", m, "from", entity, "to", target);
-        m.apply(moveContext, target);
-      }
-    };
-
-    var this_1 = this;
-
-    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
-      var entity = _a[_i];
-
-      _loop_1(entity);
-    }
-
-    this.isProcessing = false;
+    this.entitiesToProcess = [].concat(this.family.entities);
+    this.processNextEntity();
   };
 
   CombatSystem.prototype.reset = function (engine) {
@@ -51830,6 +51844,7 @@ function (_super) {
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
         defenderCombatC.setState(CombatState.Punched, defender.getComponent(sprite_1.SpriteC));
+        defenderCombatC.needsToMove = false;
     }
   };
 
@@ -51896,7 +51911,7 @@ exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
+exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.FastPunch = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
 
 var input_1 = require("../input");
 
@@ -51939,7 +51954,7 @@ function () {
     var c = ctx.entity.getComponent(sprite_1.SpriteC);
     c.turnToward(target);
     c.pos = target;
-    return true;
+    return false;
   };
 
   Walk.prototype.computeValue = function (ctx, target) {
@@ -51973,10 +51988,10 @@ function () {
     }
   };
 
-  Wait.prototype.apply = function (ctx, target) {
+  Wait.prototype.apply = function (ctx) {
     // Upon waiting, return to normal state
     ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.Normal, ctx.entity.getComponent(sprite_1.SpriteC));
-    return true;
+    return false;
   };
 
   Wait.prototype.computeValue = function (ctx, target) {
@@ -52029,7 +52044,7 @@ function () {
     var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
     spriteC.turnToward(target);
     ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.PunchTelegraph, spriteC);
-    return true;
+    return false;
   };
 
   return TelegraphedPunchPrepare;
@@ -52077,8 +52092,11 @@ function () {
     var combatC = ctx.entity.getComponent(combat_1.CombatC);
     combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC);
     var enemy = ctx.ecs.spriteSystem.findEntity(target);
+    var enemySpriteC = enemy.getComponent(sprite_1.SpriteC); // face attacker
+
+    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-    return true;
+    return false;
   };
 
   return TelegraphedPunchFollowthroughHit;
@@ -52122,19 +52140,88 @@ function () {
     return 100;
   };
 
-  TelegraphedPunchFollowthroughMiss.prototype.apply = function (ctx, target) {
+  TelegraphedPunchFollowthroughMiss.prototype.apply = function (ctx) {
     var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
     var combatC = ctx.entity.getComponent(combat_1.CombatC); // stumble forward
 
+    combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC); // ok
+
     spriteC.pos = spriteC.pos.add(direction_1.getDirectionVector(spriteC.orientation));
-    return true;
+    return false;
   };
 
   return TelegraphedPunchFollowthroughMiss;
 }();
 
 exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
-exports.BM_MOVES = [new Wait(), new Walk()];
+
+var FastPunch =
+/** @class */
+function () {
+  function FastPunch() {
+    this.action = input_1.Action.X;
+    this.name = "Punch";
+    this.help = "Strike the enemy in the face";
+  }
+
+  FastPunch.prototype.check = function (ctx, target) {
+    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+
+    if (combatC.state != combat_1.CombatState.Normal) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    var checkResult = moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    return {
+      success: true
+    };
+  };
+
+  FastPunch.prototype.computeValue = function (ctx, target) {
+    return 200;
+  };
+
+  FastPunch.prototype.apply = function (ctx, target, doNext) {
+    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    setTimeout(function () {
+      doNext();
+      var combatC = ctx.entity.getComponent(combat_1.CombatC);
+      combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC);
+      var enemy = ctx.ecs.spriteSystem.findEntity(target);
+      var enemySpriteC = enemy.getComponent(sprite_1.SpriteC); // face attacker
+
+      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      setTimeout(function () {
+        combatC.setState(combat_1.CombatState.Normal, spriteC);
+        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        doNext();
+      }, 300);
+    }, 300);
+    return true;
+  };
+
+  return FastPunch;
+}();
+
+exports.FastPunch = FastPunch;
+exports.BM_MOVES = [new Wait(), new Walk(), new FastPunch()];
 exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
 },{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./direction":"src/ecs/direction.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
 "use strict";
@@ -52412,6 +52499,8 @@ function () {
   };
 
   LevelScene.prototype.handleClick = function (pos, action) {
+    var _this = this;
+
     var actionMoves = this.possibleMoves.filter(function (_a) {
       var move = _a[0],
           result = _a[1];
@@ -52425,13 +52514,20 @@ function () {
 
     if (actionMoves.length === 1) {
       this.ecs.combatSystem.reset(this.ecs.engine);
-      actionMoves[0][0].apply({
+      this.ecs.combatSystem.isProcessing = true;
+
+      var doNext = function doNext() {
+        _this.tick();
+
+        _this.updateHoverCell(_this.hoveredPos);
+      };
+
+      var isAsync = actionMoves[0][0].apply({
         ecs: this.ecs,
         entity: this.ecs.player,
         tilemap: this.map
-      }, pos);
-      this.tick();
-      this.updateHoverCell(this.hoveredPos);
+      }, pos, doNext);
+      if (!isAsync) doNext();
     }
   };
 
@@ -52657,7 +52753,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58517" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62855" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
