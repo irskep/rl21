@@ -1,4 +1,6 @@
 {
   "strict": true,
-  "strictNullChecks": true
+  "strictNullChecks": true,
+  "target": "esnext",
+  "module": "esnext"
 }

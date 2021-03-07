@@ -191,12 +191,17 @@ export class LevelScene implements GameScene {
     }
     if (actionMoves.length === 1) {
       this.ecs.combatSystem.reset(this.ecs.engine);
-      actionMoves[0][0].apply(
+      this.ecs.combatSystem.isProcessing = true;
+      const doNext = () => {
+        this.tick();
+        this.updateHoverCell(this.hoveredPos);
+      };
+      const isAsync = actionMoves[0][0].apply(
         { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
-        pos
+        pos,
+        doNext
       );
-      this.tick();
-      this.updateHoverCell(this.hoveredPos);
+      if (!isAsync) doNext();
     }
   }
 }

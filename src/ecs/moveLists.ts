@@ -28,7 +28,7 @@ export class Walk implements Move {
     c.turnToward(target);
     c.pos = target;
 
-    return true;
+    return false;
   }
 
   computeValue(ctx: MoveContext, target: Vector): number {
@@ -49,13 +49,13 @@ export class Wait implements Move {
     }
   }
 
-  apply(ctx: MoveContext, target: Vector): boolean {
+  apply(ctx: MoveContext): boolean {
     // Upon waiting, return to normal state
     ctx.entity
       .getComponent(CombatC)
       .setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
 
-    return true;
+    return false;
   }
 
   computeValue(ctx: MoveContext, target: Vector): number {
@@ -92,7 +92,7 @@ export class TelegraphedPunchPrepare implements Move {
     ctx.entity
       .getComponent(CombatC)
       .setState(CombatState.PunchTelegraph, spriteC);
-    return true;
+    return false;
   }
 }
 
@@ -137,7 +137,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     // face attacker
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-    return true;
+    return false;
   }
 }
 
@@ -172,17 +172,73 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     return 100;
   }
 
-  apply(ctx: MoveContext, target: Vector): boolean {
+  apply(ctx: MoveContext): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
     // stumble forward
     combatC.setState(CombatState.PunchFollowthrough, spriteC); // ok
     spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
+    return false;
+  }
+}
+
+export class FastPunch implements Move {
+  action = Action.X;
+  name = "Punch";
+  help = "Strike the enemy in the face";
+
+  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+    const combatC = ctx.entity.getComponent(CombatC);
+    if (combatC.state != CombatState.Normal) {
+      return { success: false, message: "Not in the right state" };
+    }
+    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
+      return { success: false, message: "Not adjacent" };
+    }
+
+    return { success: true };
+  }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 200;
+  }
+
+  apply(ctx: MoveContext, target: Vector, doNext: () => void): boolean {
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity
+      .getComponent(CombatC)
+      .setState(CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+
+    setTimeout(() => {
+      doNext();
+
+      const combatC = ctx.entity.getComponent(CombatC);
+      combatC.setState(CombatState.PunchFollowthrough, spriteC);
+
+      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      const enemySpriteC = enemy.getComponent(SpriteC);
+      // face attacker
+      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+
+      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+
+      setTimeout(() => {
+        combatC.setState(CombatState.Normal, spriteC);
+        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        doNext();
+      }, 300);
+    }, 300);
     return true;
   }
 }
 
-export const BM_MOVES: Move[] = [new Wait(), new Walk()];
+export const BM_MOVES: Move[] = [new Wait(), new Walk(), new FastPunch()];
 export const HENCHMAN_MOVES: Move[] = [
   new TelegraphedPunchPrepare(),
   new TelegraphedPunchFollowthroughHit(),

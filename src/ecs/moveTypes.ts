@@ -16,7 +16,8 @@ export interface Move {
   action?: Action;
   check: (ctx: MoveContext, target: Vector) => MoveCheckResult;
   computeValue?: (ctx: MoveContext, target: Vector) => number;
-  apply: (ctx: MoveContext, target: Vector) => boolean;
+  // return true if doing async work. if return true, must call doNext().
+  apply: (ctx: MoveContext, target: Vector, doNext: () => void) => boolean;
 }
 
 export interface MoveCheckResult {
