@@ -49,7 +49,7 @@ function makeArmoredThug(pos: Vector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).traits.push(CombatTrait.Armored);
   e.getComponent(SpriteC).tint = 0xffff66;
-  e.getComponent(SpriteC).name = `${getHenchmanName()} the Armored Thug`;
+  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Armored Thug`;
   return e;
 }
 

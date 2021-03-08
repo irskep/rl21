@@ -1,4 +1,4 @@
-import { Component } from "@nova-engine/ecs";
+import { Component, Entity } from "@nova-engine/ecs";
 import { Move } from "./moves/_types";
 import { SpriteC } from "./sprite";
 import {
@@ -23,6 +23,8 @@ export class CombatC implements Component {
   moves: Move[] = [];
   isPlayer = false;
   recoveryTimer = 0;
+
+  superpunchTarget: Entity | null = null;
 
   static tag = "CombatC";
 

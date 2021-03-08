@@ -9,7 +9,11 @@ import {
 import { FastPunch } from "./FastPunch";
 import { Counter } from "./Counter";
 import { Stun } from "./Stun";
-import { CombatTrait } from "../CombatC";
+import {
+  SuperpunchFollowthroughHit,
+  SuperpunchFollowthroughMiss,
+  SuperpunchPrepare,
+} from "./Superpunch";
 
 export const BM_MOVES: Move[] = [
   new Wait(),
@@ -23,5 +27,12 @@ export const HENCHMAN_MOVES: Move[] = [
   new TelegraphedPunchPrepare(),
   new TelegraphedPunchFollowthroughHit(),
   new TelegraphedPunchFollowthroughMiss(),
+  new Wait(),
+];
+
+export const TITAN_MOVES: Move[] = [
+  new SuperpunchPrepare(),
+  new SuperpunchFollowthroughHit(),
+  new SuperpunchFollowthroughMiss(),
   new Wait(),
 ];

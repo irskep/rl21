@@ -1,12 +1,11 @@
 import { AbstractVector, Vector } from "vector2d";
-import { isAdjacent } from "../../tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { getDirectionVector } from "../direction";
 import {
+  ensureStandingAndTargetIsAdjacentEnemy,
   ensureTargetClear,
   ensureTargetExists,
-  ensureTargetIsEnemy,
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
@@ -16,37 +15,31 @@ export class SuperpunchPrepare implements Move {
   help = "?";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
-    const combatC = ctx.entity.getComponent(CombatC);
-    if (combatC.state != CombatState.Standing) {
-      return { success: false, message: "Not in the right state" };
-    }
-    const checkResult = ensureTargetIsEnemy(ctx, target);
+    const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
-
-    if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
-      return { success: false, message: "Not adjacent" };
-    }
 
     return { success: true };
   }
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {
-    return 100; // henchmen really want to punch Batman.
+    return 101;
   }
 
   apply(ctx: MoveContext, target: AbstractVector): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
+    const combatC = ctx.entity.getComponent(CombatC);
     spriteC.turnToward(target);
-    ctx.entity
-      .getComponent(CombatC)
-      .setState(CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a punch.`);
+    combatC.setState(CombatState.PunchTelegraph, spriteC);
+    combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
+    ctx.ecs.writeMessage(
+      `${spriteC.flavorName} winds up for a heavy unblockable punch.`
+    );
     return false;
   }
 }
 
-export class TelegraphedPunchFollowthroughHit implements Move {
-  name = "Telegraphed Punch Followthrough (hit)";
+export class SuperpunchFollowthroughHit implements Move {
+  name = "Superpunch Followthrough (hit)";
   help = "?";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
@@ -91,8 +84,8 @@ export class TelegraphedPunchFollowthroughHit implements Move {
   }
 }
 
-export class TelegraphedPunchFollowthroughMiss implements Move {
-  name = "Telegraphed Punch Followthrough (miss)";
+export class SuperpunchFollowthroughMiss implements Move {
+  name = "Superpunch Followthrough (miss)";
   help = "?";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {

@@ -4,6 +4,7 @@ import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { getDirectionVector } from "../direction";
 import {
+  ensureStandingAndTargetIsAdjacentEnemy,
   ensureTargetClear,
   ensureTargetExists,
   ensureTargetIsEnemy,
@@ -16,16 +17,8 @@ export class TelegraphedPunchPrepare implements Move {
   help = "?";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
-    const combatC = ctx.entity.getComponent(CombatC);
-    if (combatC.state != CombatState.Standing) {
-      return { success: false, message: "Not in the right state" };
-    }
-    const checkResult = ensureTargetIsEnemy(ctx, target);
+    const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
-
-    if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
-      return { success: false, message: "Not adjacent" };
-    }
 
     return { success: true };
   }
