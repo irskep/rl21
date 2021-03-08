@@ -31,13 +31,15 @@ export class Wait implements Move {
       combatC.recoveryTimer = proneTimer;
       spriteC.label = `${proneTimer}`;
       if (proneTimer <= 0) {
+        // debugger;
         combatC.setState(
           CombatState.Standing,
           ctx.entity.getComponent(SpriteC)
         );
         ctx.entity.getComponent(SpriteC).label = "";
       }
-    } else {
+    } else if (combatC.state != CombatState.Standing) {
+      // debugger;
       combatC.setState(CombatState.Standing, ctx.entity.getComponent(SpriteC));
     }
 

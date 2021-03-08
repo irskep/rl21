@@ -6,14 +6,7 @@ import {
   stateToPlayerSpriteIndex,
   stateToHenchmanSpriteIndex,
 } from "./CombatState";
-
-export enum CombatTrait {
-  Armored = "Armored",
-  Fluid = "Fluid",
-  WieldingGun = "WieldingGun",
-  WieldingShield = "WieldingShield",
-  WieldingShockBaton = "WieldingShockBaton",
-}
+import { CombatTrait } from "./CombatTrait";
 
 export class CombatC implements Component {
   state = CombatState.Standing;

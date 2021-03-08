@@ -1,7 +1,7 @@
 import { AbstractVector, Vector } from "vector2d";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
-import { getDirectionVector } from "../direction";
+import { getDirectionVector, getOrientation } from "../direction";
 import {
   ensureStandingAndTargetIsAdjacentEnemy,
   ensureTargetClear,
@@ -9,6 +9,7 @@ import {
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
+import { isAdjacent } from "../../tilemap";
 
 export class SuperpunchPrepare implements Move {
   name = "Superpunch Prepare";
@@ -29,7 +30,7 @@ export class SuperpunchPrepare implements Move {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
     spriteC.turnToward(target);
-    combatC.setState(CombatState.PunchTelegraph, spriteC);
+    combatC.setState(CombatState.SuperpunchTelegraph, spriteC);
     combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
     ctx.ecs.writeMessage(
       `${spriteC.flavorName} winds up for a heavy unblockable punch.`
@@ -44,43 +45,63 @@ export class SuperpunchFollowthroughHit implements Move {
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
+    const spriteC = ctx.entity.getComponent(SpriteC);
 
-    if (combatC.state != CombatState.PunchTelegraph) {
+    if (combatC.state != CombatState.SuperpunchTelegraph) {
       return { success: false, message: "Not in the right state" };
     }
 
-    const spriteC = ctx.entity.getComponent(SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos
-      .clone()
-      .add(getDirectionVector(spriteC.orientation))
-      .equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction",
-      };
+    const enemy = combatC.superpunchTarget;
+    if (!enemy) {
+      return { success: false, message: "No target" };
     }
 
-    return ensureTargetExists(ctx, target);
+    if (isAdjacent(enemy.getComponent(SpriteC).pos, spriteC.pos)) {
+      return { success: true };
+    } else {
+      return {
+        success: false,
+        message: "Enemy is not within superpunching distance",
+      };
+    }
   }
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 100;
   }
 
-  apply(ctx: MoveContext, target: AbstractVector): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
 
-    combatC.setState(CombatState.PunchFollowthrough, spriteC);
+    const enemy = combatC.superpunchTarget;
+    if (!enemy) return false;
 
-    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
     const enemySpriteC = enemy.getComponent(SpriteC);
-    // face attacker
+    const enemyCombatC = enemy.getComponent(CombatC);
+    const enemyPos = enemySpriteC.pos.clone();
+    // If possible to push enemy (not against a wall), do it
+    const didPush = ctx.ecs.combatSystem.push(ctx.entity, enemy, ctx.ecs, 1);
+    if (didPush) {
+      spriteC.pos = enemyPos;
+    }
+    spriteC.orientation = getOrientation(
+      enemySpriteC.pos.clone().subtract(spriteC.pos)
+    );
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-    return false;
+
+    combatC.setState(CombatState.SuperpunchFollowthrough, spriteC);
+    enemyCombatC.setState(CombatState.Stunned, enemySpriteC);
+    ctx.ecs.writeMessage(
+      `${spriteC.flavorName} lands a massive hit on ${enemySpriteC.flavorName}!`
+    );
+    ctx.ecs.spriteSystem.cowboyUpdate();
+
+    setTimeout(() => {
+      combatC.setState(CombatState.PunchFollowthrough, spriteC);
+      doNext();
+    });
+    return true;
   }
 }
 
@@ -89,26 +110,18 @@ export class SuperpunchFollowthroughMiss implements Move {
   help = "?";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
+    if (new SuperpunchFollowthroughHit().check(ctx, target).success) {
+      return { success: false, message: "Superpunch should hit" };
+    }
+    if (!isAdjacent(target, ctx.entity.getComponent(SpriteC).pos)) {
+      return { success: false, message: "Not adjacent" };
+    }
+
     const combatC = ctx.entity.getComponent(CombatC);
-    if (combatC.state != CombatState.PunchTelegraph) {
+    if (combatC.state != CombatState.SuperpunchTelegraph) {
       return { success: false, message: "Not in the right state" };
     }
-
-    const spriteC = ctx.entity.getComponent(SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos
-      .clone()
-      .add(getDirectionVector(spriteC.orientation))
-      .equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction",
-      };
-    }
-
-    // TODO: allow punching allies?
-    return ensureTargetClear(ctx, target);
+    return { success: true };
   }
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {

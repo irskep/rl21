@@ -1,4 +1,4 @@
-import { Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
 import { CombatState } from "../CombatState";
@@ -28,9 +28,12 @@ export class Walk implements Move {
       case CombatState.Prone:
         return { success: false, message: "Prone" };
       case CombatState.Punched:
+      case CombatState.Stunned:
         return { success: false, message: "Reeling from punch" };
       case CombatState.PunchFollowthrough:
       case CombatState.PunchTelegraph:
+      case CombatState.SuperpunchFollowthrough:
+      case CombatState.SuperpunchTelegraph:
         return { success: false, message: "?" };
       default:
         throw new UnreachableCaseError(state);

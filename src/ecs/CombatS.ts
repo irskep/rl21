@@ -14,7 +14,8 @@ import { ECS } from "./ecsTypes";
 import { Move } from "./moves/_types";
 import { SpriteC, SpriteSystem } from "./sprite";
 import UnreachableCaseError from "../UnreachableCaseError";
-import { CombatC, CombatTrait } from "./CombatC";
+import { CombatC } from "./CombatC";
+import { CombatTrait } from "./CombatTrait";
 import { CombatState } from "./CombatState";
 
 export class CombatSystem extends System {
@@ -124,10 +125,10 @@ export class CombatSystem extends System {
           ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
         case CombatState.SuperpunchTelegraph:
-        case CombatState.SuperpunchFollowthrough:
           ecs.writeMessage(
             `${attackerName} lands a punch on ${defenderName}, but they are unfazed.`
           );
+          break;
         default:
           defenderCombatC.setState(
             CombatState.Punched,
@@ -193,18 +194,22 @@ export class CombatSystem extends System {
   }
 
   /// Move defender away from attacker, assuming they are adjacent
-  push(attacker: Entity, defender: Entity, ecs: ECS, n: number = 1) {
+  push(attacker: Entity, defender: Entity, ecs: ECS, n: number = 1): boolean {
     const posA = attacker.getComponent(SpriteC).pos;
     const defenderSpriteC = defender.getComponent(SpriteC);
     const posD = defenderSpriteC.pos;
     const delta = posD.clone().subtract(posA);
 
+    let didPush = false;
+
     let newPosD = posD;
     newPosD = newPosD.clone().add(delta);
     let i = 0;
     while (ecs.tilemap.getCell(newPosD)?.index === EnvIndices.FLOOR && i < n) {
+      didPush = true;
       i += 1;
       defenderSpriteC.pos = newPosD;
     }
+    return didPush;
   }
 }

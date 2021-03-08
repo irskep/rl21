@@ -1,14 +1,10 @@
-import { Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { Action } from "../../input";
-import { isAdjacent } from "../../tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
-import {
-  ensureStandingAndTargetIsAdjacentEnemy,
-  ensureTargetIsEnemy,
-} from "./_helpers";
+import { ensureStandingAndTargetIsAdjacentEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC, SpriteSystem } from "../sprite";
 import { SpriteIndices } from "../../assets";
 
 export class FastPunch implements Move {
@@ -53,8 +49,7 @@ export class FastPunch implements Move {
       // face attacker
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
       ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-
-      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      ctx.ecs.spriteSystem.cowboyUpdate();
 
       setTimeout(() => {
         combatC.setState(
@@ -62,7 +57,7 @@ export class FastPunch implements Move {
           spriteC,
           SpriteIndices.BM_PUNCH_AFTER
         );
-        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        ctx.ecs.spriteSystem.cowboyUpdate();
         doNext();
       }, 500);
     }, 500);

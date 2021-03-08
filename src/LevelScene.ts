@@ -46,6 +46,7 @@ export class LevelScene implements GameScene {
 
   // display
   hoveredPos: Vector | null = null;
+  hoveredPosDuringUpdate: Vector | null = null;
   hoveredEntity: Entity | null = null;
 
   constructor(private game: GameInterface) {
@@ -130,7 +131,10 @@ export class LevelScene implements GameScene {
 
   bindEvents(cell: Cell, cellSprite: Sprite) {
     (cellSprite as any).on("mouseover", (e: InteractionEvent) => {
-      if (this.ecs.combatSystem.isProcessing) return;
+      if (this.ecs.combatSystem.isProcessing) {
+        this.hoveredPosDuringUpdate = cell.pos;
+        return;
+      }
       this.updateHoverCell(cell.pos);
     });
 
@@ -265,10 +269,16 @@ export class LevelScene implements GameScene {
   };
 
   tick() {
+    this.ecs.combatSystem.onProcessingFinished = () => {
+      console.log("Finished with", this.hoveredPosDuringUpdate);
+      this.updateHoverCell(this.hoveredPosDuringUpdate);
+    };
     this.ecs.engine.update(1);
   }
 
   handleClick(pos: Vector, action: Action) {
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
     console.log("Click", pos, action);
     const actionMoves = this.possibleMoves.filter(
       ([move, result]) => result.success && move.action == action
@@ -277,16 +287,13 @@ export class LevelScene implements GameScene {
       console.log(actionMoves);
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
-    const oldHoveredPos = this.hoveredPos;
+    this.hoveredPosDuringUpdate = this.hoveredPos;
     if (actionMoves.length === 1) {
       this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;
       const doNext = () => {
         this.tick();
-        if (this.hoveredPos === null) {
-          this.updateHoverCell(oldHoveredPos);
-        }
       };
 
       console.log("Player move:", actionMoves[0][0]);

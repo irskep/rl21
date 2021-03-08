@@ -37,3 +37,10 @@ export function getDirectionVector(direction: number): AbstractVector {
 export function getNeighbors(v: AbstractVector): AbstractVector[] {
   return DIRECTIONS.map((d) => new Vector(v.x, v.y).add(d[0]));
 }
+
+export function getOrientation(v: AbstractVector) {
+  for (let d of DIRECTIONS) {
+    if (d[0].equals(v)) return d[1];
+  }
+  throw new Error("Unknown orientation: " + v);
+}

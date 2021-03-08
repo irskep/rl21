@@ -6,9 +6,10 @@ import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
 import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
-import { BM_MOVES, HENCHMAN_MOVES } from "./moves";
+import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./CombatS";
-import { CombatC, CombatTrait } from "./CombatC";
+import { CombatC } from "./CombatC";
+import { CombatTrait } from "./CombatTrait";
 import { Tilemap } from "../tilemap";
 import getHenchmanName from "../prose/henchmanName";
 
@@ -24,7 +25,12 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     throw new Error("player should always be 0");
   }
 
-  e.putComponent(SpriteC).build("Atman", pos, SpriteIndices.BM_STAND);
+  e.putComponent(SpriteC).build(
+    "Atman",
+    "The caped crusader",
+    pos,
+    SpriteIndices.BM_STAND
+  );
   e.getComponent(SpriteC).orientation = orientation;
   e.putComponent(CombatC).build(BM_MOVES, []);
   e.getComponent(CombatC).isPlayer = true;
@@ -36,6 +42,7 @@ function makeThug(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     `${getHenchmanName()} the Thug`,
+    "A henchman of average strength and ill health.",
     pos,
     SpriteIndices.STAND
   );
@@ -50,6 +57,17 @@ function makeArmoredThug(pos: Vector, orientation: number): Entity {
   e.getComponent(CombatC).traits.push(CombatTrait.Armored);
   e.getComponent(SpriteC).tint = 0xffff66;
   e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Armored Thug`;
+  e.getComponent(SpriteC).flavorDesc =
+    "A henchman of average strength, wearing armor that blocks punches.";
+  return e;
+}
+
+function makeTitanThug(pos: Vector, orientation: number): Entity {
+  const e = makeThug(pos, orientation);
+  e.getComponent(CombatC).moves = TITAN_MOVES;
+  e.getComponent(SpriteC).tint = 0xff6666;
+  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Titan Thug`;
+  e.getComponent(SpriteC).flavorDesc = "A henchman of immense strength.";
   return e;
 }
 
@@ -79,6 +97,12 @@ export function makeECS(
   engine.addEntity(
     makeArmoredThug(
       new Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5),
+      2
+    )
+  );
+  engine.addEntity(
+    makeTitanThug(
+      new Vector(Math.floor(tilemap.size.x / 2 - 2), tilemap.size.y - 5),
       2
     )
   );
