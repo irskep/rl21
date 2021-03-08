@@ -1,4 +1,4 @@
-import { Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { Action } from "../../input";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
