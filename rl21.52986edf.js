@@ -48330,6 +48330,8 @@ exports.CombatState = CombatState;
   CombatState["Standing"] = "Standing";
   CombatState["PunchTelegraph"] = "PunchTelegraph";
   CombatState["PunchFollowthrough"] = "PunchFollowthrough";
+  CombatState["SuperpunchTelegraph"] = "SuperpunchTelegraph";
+  CombatState["SuperpunchFollowthrough"] = "SuperpunchFollowthrough";
   CombatState["Punched"] = "Punched";
   CombatState["Prone"] = "Prone";
   CombatState["Stunned"] = "Stunned";
@@ -48344,6 +48346,12 @@ function stateToPlayerSpriteIndex(state) {
       return _assets.SpriteIndices.BM_PUNCH_BEFORE;
 
     case CombatState.PunchFollowthrough:
+      return _assets.SpriteIndices.BM_PUNCH_AFTER;
+
+    case CombatState.SuperpunchTelegraph:
+      return _assets.SpriteIndices.BM_PUNCH_BEFORE;
+
+    case CombatState.SuperpunchFollowthrough:
       return _assets.SpriteIndices.BM_PUNCH_AFTER;
 
     case CombatState.Punched:
@@ -48370,6 +48378,12 @@ function stateToHenchmanSpriteIndex(state) {
 
     case CombatState.PunchFollowthrough:
       return _assets.SpriteIndices.PUNCH_AFTER;
+
+    case CombatState.SuperpunchTelegraph:
+      return _assets.SpriteIndices.SUPERPUNCH_BEFORE;
+
+    case CombatState.SuperpunchFollowthrough:
+      return _assets.SpriteIndices.SUPERPUNCH_AFTER;
 
     case CombatState.Punched:
       return _assets.SpriteIndices.STUMBLING;
@@ -49216,14 +49230,18 @@ class CombatSystem extends _ecs.System {
         case _CombatState.CombatState.Prone:
           // don't change state; enemy remains stunned
           defenderCombatC.needsToMove = false;
+          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
+
+        case _CombatState.CombatState.SuperpunchTelegraph:
+        case _CombatState.CombatState.SuperpunchFollowthrough:
+          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}, but they are unfazed.`);
 
         default:
           defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
       }
-
-      ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
     };
 
     switch (state) {
@@ -49242,6 +49260,8 @@ class CombatSystem extends _ecs.System {
       case _CombatState.CombatState.Standing:
       case _CombatState.CombatState.PunchTelegraph:
       case _CombatState.CombatState.PunchFollowthrough:
+      case _CombatState.CombatState.SuperpunchTelegraph:
+      case _CombatState.CombatState.SuperpunchFollowthrough:
         if (defenderCombatC.hasTrait(_CombatC.CombatTrait.Armored)) {
           ecs.writeMessage(`${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`);
         } else {
@@ -49257,6 +49277,8 @@ class CombatSystem extends _ecs.System {
 
   applyStun(attacker, defender, ecs) {
     const defenderCombatC = defender.getComponent(_CombatC.CombatC);
+    const attackerName = attacker.getComponent(_sprite.SpriteC).flavorName;
+    const defenderName = defender.getComponent(_sprite.SpriteC).flavorName;
     const state = defenderCombatC.state;
 
     switch (state) {
@@ -49266,10 +49288,13 @@ class CombatSystem extends _ecs.System {
       case _CombatState.CombatState.Prone:
       case _CombatState.CombatState.Punched:
       case _CombatState.CombatState.Stunned:
-        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
-        const defenderName = defender.getComponent(_sprite.SpriteC).name;
         defenderCombatC.becomeStunned(this.STUN_TIMER, defender.getComponent(_sprite.SpriteC));
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
+        break;
+
+      case _CombatState.CombatState.SuperpunchTelegraph:
+      case _CombatState.CombatState.SuperpunchFollowthrough:
+        ecs.writeMessage(`${attackerName} fails to stun ${defenderName}!`);
         break;
 
       default:
