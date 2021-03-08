@@ -47960,6 +47960,7 @@ class SpriteC {
     _defineProperty(this, "flavorName", "");
   }
 
+  // sprites have names too, why not
   build(flavorName, pos, spriteIndex) {
     this.flavorName = flavorName;
     this.pos = pos;
@@ -48003,8 +48004,6 @@ class SpriteC {
 }
 
 exports.SpriteC = SpriteC;
-
-_defineProperty(SpriteC, "tag", "SpriteC");
 
 class SpriteSystem extends _ecs.System {
   constructor(game, container) {
@@ -48079,6 +48078,7 @@ class SpriteSystem extends _ecs.System {
 }
 
 exports.SpriteSystem = SpriteSystem;
+SpriteC.tag = "SpriteC";
 },{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./direction":"8d08baf8b9861766c30a87961a2d3da1"}],"8d08baf8b9861766c30a87961a2d3da1":[function(require,module,exports) {
 "use strict";
 
@@ -48511,6 +48511,8 @@ class CombatC {
 exports.CombatC = CombatC;
 
 _defineProperty(CombatC, "tag", "CombatC");
+
+CombatC.tag = "CombatC";
 },{"./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"3574a7b057a78c60c72a4af34ca2c56d":[function(require,module,exports) {
 "use strict";
 
