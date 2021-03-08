@@ -46593,6 +46593,8 @@ class LevelScene {
 
     _defineProperty(this, "hoveredPos", null);
 
+    _defineProperty(this, "hoveredPosDuringUpdate", null);
+
     _defineProperty(this, "hoveredEntity", null);
 
     _defineProperty(this, "writeMessage", msg => {
@@ -46683,7 +46685,11 @@ class LevelScene {
 
   bindEvents(cell, cellSprite) {
     cellSprite.on("mouseover", e => {
-      if (this.ecs.combatSystem.isProcessing) return;
+      if (this.ecs.combatSystem.isProcessing) {
+        this.hoveredPosDuringUpdate = cell.pos;
+        return;
+      }
+
       this.updateHoverCell(cell.pos);
     });
     cellSprite.on("click", e => {
@@ -46779,10 +46785,17 @@ class LevelScene {
   }
 
   tick() {
+    this.ecs.combatSystem.onProcessingFinished = () => {
+      console.log("Finished with", this.hoveredPosDuringUpdate);
+      this.updateHoverCell(this.hoveredPosDuringUpdate);
+    };
+
     this.ecs.engine.update(1);
   }
 
   handleClick(pos, action) {
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
     console.log("Click", pos, action);
     const actionMoves = this.possibleMoves.filter(([move, result]) => result.success && move.action == action);
 
@@ -46791,7 +46804,7 @@ class LevelScene {
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
 
-    const oldHoveredPos = this.hoveredPos;
+    this.hoveredPosDuringUpdate = this.hoveredPos;
 
     if (actionMoves.length === 1) {
       this.updateHoverCell(null);
@@ -46800,10 +46813,6 @@ class LevelScene {
 
       const doNext = () => {
         this.tick();
-
-        if (this.hoveredPos === null) {
-          this.updateHoverCell(oldHoveredPos);
-        }
       };
 
       console.log("Player move:", actionMoves[0][0]);
@@ -47379,6 +47388,8 @@ var _CombatS = require("./CombatS");
 
 var _CombatC = require("./CombatC");
 
+var _CombatTrait = require("./CombatTrait");
+
 var _henchmanName = _interopRequireDefault(require("../prose/henchmanName"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -47396,7 +47407,7 @@ function makePlayer(pos, orientation) {
     throw new Error("player should always be 0");
   }
 
-  e.putComponent(_sprite.SpriteC).build("Atman", pos, _assets.SpriteIndices.BM_STAND);
+  e.putComponent(_sprite.SpriteC).build("Atman", "The caped crusader", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
   e.putComponent(_CombatC.CombatC).build(_moves.BM_MOVES, []);
   e.getComponent(_CombatC.CombatC).isPlayer = true;
@@ -47405,7 +47416,7 @@ function makePlayer(pos, orientation) {
 
 function makeThug(pos, orientation) {
   const e = makeEntity();
-  e.putComponent(_sprite.SpriteC).build(`${(0, _henchmanName.default)()} the Thug`, pos, _assets.SpriteIndices.STAND);
+  e.putComponent(_sprite.SpriteC).build(`${(0, _henchmanName.default)()} the Thug`, "A henchman of average strength and ill health.", pos, _assets.SpriteIndices.STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
   e.getComponent(_sprite.SpriteC).tint = 0x8888ff;
   e.putComponent(_CombatC.CombatC).build(_moves.HENCHMAN_MOVES, []);
@@ -47414,9 +47425,19 @@ function makeThug(pos, orientation) {
 
 function makeArmoredThug(pos, orientation) {
   const e = makeThug(pos, orientation);
-  e.getComponent(_CombatC.CombatC).traits.push(_CombatC.CombatTrait.Armored);
+  e.getComponent(_CombatC.CombatC).traits.push(_CombatTrait.CombatTrait.Armored);
   e.getComponent(_sprite.SpriteC).tint = 0xffff66;
   e.getComponent(_sprite.SpriteC).flavorName = `${(0, _henchmanName.default)()} the Armored Thug`;
+  e.getComponent(_sprite.SpriteC).flavorDesc = "A henchman of average strength, wearing armor that blocks punches.";
+  return e;
+}
+
+function makeTitanThug(pos, orientation) {
+  const e = makeThug(pos, orientation);
+  e.getComponent(_CombatC.CombatC).moves = _moves.TITAN_MOVES;
+  e.getComponent(_sprite.SpriteC).tint = 0xff6666;
+  e.getComponent(_sprite.SpriteC).flavorName = `${(0, _henchmanName.default)()} the Titan Thug`;
+  e.getComponent(_sprite.SpriteC).flavorDesc = "A henchman of immense strength.";
   return e;
 }
 
@@ -47430,6 +47451,7 @@ function makeECS(game, container, tilemap, writeMessage) {
   engine.addEntity(player);
   engine.addEntity(makeThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2));
   engine.addEntity(makeArmoredThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5), 2));
+  engine.addEntity(makeTitanThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2 - 2), tilemap.size.y - 5), 2));
   const ecs = {
     engine: engine,
     combatSystem: combatSystem,
@@ -47441,7 +47463,7 @@ function makeECS(game, container, tilemap, writeMessage) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -47958,11 +47980,13 @@ class SpriteC {
     _defineProperty(this, "text", null);
 
     _defineProperty(this, "flavorName", "");
+
+    _defineProperty(this, "flavorDesc", "");
   }
 
-  // sprites have names too, why not
-  build(flavorName, pos, spriteIndex) {
+  build(flavorName, flavorDesc, pos, spriteIndex) {
     this.flavorName = flavorName;
+    this.flavorDesc = flavorDesc;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
@@ -47987,7 +48011,7 @@ class SpriteC {
   }
 
   get hoverText() {
-    return this.flavorName;
+    return this.flavorName + "\n\n" + this.flavorDesc;
   }
 
   turnToward(target) {
@@ -48087,6 +48111,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getDirectionVector = getDirectionVector;
 exports.getNeighbors = getNeighbors;
+exports.getOrientation = getOrientation;
 exports.DIRECTIONS = void 0;
 
 var _vector2d = require("vector2d");
@@ -48127,6 +48152,14 @@ function getDirectionVector(direction) {
 
 function getNeighbors(v) {
   return DIRECTIONS.map(d => new _vector2d.Vector(v.x, v.y).add(d[0]));
+}
+
+function getOrientation(v) {
+  for (let d of DIRECTIONS) {
+    if (d[0].equals(v)) return d[1];
+  }
+
+  throw new Error("Unknown orientation: " + v);
 }
 },{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"73d749e6e343a99543ba0639dd49d959":[function(require,module,exports) {
 "use strict";
@@ -48217,6 +48250,7 @@ class Walk {
         };
 
       case _CombatState.CombatState.Punched:
+      case _CombatState.CombatState.Stunned:
         return {
           success: false,
           message: "Reeling from punch"
@@ -48224,6 +48258,8 @@ class Walk {
 
       case _CombatState.CombatState.PunchFollowthrough:
       case _CombatState.CombatState.PunchTelegraph:
+      case _CombatState.CombatState.SuperpunchFollowthrough:
+      case _CombatState.CombatState.SuperpunchTelegraph:
         return {
           success: false,
           message: "?"
@@ -48421,22 +48457,11 @@ exports.default = UnreachableCaseError;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CombatC = exports.CombatTrait = void 0;
+exports.CombatC = void 0;
 
 var _CombatState = require("./CombatState");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-let CombatTrait;
-exports.CombatTrait = CombatTrait;
-
-(function (CombatTrait) {
-  CombatTrait["Armored"] = "Armored";
-  CombatTrait["Fluid"] = "Fluid";
-  CombatTrait["WieldingGun"] = "WieldingGun";
-  CombatTrait["WieldingShield"] = "WieldingShield";
-  CombatTrait["WieldingShockBaton"] = "WieldingShockBaton";
-})(CombatTrait || (exports.CombatTrait = CombatTrait = {}));
 
 class CombatC {
   constructor() {
@@ -48676,10 +48701,12 @@ class Wait {
       spriteC.label = `${proneTimer}`;
 
       if (proneTimer <= 0) {
+        // debugger;
         combatC.setState(_CombatState.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
         ctx.entity.getComponent(_sprite.SpriteC).label = "";
       }
-    } else {
+    } else if (combatC.state != _CombatState.CombatState.Standing) {
+      // debugger;
       combatC.setState(_CombatState.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
     }
 
@@ -48913,10 +48940,10 @@ class FastPunch {
 
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
       ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      ctx.ecs.spriteSystem.cowboyUpdate();
       setTimeout(() => {
         combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_PUNCH_AFTER);
-        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        ctx.ecs.spriteSystem.cowboyUpdate();
         doNext();
       }, 500);
     }, 500);
@@ -49106,6 +49133,8 @@ var _helpers = require("./_helpers");
 
 var _sprite = require("../sprite");
 
+var _tilemap = require("../../tilemap");
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class SuperpunchPrepare {
@@ -49131,7 +49160,7 @@ class SuperpunchPrepare {
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
     spriteC.turnToward(target);
-    combatC.setState(_CombatState.CombatState.PunchTelegraph, spriteC);
+    combatC.setState(_CombatState.CombatState.SuperpunchTelegraph, spriteC);
     combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
     ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a heavy unblockable punch.`);
     return false;
@@ -49150,41 +49179,66 @@ class SuperpunchFollowthroughHit {
 
   check(ctx, target) {
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
 
-    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
       return {
         success: false,
         message: "Not in the right state"
       };
     }
 
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+    const enemy = combatC.superpunchTarget;
 
-    if (!isTargetInTheRightDirection) {
+    if (!enemy) {
       return {
         success: false,
-        message: "Momentum is in a different direction"
+        message: "No target"
       };
     }
 
-    return (0, _helpers.ensureTargetExists)(ctx, target);
+    if ((0, _tilemap.isAdjacent)(enemy.getComponent(_sprite.SpriteC).pos, spriteC.pos)) {
+      return {
+        success: true
+      };
+    } else {
+      return {
+        success: false,
+        message: "Enemy is not within superpunching distance"
+      };
+    }
   }
 
   computeValue(ctx, target) {
     return 100;
   }
 
-  apply(ctx, target) {
+  apply(ctx, target, doNext) {
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+    const enemy = combatC.superpunchTarget;
+    if (!enemy) return false;
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC);
+    const enemyCombatC = enemy.getComponent(_CombatC.CombatC);
+    const enemyPos = enemySpriteC.pos.clone(); // If possible to push enemy (not against a wall), do it
 
+    const didPush = ctx.ecs.combatSystem.push(ctx.entity, enemy, ctx.ecs, 1);
+
+    if (didPush) {
+      spriteC.pos = enemyPos;
+    }
+
+    spriteC.orientation = (0, _direction.getOrientation)(enemySpriteC.pos.clone().subtract(spriteC.pos));
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-    return false;
+    combatC.setState(_CombatState.CombatState.SuperpunchFollowthrough, spriteC);
+    enemyCombatC.setState(_CombatState.CombatState.Stunned, enemySpriteC);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} lands a massive hit on ${enemySpriteC.flavorName}!`);
+    ctx.ecs.spriteSystem.cowboyUpdate();
+    setTimeout(() => {
+      combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+      doNext();
+    });
+    return true;
   }
 
 }
@@ -49199,27 +49253,32 @@ class SuperpunchFollowthroughMiss {
   }
 
   check(ctx, target) {
+    if (new SuperpunchFollowthroughHit().check(ctx, target).success) {
+      return {
+        success: false,
+        message: "Superpunch should hit"
+      };
+    }
+
+    if (!(0, _tilemap.isAdjacent)(target, ctx.entity.getComponent(_sprite.SpriteC).pos)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
 
-    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
       return {
         success: false,
         message: "Not in the right state"
       };
     }
 
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    } // TODO: allow punching allies?
-
-
-    return (0, _helpers.ensureTargetClear)(ctx, target);
+    return {
+      success: true
+    };
   }
 
   computeValue(ctx, target) {
@@ -49240,7 +49299,7 @@ class SuperpunchFollowthroughMiss {
 }
 
 exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../tilemap":"7a3b31d0aefed94afd5821fb64498963"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49259,6 +49318,8 @@ var _sprite = require("./sprite");
 var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
 
 var _CombatC = require("./CombatC");
+
+var _CombatTrait = require("./CombatTrait");
 
 var _CombatState = require("./CombatState");
 
@@ -49370,8 +49431,8 @@ class CombatSystem extends _ecs.System {
           break;
 
         case _CombatState.CombatState.SuperpunchTelegraph:
-        case _CombatState.CombatState.SuperpunchFollowthrough:
           ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}, but they are unfazed.`);
+          break;
 
         default:
           defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
@@ -49398,7 +49459,7 @@ class CombatSystem extends _ecs.System {
       case _CombatState.CombatState.PunchFollowthrough:
       case _CombatState.CombatState.SuperpunchTelegraph:
       case _CombatState.CombatState.SuperpunchFollowthrough:
-        if (defenderCombatC.hasTrait(_CombatC.CombatTrait.Armored)) {
+        if (defenderCombatC.hasTrait(_CombatTrait.CombatTrait.Armored)) {
           ecs.writeMessage(`${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`);
         } else {
           landPunch();
@@ -49444,20 +49505,41 @@ class CombatSystem extends _ecs.System {
     const defenderSpriteC = defender.getComponent(_sprite.SpriteC);
     const posD = defenderSpriteC.pos;
     const delta = posD.clone().subtract(posA);
+    let didPush = false;
     let newPosD = posD;
     newPosD = newPosD.clone().add(delta);
     let i = 0;
 
     while (ecs.tilemap.getCell(newPosD)?.index === _assets.EnvIndices.FLOOR && i < n) {
+      didPush = true;
       i += 1;
       defenderSpriteC.pos = newPosD;
     }
+
+    return didPush;
   }
 
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatTrait = void 0;
+let CombatTrait;
+exports.CombatTrait = CombatTrait;
+
+(function (CombatTrait) {
+  CombatTrait["Armored"] = "Armored";
+  CombatTrait["Fluid"] = "Fluid";
+  CombatTrait["WieldingGun"] = "WieldingGun";
+  CombatTrait["WieldingShield"] = "WieldingShield";
+  CombatTrait["WieldingShockBaton"] = "WieldingShockBaton";
+})(CombatTrait || (exports.CombatTrait = CombatTrait = {}));
+},{}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
