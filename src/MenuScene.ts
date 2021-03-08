@@ -46,7 +46,7 @@ export class MenuScene implements GameScene {
 
       instructions.interactive = true;
       title.interactive = true;
-      title.on("click", this.handleTouchStart);
+      (title as any).on("click", this.handleTouchStart);
     }
 
     this.game.app.stage.addChild(this.container);
