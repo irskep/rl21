@@ -47958,18 +47958,15 @@ class SpriteC {
     _defineProperty(this, "text", null);
 
     _defineProperty(this, "flavorName", "");
+
+    _defineProperty(this, "tag", "SpriteC");
   }
 
-  // sprites have names too, why not
   build(flavorName, pos, spriteIndex) {
     this.flavorName = flavorName;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
-  }
-
-  get tag() {
-    return "SpriteC";
   }
 
   get spriteIndex() {
@@ -48452,16 +48449,14 @@ class CombatC {
     _defineProperty(this, "isPlayer", false);
 
     _defineProperty(this, "recoveryTimer", 0);
+
+    _defineProperty(this, "tag", "CombatC");
   }
 
   build(moves, traits) {
     this.moves = moves;
     this.traits = traits;
     return this;
-  }
-
-  get tag() {
-    return "CombatC";
   }
 
   get hoverText() {
