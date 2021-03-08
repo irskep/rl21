@@ -46575,11 +46575,25 @@ class LevelScene {
 
     _defineProperty(this, "dbgText", new _pixi.Text(""));
 
-    _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(16, 16)));
+    _defineProperty(this, "messageLog", new _pixi.Text(""));
+
+    _defineProperty(this, "messages", new Array());
+
+    _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
 
     _defineProperty(this, "possibleMoves", []);
 
     _defineProperty(this, "hoveredPos", null);
+
+    _defineProperty(this, "writeMessage", msg => {
+      this.messages.push(msg);
+
+      while (this.messages.length > 10) {
+        this.messages.shift();
+      }
+
+      this.messageLog.text = this.messages.join("\n");
+    });
 
     _defineProperty(this, "gameLoop", dt => {
       /* hi */
@@ -46599,6 +46613,7 @@ class LevelScene {
     }
 
     this.game.app.stage.addChild(this.container);
+    this.writeMessage("Atman enters the room.");
   }
 
   addChildren() {
@@ -46613,16 +46628,24 @@ class LevelScene {
     this.hoverSprite.texture = this.game.assets.env[_assets.EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
-    this.dbgText.position.set(10, 10);
-    this.dbgText.style = new _pixi.TextStyle({
+    const consoleStyle = {
       fontSize: 18,
       fontFamily: "Barlow Condensed",
       fill: "white",
       align: "left",
       wordWrap: true,
       wordWrapWidth: 320
-    });
+    };
+    this.dbgText.position.set(10, 10);
+    this.dbgText.style = new _pixi.TextStyle(consoleStyle);
     this.hudContainer.addChild(this.dbgText);
+    this.messageLog.anchor.set(1, 0);
+    this.messageLog.position.set(this.game.app.screen.width - 10, 10);
+    this.messageLog.style = new _pixi.TextStyle({ ...consoleStyle,
+      align: "right",
+      wordWrapWidth: 400
+    });
+    this.hudContainer.addChild(this.messageLog);
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
@@ -46637,7 +46660,7 @@ class LevelScene {
       }
     }
 
-    this.ecs = (0, _ecs.makeECS)(this.game, this.arena);
+    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage);
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateDbgText();
@@ -46692,8 +46715,7 @@ class LevelScene {
 
     this.possibleMoves = this.ecs.player.getComponent(_combat.CombatC).moves.map(m => [m, m.check({
       ecs: this.ecs,
-      entity: this.ecs.player,
-      tilemap: this.map
+      entity: this.ecs.player
     }, this.hoveredPos)]);
     this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
       if (resultA.success == resultB.success) {
@@ -46737,8 +46759,7 @@ class LevelScene {
       console.log("Player move:", actionMoves[0][0]);
       const isAsync = actionMoves[0][0].apply({
         ecs: this.ecs,
-        entity: this.ecs.player,
-        tilemap: this.map
+        entity: this.ecs.player
       }, pos, doNext);
       if (!isAsync) doNext();
     }
@@ -47302,9 +47323,11 @@ var _sprite = require("./sprite");
 
 var _vector2d = require("vector2d");
 
-var _moveLists = require("./moveLists");
+var _moveLists = require("./moves/moveLists");
 
 var _combat = require("./combat");
+
+var _henchmanName = _interopRequireDefault(require("../prose/henchmanName"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -47321,7 +47344,7 @@ function makePlayer(pos, orientation) {
     throw new Error("player should always be 0");
   }
 
-  e.putComponent(_sprite.SpriteC).build(pos, _assets.SpriteIndices.BM_STAND);
+  e.putComponent(_sprite.SpriteC).build("Atman", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
   e.putComponent(_combat.CombatC).build(_moveLists.BM_MOVES);
   e.getComponent(_combat.CombatC).isPlayer = true;
@@ -47330,31 +47353,33 @@ function makePlayer(pos, orientation) {
 
 function makeThug(pos, orientation) {
   const e = makeEntity();
-  e.putComponent(_sprite.SpriteC).build(pos, _assets.SpriteIndices.STAND);
+  e.putComponent(_sprite.SpriteC).build((0, _henchmanName.default)(), pos, _assets.SpriteIndices.STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
   e.putComponent(_combat.CombatC).build(_moveLists.HENCHMAN_MOVES);
   return e;
 }
 
-function makeECS(game, container) {
+function makeECS(game, container, tilemap, writeMessage) {
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
   const combatSystem = new _combat.CombatSystem(game);
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
-  const player = makePlayer(new _vector2d.Vector(7, 14), 0);
+  const player = makePlayer(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 2), 0);
   engine.addEntity(player);
-  engine.addEntity(makeThug(new _vector2d.Vector(7, 11), 2));
+  engine.addEntity(makeThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2));
   const ecs = {
     engine: engine,
     combatSystem: combatSystem,
     spriteSystem: spriteSystem,
-    player
+    tilemap,
+    player,
+    writeMessage
   };
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moveLists":"1ec2dd882cdf85bfc8574df0c323d759","./combat":"cb5a787c677bc498cfd6f61d61b50e74"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./combat":"cb5a787c677bc498cfd6f61d61b50e74","./moves/moveLists":"6dd31a59032b34c546712b3a11f701f3","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -47871,9 +47896,13 @@ class SpriteC {
     _defineProperty(this, "needsLabelUpdate", false);
 
     _defineProperty(this, "text", null);
+
+    _defineProperty(this, "name", "");
   }
 
-  build(pos, spriteIndex) {
+  // sprites have names too, why not
+  build(name, pos, spriteIndex) {
+    this.name = name;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
@@ -48024,499 +48053,7 @@ function getDirectionVector(direction) {
 function getNeighbors(v) {
   return DIRECTIONS.map(d => new _vector2d.Vector(v.x, v.y).add(d[0]));
 }
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"1ec2dd882cdf85bfc8574df0c323d759":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.Counter = exports.FastPunch = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
-
-var _input = require("../input");
-
-var _tilemap = require("../tilemap");
-
-var _combat = require("./combat");
-
-var _direction = require("./direction");
-
-var _moveHelpers = require("./moveHelpers");
-
-var _sprite = require("./sprite");
-
-var _UnreachableCaseError = _interopRequireDefault(require("./UnreachableCaseError"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class Walk {
-  constructor() {
-    _defineProperty(this, "name", "Walk");
-
-    _defineProperty(this, "help", "no combat");
-
-    _defineProperty(this, "action", _input.Action.X);
-  }
-
-  check(ctx, target) {
-    const checkResult = (0, _moveHelpers.ensureTargetClear)(ctx, target);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const state = ctx.entity.getComponent(_combat.CombatC).state;
-
-    switch (state) {
-      case _combat.CombatState.Normal:
-        return {
-          success: true
-        };
-
-      case _combat.CombatState.Prone:
-        return {
-          success: false,
-          message: "Prone"
-        };
-
-      case _combat.CombatState.Punched:
-        return {
-          success: false,
-          message: "Reeling from punch"
-        };
-
-      case _combat.CombatState.PunchFollowthrough:
-      case _combat.CombatState.PunchTelegraph:
-        return {
-          success: false,
-          message: "?"
-        };
-
-      default:
-        throw new _UnreachableCaseError.default(state);
-    }
-  }
-
-  apply(ctx, target) {
-    const c = ctx.entity.getComponent(_sprite.SpriteC);
-    c.turnToward(target);
-    c.pos = target;
-    return false;
-  }
-
-  computeValue(ctx, target) {
-    return 0;
-  }
-
-}
-
-exports.Walk = Walk;
-
-class Wait {
-  constructor() {
-    _defineProperty(this, "name", "Wait");
-
-    _defineProperty(this, "help", "no combat");
-
-    _defineProperty(this, "action", _input.Action.X);
-  }
-
-  check(ctx, target) {
-    if (ctx.entity.getComponent(_sprite.SpriteC).pos.equals(target)) {
-      return {
-        success: true
-      };
-    } else {
-      return {
-        success: false,
-        message: "Must click on yourself"
-      };
-    }
-  }
-
-  apply(ctx) {
-    // Upon waiting, return to normal state
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-
-    if (combatC.state === _combat.CombatState.Prone) {
-      const proneTimer = combatC.proneTimer - 1;
-      combatC.proneTimer = proneTimer;
-      spriteC.label = `${proneTimer}`;
-
-      if (proneTimer <= 0) {
-        combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
-        ctx.entity.getComponent(_sprite.SpriteC).label = "";
-      }
-    } else {
-      combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
-    }
-
-    return false;
-  }
-
-  computeValue(ctx, target) {
-    return 0;
-  }
-
-}
-
-exports.Wait = Wait;
-
-class TelegraphedPunchPrepare {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Prepare");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.Normal) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 100; // henchmen really want to punch Batman.
-  }
-
-  apply(ctx, target) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
-
-class TelegraphedPunchFollowthroughHit {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Followthrough (hit)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    }
-
-    return (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx, target) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
-
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
-
-class TelegraphedPunchFollowthroughMiss {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Followthrough (miss)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    } // TODO: allow punching allies?
-
-
-    return (0, _moveHelpers.ensureTargetClear)(ctx, target);
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC); // stumble forward
-
-    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC); // ok
-
-    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
-
-class FastPunch {
-  constructor() {
-    _defineProperty(this, "action", _input.Action.X);
-
-    _defineProperty(this, "name", "Punch");
-
-    _defineProperty(this, "help", "Strike the enemy in the face");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.Normal) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyState = enemy.getComponent(_combat.CombatC).state;
-
-    switch (enemyState) {
-      case _combat.CombatState.Prone:
-        return {
-          success: false,
-          message: "Enemy is on the ground"
-        };
-
-      default:
-        break;
-    }
-
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 200;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    setTimeout(() => {
-      const combatC = ctx.entity.getComponent(_combat.CombatC);
-      combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
-      const enemy = ctx.ecs.spriteSystem.findEntity(target);
-      const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
-
-      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-      setTimeout(() => {
-        combatC.setState(_combat.CombatState.Normal, spriteC);
-        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-        doNext();
-      }, 500);
-    }, 500);
-    return true;
-  }
-
-}
-
-exports.FastPunch = FastPunch;
-
-class Counter {
-  constructor() {
-    _defineProperty(this, "action", _input.Action.Y);
-
-    _defineProperty(this, "name", "Counter");
-
-    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-
-    if (combatC.state != _combat.CombatState.Normal) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyState = enemy.getComponent(_combat.CombatC).state;
-
-    switch (enemyState) {
-      case _combat.CombatState.PunchTelegraph:
-        return {
-          success: true
-        };
-
-      default:
-        return {
-          success: false,
-          message: "Enemy is not winding up to strike"
-        };
-    }
-  }
-
-  computeValue(ctx, target) {
-    return 200;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    spriteC.turnToward(target); // swap positions, prone the enemy
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyCombatC = enemy.getComponent(_combat.CombatC);
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // const orientation = spriteC.orientation;
-
-    const enemyOrientation = enemySpriteC.orientation;
-    spriteC.orientation = enemyOrientation;
-    const playerPos = spriteC.pos;
-    spriteC.pos = enemySpriteC.pos;
-    enemySpriteC.pos = playerPos;
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    setTimeout(() => {
-      enemyCombatC.becomeProne(2, enemySpriteC);
-      doNext();
-    }, 500);
-    return true;
-  }
-
-}
-
-exports.Counter = Counter;
-const BM_MOVES = [new Wait(), new Walk(), new FastPunch(), new Counter()];
-exports.BM_MOVES = BM_MOVES;
-const HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
-exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
-},{"../input":"7a6fba9761d9655e6215ca003429e87d","../tilemap":"7a3b31d0aefed94afd5821fb64498963","./combat":"cb5a787c677bc498cfd6f61d61b50e74","./direction":"8d08baf8b9861766c30a87961a2d3da1","./moveHelpers":"dfd8df1edb71207f8fd81affc96946fc","./sprite":"488445ffc318f5d280c0d86556dce008","./UnreachableCaseError":"a08cefd6a8125cbbb66ee809f2ccf505"}],"7a6fba9761d9655e6215ca003429e87d":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.interpretEvent = interpretEvent;
-exports.Action = void 0;
-let Action;
-exports.Action = Action;
-
-(function (Action) {
-  Action["A"] = "A";
-  Action["B"] = "B";
-  Action["X"] = "X";
-  Action["Y"] = "Y";
-})(Action || (exports.Action = Action = {}));
-
-function interpretEvent(e) {
-  const mouseEvent = e.data.originalEvent;
-
-  if (mouseEvent.button === 0) {
-    if (mouseEvent.shiftKey) {
-      return Action.A;
-    } else {
-      return Action.X;
-    }
-  }
-
-  if (mouseEvent.button === 1) {
-    return Action.B;
-  }
-
-  if (mouseEvent.button === 2) {
-    if (mouseEvent.shiftKey) {
-      return Action.B;
-    } else {
-      return Action.Y;
-    }
-  }
-
-  return null;
-}
-},{}],"cb5a787c677bc498cfd6f61d61b50e74":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"cb5a787c677bc498cfd6f61d61b50e74":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48532,7 +48069,7 @@ var _direction = require("./direction");
 
 var _sprite = require("./sprite");
 
-var _UnreachableCaseError = _interopRequireDefault(require("./UnreachableCaseError"));
+var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -48719,7 +48256,7 @@ class CombatSystem extends _ecs.System {
     }
   }
 
-  applyPunch(attacker, defender) {
+  applyPunch(attacker, defender, ecs) {
     const defenderCombatC = defender.getComponent(CombatC);
     const state = defenderCombatC.state;
 
@@ -48729,8 +48266,11 @@ class CombatSystem extends _ecs.System {
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:
       case CombatState.Punched:
+        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
+        const defenderName = defender.getComponent(_sprite.SpriteC).name;
         defenderCombatC.setState(CombatState.Punched, defender.getComponent(_sprite.SpriteC));
         defenderCombatC.needsToMove = false;
+        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
         break;
 
       default:
@@ -48741,7 +48281,7 @@ class CombatSystem extends _ecs.System {
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","./UnreachableCaseError":"a08cefd6a8125cbbb66ee809f2ccf505"}],"a08cefd6a8125cbbb66ee809f2ccf505":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48757,7 +48297,162 @@ class UnreachableCaseError extends Error {
 }
 
 exports.default = UnreachableCaseError;
-},{}],"dfd8df1edb71207f8fd81affc96946fc":[function(require,module,exports) {
+},{}],"6dd31a59032b34c546712b3a11f701f3":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HENCHMAN_MOVES = exports.BM_MOVES = void 0;
+
+var _Walk = require("./Walk");
+
+var _Wait = require("./Wait");
+
+var _TelegraphedPunch = require("./TelegraphedPunch");
+
+var _FastPunch = require("./FastPunch");
+
+var _Counter = require("./Counter");
+
+const BM_MOVES = [new _Wait.Wait(), new _Walk.Walk(), new _FastPunch.FastPunch(), new _Counter.Counter()];
+exports.BM_MOVES = BM_MOVES;
+const HENCHMAN_MOVES = [new _TelegraphedPunch.TelegraphedPunchPrepare(), new _TelegraphedPunch.TelegraphedPunchFollowthroughHit(), new _TelegraphedPunch.TelegraphedPunchFollowthroughMiss(), new _Wait.Wait()];
+exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
+},{"./Walk":"fc6817f8979026dd6927ff37ee14e529","./Wait":"5f653e4293240883170322ba382d4013","./TelegraphedPunch":"b99ca3553cd73cf95091d9e983745d90","./FastPunch":"3c317739c70eba769b5ef5cf0eb645ff","./Counter":"f8ca4efbddc20d7e5b79d513fdc0d887"}],"fc6817f8979026dd6927ff37ee14e529":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Walk = void 0;
+
+var _input = require("../../input");
+
+var _tilemap = require("../../tilemap");
+
+var _combat = require("../combat");
+
+var _moveHelpers = require("./moveHelpers");
+
+var _sprite = require("../sprite");
+
+var _UnreachableCaseError = _interopRequireDefault(require("../../UnreachableCaseError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Walk {
+  constructor() {
+    _defineProperty(this, "name", "Walk");
+
+    _defineProperty(this, "help", "no combat");
+
+    _defineProperty(this, "action", _input.Action.X);
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _moveHelpers.ensureTargetClear)(ctx, target);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const state = ctx.entity.getComponent(_combat.CombatC).state;
+
+    switch (state) {
+      case _combat.CombatState.Normal:
+        return {
+          success: true
+        };
+
+      case _combat.CombatState.Prone:
+        return {
+          success: false,
+          message: "Prone"
+        };
+
+      case _combat.CombatState.Punched:
+        return {
+          success: false,
+          message: "Reeling from punch"
+        };
+
+      case _combat.CombatState.PunchFollowthrough:
+      case _combat.CombatState.PunchTelegraph:
+        return {
+          success: false,
+          message: "?"
+        };
+
+      default:
+        throw new _UnreachableCaseError.default(state);
+    }
+  }
+
+  apply(ctx, target) {
+    const c = ctx.entity.getComponent(_sprite.SpriteC);
+    c.turnToward(target);
+    c.pos = target;
+    return false;
+  }
+
+  computeValue(ctx, target) {
+    return 0;
+  }
+
+}
+
+exports.Walk = Walk;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"7a6fba9761d9655e6215ca003429e87d":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.interpretEvent = interpretEvent;
+exports.Action = void 0;
+let Action;
+exports.Action = Action;
+
+(function (Action) {
+  Action["A"] = "A";
+  Action["B"] = "B";
+  Action["X"] = "X";
+  Action["Y"] = "Y";
+})(Action || (exports.Action = Action = {}));
+
+function interpretEvent(e) {
+  const mouseEvent = e.data.originalEvent;
+
+  if (mouseEvent.button === 0) {
+    if (mouseEvent.shiftKey) {
+      return Action.A;
+    } else {
+      return Action.X;
+    }
+  }
+
+  if (mouseEvent.button === 1) {
+    return Action.B;
+  }
+
+  if (mouseEvent.button === 2) {
+    if (mouseEvent.shiftKey) {
+      return Action.B;
+    } else {
+      return Action.Y;
+    }
+  }
+
+  return null;
+}
+},{}],"03a0ec7ec078c042fc54124d5b564f82":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48766,12 +48461,12 @@ Object.defineProperty(exports, "__esModule", {
 exports.ensureTargetClear = ensureTargetClear;
 exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 
-var _assets = require("../assets");
+var _assets = require("../../assets");
 
-var _combat = require("./combat");
+var _combat = require("../combat");
 
 function ensureTargetClear(ctx, target) {
-  const cell = ctx.tilemap.getCell(target);
+  const cell = ctx.ecs.tilemap.getCell(target);
   if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
     success: false,
     message: "Target is not floor"
@@ -48786,7 +48481,7 @@ function ensureTargetClear(ctx, target) {
 }
 
 function ensureTargetIsEnemy(ctx, target, isPlayer) {
-  const cell = ctx.tilemap.getCell(target);
+  const cell = ctx.ecs.tilemap.getCell(target);
   if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
     success: false,
     message: "Target is not floor"
@@ -48809,6 +48504,1626 @@ function ensureTargetIsEnemy(ctx, target, isPlayer) {
     success: true
   };
 }
-},{"../assets":"be73c6663579275afb4521336d5df627","./combat":"cb5a787c677bc498cfd6f61d61b50e74"}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
+},{"../../assets":"be73c6663579275afb4521336d5df627","../combat":"cb5a787c677bc498cfd6f61d61b50e74"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Wait = void 0;
+
+var _input = require("../../input");
+
+var _combat = require("../combat");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Wait {
+  constructor() {
+    _defineProperty(this, "name", "Wait");
+
+    _defineProperty(this, "help", "no combat");
+
+    _defineProperty(this, "action", _input.Action.X);
+  }
+
+  check(ctx, target) {
+    if (ctx.entity.getComponent(_sprite.SpriteC).pos.equals(target)) {
+      return {
+        success: true
+      };
+    } else {
+      return {
+        success: false,
+        message: "Must click on yourself"
+      };
+    }
+  }
+
+  apply(ctx) {
+    // Upon waiting, return to normal state
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (combatC.state === _combat.CombatState.Prone) {
+      const proneTimer = combatC.proneTimer - 1;
+      combatC.proneTimer = proneTimer;
+      spriteC.label = `${proneTimer}`;
+
+      if (proneTimer <= 0) {
+        combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+        ctx.entity.getComponent(_sprite.SpriteC).label = "";
+      }
+    } else {
+      combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+    }
+
+    return false;
+  }
+
+  computeValue(ctx, target) {
+    return 0;
+  }
+
+}
+
+exports.Wait = Wait;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../combat":"cb5a787c677bc498cfd6f61d61b50e74","../sprite":"488445ffc318f5d280c0d86556dce008"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = void 0;
+
+var _tilemap = require("../../tilemap");
+
+var _combat = require("../combat");
+
+var _direction = require("../direction");
+
+var _moveHelpers = require("./moveHelpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class TelegraphedPunchPrepare {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Prepare");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+
+    if (combatC.state != _combat.CombatState.Normal) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 100; // henchmen really want to punch Batman.
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.writeMessage(`${spriteC.name} winds up for a punch.`);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
+
+class TelegraphedPunchFollowthroughHit {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Followthrough (hit)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+
+    if (combatC.state != _combat.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    }
+
+    return (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
+
+class TelegraphedPunchFollowthroughMiss {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Followthrough (miss)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+
+    if (combatC.state != _combat.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    } // TODO: allow punching allies?
+
+
+    return (0, _moveHelpers.ensureTargetClear)(ctx, target);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_combat.CombatC); // stumble forward
+
+    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC); // ok
+
+    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
+    ctx.ecs.writeMessage(`${spriteC.name} swings at nothing but air!`);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
+},{"../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","../direction":"8d08baf8b9861766c30a87961a2d3da1","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.FastPunch = void 0;
+
+var _input = require("../../input");
+
+var _tilemap = require("../../tilemap");
+
+var _combat = require("../combat");
+
+var _moveHelpers = require("./moveHelpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class FastPunch {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.X);
+
+    _defineProperty(this, "name", "Punch");
+
+    _defineProperty(this, "help", "Strike the enemy in the face");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+
+    if (combatC.state != _combat.CombatState.Normal) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyState = enemy.getComponent(_combat.CombatC).state;
+
+    switch (enemyState) {
+      case _combat.CombatState.Prone:
+        return {
+          success: false,
+          message: "Enemy is on the ground"
+        };
+
+      default:
+        break;
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    setTimeout(() => {
+      const combatC = ctx.entity.getComponent(_combat.CombatC);
+      combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
+      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      setTimeout(() => {
+        combatC.setState(_combat.CombatState.Normal, spriteC);
+        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        doNext();
+      }, 500);
+    }, 500);
+    return true;
+  }
+
+}
+
+exports.FastPunch = FastPunch;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Counter = void 0;
+
+var _input = require("../../input");
+
+var _tilemap = require("../../tilemap");
+
+var _combat = require("../combat");
+
+var _moveHelpers = require("./moveHelpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Counter {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.Y);
+
+    _defineProperty(this, "name", "Counter");
+
+    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (combatC.state != _combat.CombatState.Normal) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyState = enemy.getComponent(_combat.CombatC).state;
+
+    switch (enemyState) {
+      case _combat.CombatState.PunchTelegraph:
+        return {
+          success: true
+        };
+
+      default:
+        return {
+          success: false,
+          message: "Enemy is not winding up to strike"
+        };
+    }
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_combat.CombatC);
+    spriteC.turnToward(target); // swap positions, prone the enemy
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyCombatC = enemy.getComponent(_combat.CombatC);
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // const orientation = spriteC.orientation;
+
+    const enemyOrientation = enemySpriteC.orientation;
+    spriteC.orientation = enemyOrientation;
+    const playerPos = spriteC.pos;
+    spriteC.pos = enemySpriteC.pos;
+    enemySpriteC.pos = playerPos;
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    ctx.ecs.writeMessage(`${spriteC.name} counters ${enemySpriteC.name}’s punch!`);
+    setTimeout(() => {
+      enemyCombatC.becomeProne(2, enemySpriteC);
+      ctx.ecs.writeMessage(`${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.proneTimer} turns.`);
+      doNext();
+    }, 500);
+    return true;
+  }
+
+}
+
+exports.Counter = Counter;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getHenchmanName;
+
+var _RNG = _interopRequireDefault(require("../RNG"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’"];
+const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv"];
+
+function getHenchmanName() {
+  const rng = new _RNG.default(`${Math.random()}`);
+  return `${rng.choice(adjs)} ${rng.choice(names)} the Thug`;
+}
+},{"../RNG":"930b9d1127b4b9643f68937ef97d4a53"}],"930b9d1127b4b9643f68937ef97d4a53":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _seedrandom = _interopRequireDefault(require("seedrandom"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class RNG {
+  constructor(seed) {
+    this.getRandom = (0, _seedrandom.default)(seed);
+  }
+
+  replaceMathRandom(fn) {
+    const r = Math.random;
+    Math.random = this.getRandom;
+    const val = fn();
+    Math.random = r;
+    return val;
+  }
+
+  int(minInclusive, maxExclusive) {
+    return minInclusive + Math.floor(this.getRandom() * maxExclusive);
+  }
+
+  float(min, max) {
+    return min + this.getRandom() * (max - min);
+  }
+
+  choice(items) {
+    return items[Math.floor(this.getRandom() * items.length)];
+  }
+
+  chooseAndRemove(items) {
+    const ix = Math.floor(this.getRandom() * items.length);
+    return items.splice(ix, 1)[0];
+  }
+
+  shuffled(array) {
+    const arr = new Array().concat(array);
+    this.shuffle(arr);
+    return arr;
+  }
+
+  shuffle(array) {
+    let currentIndex = array.length,
+        temporaryValue,
+        randomIndex; // While there remain elements to shuffle...
+
+    while (0 !== currentIndex) {
+      // Pick a remaining element...
+      randomIndex = Math.floor(this.getRandom() * currentIndex);
+      currentIndex -= 1; // And swap it with the current element.
+
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+  } // Gives back N values between 0 and Math.PI * 2, where values are evenly
+  // distributed but start at a random place
+
+
+  getSlots(n) {
+    const slots = new Array();
+    let last = this.getRandom();
+
+    for (let i = 0; i < n; i++) {
+      if (last > Math.PI * 2) last -= Math.PI * 2;
+      slots.push(last);
+      last += Math.PI * 2 / n;
+    }
+
+    return slots;
+  }
+
+}
+
+exports.default = RNG;
+},{"seedrandom":"146f3f2566b1aa72e8014b36079d24b9"}],"146f3f2566b1aa72e8014b36079d24b9":[function(require,module,exports) {
+// A library of seedable RNGs implemented in Javascript.
+//
+// Usage:
+//
+// var seedrandom = require('seedrandom');
+// var random = seedrandom(1); // or any seed.
+// var x = random();       // 0 <= x < 1.  Every bit is random.
+// var x = random.quick(); // 0 <= x < 1.  32 bits of randomness.
+
+// alea, a 53-bit multiply-with-carry generator by Johannes Baagøe.
+// Period: ~2^116
+// Reported to pass all BigCrush tests.
+var alea = require('./lib/alea');
+
+// xor128, a pure xor-shift generator by George Marsaglia.
+// Period: 2^128-1.
+// Reported to fail: MatrixRank and LinearComp.
+var xor128 = require('./lib/xor128');
+
+// xorwow, George Marsaglia's 160-bit xor-shift combined plus weyl.
+// Period: 2^192-2^32
+// Reported to fail: CollisionOver, SimpPoker, and LinearComp.
+var xorwow = require('./lib/xorwow');
+
+// xorshift7, by François Panneton and Pierre L'ecuyer, takes
+// a different approach: it adds robustness by allowing more shifts
+// than Marsaglia's original three.  It is a 7-shift generator
+// with 256 bits, that passes BigCrush with no systmatic failures.
+// Period 2^256-1.
+// No systematic BigCrush failures reported.
+var xorshift7 = require('./lib/xorshift7');
+
+// xor4096, by Richard Brent, is a 4096-bit xor-shift with a
+// very long period that also adds a Weyl generator. It also passes
+// BigCrush with no systematic failures.  Its long period may
+// be useful if you have many generators and need to avoid
+// collisions.
+// Period: 2^4128-2^32.
+// No systematic BigCrush failures reported.
+var xor4096 = require('./lib/xor4096');
+
+// Tyche-i, by Samuel Neves and Filipe Araujo, is a bit-shifting random
+// number generator derived from ChaCha, a modern stream cipher.
+// https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
+// Period: ~2^127
+// No systematic BigCrush failures reported.
+var tychei = require('./lib/tychei');
+
+// The original ARC4-based prng included in this library.
+// Period: ~2^1600
+var sr = require('./seedrandom');
+
+sr.alea = alea;
+sr.xor128 = xor128;
+sr.xorwow = xorwow;
+sr.xorshift7 = xorshift7;
+sr.xor4096 = xor4096;
+sr.tychei = tychei;
+
+module.exports = sr;
+
+},{"./lib/alea":"9cdecac848bf3fed0d081d1729a9545b","./lib/xor128":"4a34703a580246ee9916b22ae37a9c34","./lib/xorwow":"501d18ab6acc6cb1ae71e8b6e3f79b3d","./lib/xorshift7":"c07284d2bbfd838cc7b2edb00a802526","./lib/xor4096":"95a3e0329b43d29d944c97d624a2eb41","./lib/tychei":"b004d89bef937fa84791d5966b1df924","./seedrandom":"fafebfce7d2e57f321b035cf233da10d"}],"9cdecac848bf3fed0d081d1729a9545b":[function(require,module,exports) {
+var define;
+
+// A port of an algorithm by Johannes Baagøe <baagoe@baagoe.com>, 2010
+// http://baagoe.com/en/RandomMusings/javascript/
+// https://github.com/nquinlan/better-random-numbers-for-javascript-mirror
+// Original work is under MIT license -
+// Copyright (C) 2010 by Johannes Baagøe <baagoe@baagoe.org>
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+(function (global, module, define) {
+  function Alea(seed) {
+    var me = this,
+        mash = Mash();
+
+    me.next = function () {
+      var t = 2091639 * me.s0 + me.c * 2.3283064365386963e-10; // 2^-32
+
+      me.s0 = me.s1;
+      me.s1 = me.s2;
+      return me.s2 = t - (me.c = t | 0);
+    }; // Apply the seeding algorithm from Baagoe.
+
+
+    me.c = 1;
+    me.s0 = mash(' ');
+    me.s1 = mash(' ');
+    me.s2 = mash(' ');
+    me.s0 -= mash(seed);
+
+    if (me.s0 < 0) {
+      me.s0 += 1;
+    }
+
+    me.s1 -= mash(seed);
+
+    if (me.s1 < 0) {
+      me.s1 += 1;
+    }
+
+    me.s2 -= mash(seed);
+
+    if (me.s2 < 0) {
+      me.s2 += 1;
+    }
+
+    mash = null;
+  }
+
+  function copy(f, t) {
+    t.c = f.c;
+    t.s0 = f.s0;
+    t.s1 = f.s1;
+    t.s2 = f.s2;
+    return t;
+  }
+
+  function impl(seed, opts) {
+    var xg = new Alea(seed),
+        state = opts && opts.state,
+        prng = xg.next;
+
+    prng.int32 = function () {
+      return xg.next() * 0x100000000 | 0;
+    };
+
+    prng.double = function () {
+      return prng() + (prng() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
+    };
+
+    prng.quick = prng;
+
+    if (state) {
+      if (typeof state == 'object') copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  function Mash() {
+    var n = 0xefc8249d;
+
+    var mash = function (data) {
+      data = String(data);
+
+      for (var i = 0; i < data.length; i++) {
+        n += data.charCodeAt(i);
+        var h = 0.02519603282416938 * n;
+        n = h >>> 0;
+        h -= n;
+        h *= n;
+        n = h >>> 0;
+        h -= n;
+        n += h * 0x100000000; // 2^32
+      }
+
+      return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
+    };
+
+    return mash;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.alea = impl;
+  }
+})(this, typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"4a34703a580246ee9916b22ae37a9c34":[function(require,module,exports) {
+var define;
+
+// A Javascript implementaion of the "xor128" prng algorithm by
+// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
+(function (global, module, define) {
+  function XorGen(seed) {
+    var me = this,
+        strseed = '';
+    me.x = 0;
+    me.y = 0;
+    me.z = 0;
+    me.w = 0; // Set up generator function.
+
+    me.next = function () {
+      var t = me.x ^ me.x << 11;
+      me.x = me.y;
+      me.y = me.z;
+      me.z = me.w;
+      return me.w ^= me.w >>> 19 ^ t ^ t >>> 8;
+    };
+
+    if (seed === (seed | 0)) {
+      // Integer seed.
+      me.x = seed;
+    } else {
+      // String seed.
+      strseed += seed;
+    } // Mix in string seed, then discard an initial batch of 64 values.
+
+
+    for (var k = 0; k < strseed.length + 64; k++) {
+      me.x ^= strseed.charCodeAt(k) | 0;
+      me.next();
+    }
+  }
+
+  function copy(f, t) {
+    t.x = f.x;
+    t.y = f.y;
+    t.z = f.z;
+    t.w = f.w;
+    return t;
+  }
+
+  function impl(seed, opts) {
+    var xg = new XorGen(seed),
+        state = opts && opts.state,
+        prng = function () {
+      return (xg.next() >>> 0) / 0x100000000;
+    };
+
+    prng.double = function () {
+      do {
+        var top = xg.next() >>> 11,
+            bot = (xg.next() >>> 0) / 0x100000000,
+            result = (top + bot) / (1 << 21);
+      } while (result === 0);
+
+      return result;
+    };
+
+    prng.int32 = xg.next;
+    prng.quick = prng;
+
+    if (state) {
+      if (typeof state == 'object') copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.xor128 = impl;
+  }
+})(this, typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"501d18ab6acc6cb1ae71e8b6e3f79b3d":[function(require,module,exports) {
+var define;
+
+// A Javascript implementaion of the "xorwow" prng algorithm by
+// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
+(function (global, module, define) {
+  function XorGen(seed) {
+    var me = this,
+        strseed = ''; // Set up generator function.
+
+    me.next = function () {
+      var t = me.x ^ me.x >>> 2;
+      me.x = me.y;
+      me.y = me.z;
+      me.z = me.w;
+      me.w = me.v;
+      return (me.d = me.d + 362437 | 0) + (me.v = me.v ^ me.v << 4 ^ (t ^ t << 1)) | 0;
+    };
+
+    me.x = 0;
+    me.y = 0;
+    me.z = 0;
+    me.w = 0;
+    me.v = 0;
+
+    if (seed === (seed | 0)) {
+      // Integer seed.
+      me.x = seed;
+    } else {
+      // String seed.
+      strseed += seed;
+    } // Mix in string seed, then discard an initial batch of 64 values.
+
+
+    for (var k = 0; k < strseed.length + 64; k++) {
+      me.x ^= strseed.charCodeAt(k) | 0;
+
+      if (k == strseed.length) {
+        me.d = me.x << 10 ^ me.x >>> 4;
+      }
+
+      me.next();
+    }
+  }
+
+  function copy(f, t) {
+    t.x = f.x;
+    t.y = f.y;
+    t.z = f.z;
+    t.w = f.w;
+    t.v = f.v;
+    t.d = f.d;
+    return t;
+  }
+
+  function impl(seed, opts) {
+    var xg = new XorGen(seed),
+        state = opts && opts.state,
+        prng = function () {
+      return (xg.next() >>> 0) / 0x100000000;
+    };
+
+    prng.double = function () {
+      do {
+        var top = xg.next() >>> 11,
+            bot = (xg.next() >>> 0) / 0x100000000,
+            result = (top + bot) / (1 << 21);
+      } while (result === 0);
+
+      return result;
+    };
+
+    prng.int32 = xg.next;
+    prng.quick = prng;
+
+    if (state) {
+      if (typeof state == 'object') copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.xorwow = impl;
+  }
+})(this, typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"c07284d2bbfd838cc7b2edb00a802526":[function(require,module,exports) {
+var define;
+
+// A Javascript implementaion of the "xorshift7" algorithm by
+// François Panneton and Pierre L'ecuyer:
+// "On the Xorgshift Random Number Generators"
+// http://saluc.engr.uconn.edu/refs/crypto/rng/panneton05onthexorshift.pdf
+(function (global, module, define) {
+  function XorGen(seed) {
+    var me = this; // Set up generator function.
+
+    me.next = function () {
+      // Update xor generator.
+      var X = me.x,
+          i = me.i,
+          t,
+          v,
+          w;
+      t = X[i];
+      t ^= t >>> 7;
+      v = t ^ t << 24;
+      t = X[i + 1 & 7];
+      v ^= t ^ t >>> 10;
+      t = X[i + 3 & 7];
+      v ^= t ^ t >>> 3;
+      t = X[i + 4 & 7];
+      v ^= t ^ t << 7;
+      t = X[i + 7 & 7];
+      t = t ^ t << 13;
+      v ^= t ^ t << 9;
+      X[i] = v;
+      me.i = i + 1 & 7;
+      return v;
+    };
+
+    function init(me, seed) {
+      var j,
+          w,
+          X = [];
+
+      if (seed === (seed | 0)) {
+        // Seed state array using a 32-bit integer.
+        w = X[0] = seed;
+      } else {
+        // Seed state using a string.
+        seed = '' + seed;
+
+        for (j = 0; j < seed.length; ++j) {
+          X[j & 7] = X[j & 7] << 15 ^ seed.charCodeAt(j) + X[j + 1 & 7] << 13;
+        }
+      } // Enforce an array length of 8, not all zeroes.
+
+
+      while (X.length < 8) X.push(0);
+
+      for (j = 0; j < 8 && X[j] === 0; ++j);
+
+      if (j == 8) w = X[7] = -1;else w = X[j];
+      me.x = X;
+      me.i = 0; // Discard an initial 256 values.
+
+      for (j = 256; j > 0; --j) {
+        me.next();
+      }
+    }
+
+    init(me, seed);
+  }
+
+  function copy(f, t) {
+    t.x = f.x.slice();
+    t.i = f.i;
+    return t;
+  }
+
+  function impl(seed, opts) {
+    if (seed == null) seed = +new Date();
+
+    var xg = new XorGen(seed),
+        state = opts && opts.state,
+        prng = function () {
+      return (xg.next() >>> 0) / 0x100000000;
+    };
+
+    prng.double = function () {
+      do {
+        var top = xg.next() >>> 11,
+            bot = (xg.next() >>> 0) / 0x100000000,
+            result = (top + bot) / (1 << 21);
+      } while (result === 0);
+
+      return result;
+    };
+
+    prng.int32 = xg.next;
+    prng.quick = prng;
+
+    if (state) {
+      if (state.x) copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.xorshift7 = impl;
+  }
+})(this, typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"95a3e0329b43d29d944c97d624a2eb41":[function(require,module,exports) {
+var define;
+
+// A Javascript implementaion of Richard Brent's Xorgens xor4096 algorithm.
+//
+// This fast non-cryptographic random number generator is designed for
+// use in Monte-Carlo algorithms. It combines a long-period xorshift
+// generator with a Weyl generator, and it passes all common batteries
+// of stasticial tests for randomness while consuming only a few nanoseconds
+// for each prng generated.  For background on the generator, see Brent's
+// paper: "Some long-period random number generators using shifts and xors."
+// http://arxiv.org/pdf/1004.3115v1.pdf
+//
+// Usage:
+//
+// var xor4096 = require('xor4096');
+// random = xor4096(1);                        // Seed with int32 or string.
+// assert.equal(random(), 0.1520436450538547); // (0, 1) range, 53 bits.
+// assert.equal(random.int32(), 1806534897);   // signed int32, 32 bits.
+//
+// For nonzero numeric keys, this impelementation provides a sequence
+// identical to that by Brent's xorgens 3 implementaion in C.  This
+// implementation also provides for initalizing the generator with
+// string seeds, or for saving and restoring the state of the generator.
+//
+// On Chrome, this prng benchmarks about 2.1 times slower than
+// Javascript's built-in Math.random().
+(function (global, module, define) {
+  function XorGen(seed) {
+    var me = this; // Set up generator function.
+
+    me.next = function () {
+      var w = me.w,
+          X = me.X,
+          i = me.i,
+          t,
+          v; // Update Weyl generator.
+
+      me.w = w = w + 0x61c88647 | 0; // Update xor generator.
+
+      v = X[i + 34 & 127];
+      t = X[i = i + 1 & 127];
+      v ^= v << 13;
+      t ^= t << 17;
+      v ^= v >>> 15;
+      t ^= t >>> 12; // Update Xor generator array state.
+
+      v = X[i] = v ^ t;
+      me.i = i; // Result is the combination.
+
+      return v + (w ^ w >>> 16) | 0;
+    };
+
+    function init(me, seed) {
+      var t,
+          v,
+          i,
+          j,
+          w,
+          X = [],
+          limit = 128;
+
+      if (seed === (seed | 0)) {
+        // Numeric seeds initialize v, which is used to generates X.
+        v = seed;
+        seed = null;
+      } else {
+        // String seeds are mixed into v and X one character at a time.
+        seed = seed + '\0';
+        v = 0;
+        limit = Math.max(limit, seed.length);
+      } // Initialize circular array and weyl value.
+
+
+      for (i = 0, j = -32; j < limit; ++j) {
+        // Put the unicode characters into the array, and shuffle them.
+        if (seed) v ^= seed.charCodeAt((j + 32) % seed.length); // After 32 shuffles, take v as the starting w value.
+
+        if (j === 0) w = v;
+        v ^= v << 10;
+        v ^= v >>> 15;
+        v ^= v << 4;
+        v ^= v >>> 13;
+
+        if (j >= 0) {
+          w = w + 0x61c88647 | 0; // Weyl.
+
+          t = X[j & 127] ^= v + w; // Combine xor and weyl to init array.
+
+          i = 0 == t ? i + 1 : 0; // Count zeroes.
+        }
+      } // We have detected all zeroes; make the key nonzero.
+
+
+      if (i >= 128) {
+        X[(seed && seed.length || 0) & 127] = -1;
+      } // Run the generator 512 times to further mix the state before using it.
+      // Factoring this as a function slows the main generator, so it is just
+      // unrolled here.  The weyl generator is not advanced while warming up.
+
+
+      i = 127;
+
+      for (j = 4 * 128; j > 0; --j) {
+        v = X[i + 34 & 127];
+        t = X[i = i + 1 & 127];
+        v ^= v << 13;
+        t ^= t << 17;
+        v ^= v >>> 15;
+        t ^= t >>> 12;
+        X[i] = v ^ t;
+      } // Storing state as object members is faster than using closure variables.
+
+
+      me.w = w;
+      me.X = X;
+      me.i = i;
+    }
+
+    init(me, seed);
+  }
+
+  function copy(f, t) {
+    t.i = f.i;
+    t.w = f.w;
+    t.X = f.X.slice();
+    return t;
+  }
+
+  ;
+
+  function impl(seed, opts) {
+    if (seed == null) seed = +new Date();
+
+    var xg = new XorGen(seed),
+        state = opts && opts.state,
+        prng = function () {
+      return (xg.next() >>> 0) / 0x100000000;
+    };
+
+    prng.double = function () {
+      do {
+        var top = xg.next() >>> 11,
+            bot = (xg.next() >>> 0) / 0x100000000,
+            result = (top + bot) / (1 << 21);
+      } while (result === 0);
+
+      return result;
+    };
+
+    prng.int32 = xg.next;
+    prng.quick = prng;
+
+    if (state) {
+      if (state.X) copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.xor4096 = impl;
+  }
+})(this, // window object or global
+typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"b004d89bef937fa84791d5966b1df924":[function(require,module,exports) {
+var define;
+
+// A Javascript implementaion of the "Tyche-i" prng algorithm by
+// Samuel Neves and Filipe Araujo.
+// See https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
+(function (global, module, define) {
+  function XorGen(seed) {
+    var me = this,
+        strseed = ''; // Set up generator function.
+
+    me.next = function () {
+      var b = me.b,
+          c = me.c,
+          d = me.d,
+          a = me.a;
+      b = b << 25 ^ b >>> 7 ^ c;
+      c = c - d | 0;
+      d = d << 24 ^ d >>> 8 ^ a;
+      a = a - b | 0;
+      me.b = b = b << 20 ^ b >>> 12 ^ c;
+      me.c = c = c - d | 0;
+      me.d = d << 16 ^ c >>> 16 ^ a;
+      return me.a = a - b | 0;
+    };
+    /* The following is non-inverted tyche, which has better internal
+     * bit diffusion, but which is about 25% slower than tyche-i in JS.
+    me.next = function() {
+      var a = me.a, b = me.b, c = me.c, d = me.d;
+      a = (me.a + me.b | 0) >>> 0;
+      d = me.d ^ a; d = d << 16 ^ d >>> 16;
+      c = me.c + d | 0;
+      b = me.b ^ c; b = b << 12 ^ d >>> 20;
+      me.a = a = a + b | 0;
+      d = d ^ a; me.d = d = d << 8 ^ d >>> 24;
+      me.c = c = c + d | 0;
+      b = b ^ c;
+      return me.b = (b << 7 ^ b >>> 25);
+    }
+    */
+
+
+    me.a = 0;
+    me.b = 0;
+    me.c = 2654435769 | 0;
+    me.d = 1367130551;
+
+    if (seed === Math.floor(seed)) {
+      // Integer seed.
+      me.a = seed / 0x100000000 | 0;
+      me.b = seed | 0;
+    } else {
+      // String seed.
+      strseed += seed;
+    } // Mix in string seed, then discard an initial batch of 64 values.
+
+
+    for (var k = 0; k < strseed.length + 20; k++) {
+      me.b ^= strseed.charCodeAt(k) | 0;
+      me.next();
+    }
+  }
+
+  function copy(f, t) {
+    t.a = f.a;
+    t.b = f.b;
+    t.c = f.c;
+    t.d = f.d;
+    return t;
+  }
+
+  ;
+
+  function impl(seed, opts) {
+    var xg = new XorGen(seed),
+        state = opts && opts.state,
+        prng = function () {
+      return (xg.next() >>> 0) / 0x100000000;
+    };
+
+    prng.double = function () {
+      do {
+        var top = xg.next() >>> 11,
+            bot = (xg.next() >>> 0) / 0x100000000,
+            result = (top + bot) / (1 << 21);
+      } while (result === 0);
+
+      return result;
+    };
+
+    prng.int32 = xg.next;
+    prng.quick = prng;
+
+    if (state) {
+      if (typeof state == 'object') copy(state, xg);
+
+      prng.state = function () {
+        return copy(xg, {});
+      };
+    }
+
+    return prng;
+  }
+
+  if (module && module.exports) {
+    module.exports = impl;
+  } else if (define && define.amd) {
+    define(function () {
+      return impl;
+    });
+  } else {
+    this.tychei = impl;
+  }
+})(this, typeof module == 'object' && module, // present in node.js
+typeof define == 'function' && define // present with an AMD loader
+);
+},{}],"fafebfce7d2e57f321b035cf233da10d":[function(require,module,exports) {
+var define;
+
+/*
+Copyright 2019 David Bau.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
+(function (global, pool, math) {
+  //
+  // The following constants are related to IEEE 754 limits.
+  //
+  var width = 256,
+      // each RC4 output is 0 <= x < 256
+  chunks = 6,
+      // at least six RC4 outputs for each double
+  digits = 52,
+      // there are 52 significant digits in a double
+  rngname = 'random',
+      // rngname: name for Math.random and Math.seedrandom
+  startdenom = math.pow(width, chunks),
+      significance = math.pow(2, digits),
+      overflow = significance * 2,
+      mask = width - 1,
+      nodecrypto; // node.js crypto module, initialized at the bottom.
+  //
+  // seedrandom()
+  // This is the seedrandom function described above.
+  //
+
+  function seedrandom(seed, options, callback) {
+    var key = [];
+    options = options == true ? {
+      entropy: true
+    } : options || {}; // Flatten the seed string or build one from local entropy if needed.
+
+    var shortseed = mixkey(flatten(options.entropy ? [seed, tostring(pool)] : seed == null ? autoseed() : seed, 3), key); // Use the seed to initialize an ARC4 generator.
+
+    var arc4 = new ARC4(key); // This function returns a random double in [0, 1) that contains
+    // randomness in every bit of the mantissa of the IEEE 754 value.
+
+    var prng = function () {
+      var n = arc4.g(chunks),
+          // Start with a numerator n < 2 ^ 48
+      d = startdenom,
+          //   and denominator d = 2 ^ 48.
+      x = 0; //   and no 'extra last byte'.
+
+      while (n < significance) {
+        // Fill up all significant digits by
+        n = (n + x) * width; //   shifting numerator and
+
+        d *= width; //   denominator and generating a
+
+        x = arc4.g(1); //   new least-significant-byte.
+      }
+
+      while (n >= overflow) {
+        // To avoid rounding up, before adding
+        n /= 2; //   last byte, shift everything
+
+        d /= 2; //   right using integer math until
+
+        x >>>= 1; //   we have exactly the desired bits.
+      }
+
+      return (n + x) / d; // Form the number within [0, 1).
+    };
+
+    prng.int32 = function () {
+      return arc4.g(4) | 0;
+    };
+
+    prng.quick = function () {
+      return arc4.g(4) / 0x100000000;
+    };
+
+    prng.double = prng; // Mix the randomness into accumulated entropy.
+
+    mixkey(tostring(arc4.S), pool); // Calling convention: what to return as a function of prng, seed, is_math.
+
+    return (options.pass || callback || function (prng, seed, is_math_call, state) {
+      if (state) {
+        // Load the arc4 state from the given state if it has an S array.
+        if (state.S) {
+          copy(state, arc4);
+        } // Only provide the .state method if requested via options.state.
+
+
+        prng.state = function () {
+          return copy(arc4, {});
+        };
+      } // If called as a method of Math (Math.seedrandom()), mutate
+      // Math.random because that is how seedrandom.js has worked since v1.0.
+
+
+      if (is_math_call) {
+        math[rngname] = prng;
+        return seed;
+      } // Otherwise, it is a newer calling convention, so return the
+      // prng directly.
+      else return prng;
+    })(prng, shortseed, 'global' in options ? options.global : this == math, options.state);
+  } //
+  // ARC4
+  //
+  // An ARC4 implementation.  The constructor takes a key in the form of
+  // an array of at most (width) integers that should be 0 <= x < (width).
+  //
+  // The g(count) method returns a pseudorandom integer that concatenates
+  // the next (count) outputs from ARC4.  Its return value is a number x
+  // that is in the range 0 <= x < (width ^ count).
+  //
+
+
+  function ARC4(key) {
+    var t,
+        keylen = key.length,
+        me = this,
+        i = 0,
+        j = me.i = me.j = 0,
+        s = me.S = []; // The empty key [] is treated as [0].
+
+    if (!keylen) {
+      key = [keylen++];
+    } // Set up S using the standard key scheduling algorithm.
+
+
+    while (i < width) {
+      s[i] = i++;
+    }
+
+    for (i = 0; i < width; i++) {
+      s[i] = s[j = mask & j + key[i % keylen] + (t = s[i])];
+      s[j] = t;
+    } // The "g" method returns the next (count) outputs as one number.
+
+
+    (me.g = function (count) {
+      // Using instance members instead of closure state nearly doubles speed.
+      var t,
+          r = 0,
+          i = me.i,
+          j = me.j,
+          s = me.S;
+
+      while (count--) {
+        t = s[i = mask & i + 1];
+        r = r * width + s[mask & (s[i] = s[j = mask & j + t]) + (s[j] = t)];
+      }
+
+      me.i = i;
+      me.j = j;
+      return r; // For robust unpredictability, the function call below automatically
+      // discards an initial batch of values.  This is called RC4-drop[256].
+      // See http://google.com/search?q=rsa+fluhrer+response&btnI
+    })(width);
+  } //
+  // copy()
+  // Copies internal state of ARC4 to or from a plain object.
+  //
+
+
+  function copy(f, t) {
+    t.i = f.i;
+    t.j = f.j;
+    t.S = f.S.slice();
+    return t;
+  }
+
+  ; //
+  // flatten()
+  // Converts an object tree to nested arrays of strings.
+  //
+
+  function flatten(obj, depth) {
+    var result = [],
+        typ = typeof obj,
+        prop;
+
+    if (depth && typ == 'object') {
+      for (prop in obj) {
+        try {
+          result.push(flatten(obj[prop], depth - 1));
+        } catch (e) {}
+      }
+    }
+
+    return result.length ? result : typ == 'string' ? obj : obj + '\0';
+  } //
+  // mixkey()
+  // Mixes a string seed into a key that is an array of integers, and
+  // returns a shortened string seed that is equivalent to the result key.
+  //
+
+
+  function mixkey(seed, key) {
+    var stringseed = seed + '',
+        smear,
+        j = 0;
+
+    while (j < stringseed.length) {
+      key[mask & j] = mask & (smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++);
+    }
+
+    return tostring(key);
+  } //
+  // autoseed()
+  // Returns an object for autoseeding, using window.crypto and Node crypto
+  // module if available.
+  //
+
+
+  function autoseed() {
+    try {
+      var out;
+
+      if (nodecrypto && (out = nodecrypto.randomBytes)) {
+        // The use of 'out' to remember randomBytes makes tight minified code.
+        out = out(width);
+      } else {
+        out = new Uint8Array(width);
+        (global.crypto || global.msCrypto).getRandomValues(out);
+      }
+
+      return tostring(out);
+    } catch (e) {
+      var browser = global.navigator,
+          plugins = browser && browser.plugins;
+      return [+new Date(), global, plugins, global.screen, tostring(pool)];
+    }
+  } //
+  // tostring()
+  // Converts an array of charcodes to a string
+  //
+
+
+  function tostring(a) {
+    return String.fromCharCode.apply(0, a);
+  } //
+  // When seedrandom.js is loaded, we immediately mix a few bits
+  // from the built-in RNG into the entropy pool.  Because we do
+  // not want to interfere with deterministic PRNG state later,
+  // seedrandom will not call math.random on its own again after
+  // initialization.
+  //
+
+
+  mixkey(math.random(), pool); //
+  // Nodejs and AMD support: export the implementation as a module using
+  // either convention.
+  //
+
+  if (typeof module == 'object' && module.exports) {
+    module.exports = seedrandom; // When in node.js, try using crypto package for autoseeding.
+
+    try {
+      nodecrypto = require('crypto');
+    } catch (ex) {}
+  } else if (typeof define == 'function' && define.amd) {
+    define(function () {
+      return seedrandom;
+    });
+  } else {
+    // When included as a plain script, set up Math.seedrandom global.
+    math['seed' + rngname] = seedrandom;
+  } // End anonymous scope, and pass initial values.
+
+})( // global: `self` in browsers (including strict mode and web workers),
+// otherwise `this` in Node and other environments
+typeof self !== 'undefined' ? self : this, [], // pool: entropy pool starts empty
+Math // math: package containing random, pow, and seedrandom
+);
+},{"crypto":"d0c8cb413b8a918e0130e85e831bf0d4"}],"d0c8cb413b8a918e0130e85e831bf0d4":[function(require,module,exports) {
+"use strict";
+},{}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
