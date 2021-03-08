@@ -16,7 +16,7 @@ import { CombatC } from "./ecs/CombatC";
 import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
 import { Move, MoveCheckResult } from "./ecs/moves/_types";
-import { Action, interpretEvent } from "./input";
+import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "./ecs/sprite";
 
@@ -244,7 +244,7 @@ export class LevelScene implements GameScene {
     this.dbgText.text =
       `${this.hoveredPos || "(no selection)"}\n` +
       okMoves
-        .map(([move]) => `${move.action} ${move.name}`) // (${move.help})`)
+        .map(([move]) => `${getActionText(move.action!)}: ${move.name}`) // (${move.help})`)
         .join("\n") +
       "\n\nOmitted:\n" +
       notOkMoves

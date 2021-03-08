@@ -28,3 +28,16 @@ export function interpretEvent(e: InteractionEvent): Action | null {
   }
   return null;
 }
+
+export function getActionText(action: Action): string {
+  switch (action) {
+    case Action.A:
+      return "Shift + left click";
+    case Action.B:
+      return "Shift + right click";
+    case Action.X:
+      return "Left click";
+    case Action.Y:
+      return "Right click";
+  }
+}
