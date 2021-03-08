@@ -8,6 +8,7 @@ import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES } from "./moves/moveLists";
 import { CombatC, CombatSystem } from "./combat";
+import { Tilemap } from "../tilemap";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -37,7 +38,11 @@ function makeThug(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-export function makeECS(game: GameInterface, container: Container): ECS {
+export function makeECS(
+  game: GameInterface,
+  container: Container,
+  tilemap: Tilemap
+): ECS {
   const engine = new Engine();
 
   const spriteSystem = new SpriteSystem(game, container);
@@ -46,15 +51,21 @@ export function makeECS(game: GameInterface, container: Container): ECS {
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
 
-  const player = makePlayer(new Vector(7, 14), 0);
+  const player = makePlayer(
+    new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 2),
+    0
+  );
   engine.addEntity(player);
 
-  engine.addEntity(makeThug(new Vector(7, 11), 2));
+  engine.addEntity(
+    makeThug(new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2)
+  );
 
   const ecs = {
     engine: engine,
     combatSystem: combatSystem,
     spriteSystem: spriteSystem,
+    tilemap,
     player,
   };
   combatSystem.ecs = ecs;

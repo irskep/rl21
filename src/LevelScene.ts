@@ -25,7 +25,7 @@ export class LevelScene implements GameScene {
   /* state management */
 
   ecs!: ECS;
-  map = new Tilemap(new Vector(16, 16));
+  map = new Tilemap(new Vector(10, 10));
   possibleMoves: [Move, MoveCheckResult][] = [];
 
   // debug state
@@ -87,7 +87,7 @@ export class LevelScene implements GameScene {
       }
     }
 
-    this.ecs = makeECS(this.game, this.arena);
+    this.ecs = makeECS(this.game, this.arena, this.map);
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateDbgText();
