@@ -17,7 +17,7 @@ import { SpriteC } from "./sprite";
 import UnreachableCaseError from "../UnreachableCaseError";
 
 export enum CombatState {
-  Normal = "Normal",
+  Standing = "Standing",
   PunchTelegraph = "PunchTelegraph",
   PunchFollowthrough = "PunchFollowthrough",
   Punched = "Punched",
@@ -26,7 +26,7 @@ export enum CombatState {
 
 function stateToPlayerSpriteIndex(state: CombatState): number {
   switch (state) {
-    case CombatState.Normal:
+    case CombatState.Standing:
       return SpriteIndices.BM_STAND;
     case CombatState.PunchTelegraph:
       return SpriteIndices.BM_PUNCH_BEFORE;
@@ -43,7 +43,7 @@ function stateToPlayerSpriteIndex(state: CombatState): number {
 
 function stateToHenchmanSpriteIndex(state: CombatState): number {
   switch (state) {
-    case CombatState.Normal:
+    case CombatState.Standing:
       return SpriteIndices.STAND;
     case CombatState.PunchTelegraph:
       return SpriteIndices.PUNCH_BEFORE;
@@ -59,7 +59,7 @@ function stateToHenchmanSpriteIndex(state: CombatState): number {
 }
 
 export class CombatC implements Component {
-  state = CombatState.Normal;
+  state = CombatState.Standing;
   spriteIndexOverride: number | null = null;
   needsToMove = true;
   moves: Move[] = [];
@@ -69,6 +69,10 @@ export class CombatC implements Component {
   build(moves: Move[]): CombatC {
     this.moves = moves;
     return this;
+  }
+
+  get hoverText(): string {
+    return this.state;
   }
 
   becomeProne(turns: number, spriteC: SpriteC) {
@@ -187,7 +191,7 @@ export class CombatSystem extends System {
     const defenderCombatC = defender.getComponent(CombatC);
     const state = defenderCombatC.state;
     switch (state) {
-      case CombatState.Normal:
+      case CombatState.Standing:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:

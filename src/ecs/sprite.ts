@@ -47,6 +47,10 @@ export class SpriteC implements Component {
     this.needsLabelUpdate = true;
   }
 
+  get hoverText(): string {
+    return this.name;
+  }
+
   turnToward(target: Vector) {
     const direction = target.clone().subtract(this.pos);
     for (const d2 of DIRECTIONS) {

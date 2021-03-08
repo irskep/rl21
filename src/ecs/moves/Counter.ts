@@ -14,7 +14,7 @@ export class Counter implements Move {
   check(ctx: MoveContext, target: Vector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
     const spriteC = ctx.entity.getComponent(SpriteC);
-    if (combatC.state != CombatState.Normal) {
+    if (combatC.state != CombatState.Standing) {
       return { success: false, message: "Not in the right state" };
     }
     const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);

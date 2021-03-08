@@ -27,11 +27,14 @@ export class Wait implements Move {
       combatC.proneTimer = proneTimer;
       spriteC.label = `${proneTimer}`;
       if (proneTimer <= 0) {
-        combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+        combatC.setState(
+          CombatState.Standing,
+          ctx.entity.getComponent(SpriteC)
+        );
         ctx.entity.getComponent(SpriteC).label = "";
       }
     } else {
-      combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+      combatC.setState(CombatState.Standing, ctx.entity.getComponent(SpriteC));
     }
 
     return false;

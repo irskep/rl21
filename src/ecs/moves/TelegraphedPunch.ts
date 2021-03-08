@@ -12,7 +12,7 @@ export class TelegraphedPunchPrepare implements Move {
 
   check(ctx: MoveContext, target: Vector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
-    if (combatC.state != CombatState.Normal) {
+    if (combatC.state != CombatState.Standing) {
       return { success: false, message: "Not in the right state" };
     }
     const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);

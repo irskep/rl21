@@ -6,6 +6,7 @@ import {
   TextStyle,
   Text,
   ITextStyle,
+  Graphics,
 } from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
@@ -16,6 +17,8 @@ import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
 import { Move, MoveCheckResult } from "./ecs/moves/moveTypes";
 import { Action, interpretEvent } from "./input";
+import { Entity } from "@nova-engine/ecs";
+import { SpriteC } from "./ecs/sprite";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -31,14 +34,19 @@ export class LevelScene implements GameScene {
   messageLog = new Text("");
   messages = new Array<string>();
 
+  mouseoverContainer = new Container();
+  mouseoverBg = new Graphics();
+  mouseoverText = new Text("");
+
   /* state management */
 
   ecs!: ECS;
   map = new Tilemap(new Vector(10, 10));
   possibleMoves: [Move, MoveCheckResult][] = [];
 
-  // debug state
+  // display
   hoveredPos: Vector | null = null;
+  hoveredEntity: Entity | null = null;
 
   constructor(private game: GameInterface) {
     this.container.interactive = true;
@@ -94,6 +102,12 @@ export class LevelScene implements GameScene {
       wordWrapWidth: 400,
     });
     this.hudContainer.addChild(this.messageLog);
+
+    this.mouseoverText.style = new TextStyle(consoleStyle);
+    this.mouseoverContainer.addChild(this.mouseoverBg);
+    this.mouseoverContainer.addChild(this.mouseoverText);
+    this.mouseoverContainer.visible = false;
+    this.hudContainer.addChild(this.mouseoverContainer);
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
@@ -156,6 +170,48 @@ export class LevelScene implements GameScene {
     } else {
       this.hoverSprite.visible = false;
     }
+
+    if (pos) {
+      this.updateHoveredEntity(this.ecs.spriteSystem.findEntity(pos) || null);
+    } else {
+      this.updateHoveredEntity(null);
+    }
+  }
+
+  updateHoveredEntity(e: Entity | null) {
+    if (!e) {
+      this.mouseoverContainer.visible = false;
+      return;
+    }
+
+    const tilePos = e.getComponent(SpriteC).pos;
+    const pos = new Vector(
+      (tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10,
+      tilePos.y * this.game.tileSize * this.arena.scale.y
+    );
+    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.visible = true;
+
+    const text = `${e.getComponent(SpriteC).hoverText}\n\n${
+      e.getComponent(CombatC).hoverText
+    }`;
+    this.mouseoverText.text = text;
+
+    const size = new Vector(
+      this.mouseoverText.width,
+      this.mouseoverText.height
+    );
+
+    const gfx = this.mouseoverBg;
+
+    gfx.clear();
+    gfx.width = size.x;
+    gfx.height = size.y;
+    gfx.beginFill(0x000000);
+    gfx.drawRect(0, 0, size.x, size.y);
+    gfx.endFill();
+
+    console.log(this.mouseoverContainer);
   }
 
   updatePossibleMoves() {

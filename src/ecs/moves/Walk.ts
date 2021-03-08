@@ -22,7 +22,7 @@ export class Walk implements Move {
 
     const state = ctx.entity.getComponent(CombatC).state;
     switch (state) {
-      case CombatState.Normal:
+      case CombatState.Standing:
         return { success: true };
       case CombatState.Prone:
         return { success: false, message: "Prone" };
