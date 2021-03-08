@@ -47416,7 +47416,7 @@ function makeArmoredThug(pos, orientation) {
   const e = makeThug(pos, orientation);
   e.getComponent(_CombatC.CombatC).traits.push(_CombatC.CombatTrait.Armored);
   e.getComponent(_sprite.SpriteC).tint = 0xffff66;
-  e.getComponent(_sprite.SpriteC).name = `${(0, _henchmanName.default)()} the Armored Thug`;
+  e.getComponent(_sprite.SpriteC).flavorName = `${(0, _henchmanName.default)()} the Armored Thug`;
   return e;
 }
 
@@ -48134,7 +48134,7 @@ function getNeighbors(v) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.HENCHMAN_MOVES = exports.BM_MOVES = void 0;
+exports.TITAN_MOVES = exports.HENCHMAN_MOVES = exports.BM_MOVES = void 0;
 
 var _Walk = require("./Walk");
 
@@ -48148,11 +48148,15 @@ var _Counter = require("./Counter");
 
 var _Stun = require("./Stun");
 
+var _Superpunch = require("./Superpunch");
+
 const BM_MOVES = [new _Wait.Wait(), new _Walk.Walk(), new _FastPunch.FastPunch(), new _Counter.Counter(), new _Stun.Stun()];
 exports.BM_MOVES = BM_MOVES;
 const HENCHMAN_MOVES = [new _TelegraphedPunch.TelegraphedPunchPrepare(), new _TelegraphedPunch.TelegraphedPunchFollowthroughHit(), new _TelegraphedPunch.TelegraphedPunchFollowthroughMiss(), new _Wait.Wait()];
 exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
-},{"./Walk":"fc6817f8979026dd6927ff37ee14e529","./Wait":"5f653e4293240883170322ba382d4013","./TelegraphedPunch":"b99ca3553cd73cf95091d9e983745d90","./FastPunch":"3c317739c70eba769b5ef5cf0eb645ff","./Counter":"f8ca4efbddc20d7e5b79d513fdc0d887","./Stun":"2d5a54111a7878180d9a627ddc8d0b53"}],"fc6817f8979026dd6927ff37ee14e529":[function(require,module,exports) {
+const TITAN_MOVES = [new _Superpunch.SuperpunchPrepare(), new _Superpunch.SuperpunchFollowthroughHit(), new _Superpunch.SuperpunchFollowthroughMiss(), new _Wait.Wait()];
+exports.TITAN_MOVES = TITAN_MOVES;
+},{"./Walk":"fc6817f8979026dd6927ff37ee14e529","./Wait":"5f653e4293240883170322ba382d4013","./TelegraphedPunch":"b99ca3553cd73cf95091d9e983745d90","./FastPunch":"3c317739c70eba769b5ef5cf0eb645ff","./Counter":"f8ca4efbddc20d7e5b79d513fdc0d887","./Stun":"2d5a54111a7878180d9a627ddc8d0b53","./Superpunch":"b5fa364c092432c1f44aa6a4841f92ad"}],"fc6817f8979026dd6927ff37ee14e529":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48449,6 +48453,8 @@ class CombatC {
     _defineProperty(this, "isPlayer", false);
 
     _defineProperty(this, "recoveryTimer", 0);
+
+    _defineProperty(this, "superpunchTarget", null);
   }
 
   build(moves, traits) {
@@ -48695,8 +48701,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = void 0;
 
-var _tilemap = require("../../tilemap");
-
 var _CombatState = require("../CombatState");
 
 var _CombatC = require("../CombatC");
@@ -48717,25 +48721,8 @@ class TelegraphedPunchPrepare {
   }
 
   check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-
-    if (combatC.state != _CombatState.CombatState.Standing) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target);
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
     if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
     return {
       success: true
     };
@@ -48856,7 +48843,7 @@ class TelegraphedPunchFollowthroughMiss {
 }
 
 exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
-},{"../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49101,7 +49088,159 @@ class Stun {
 }
 
 exports.Stun = Stun;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SuperpunchFollowthroughMiss = exports.SuperpunchFollowthroughHit = exports.SuperpunchPrepare = void 0;
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _direction = require("../direction");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class SuperpunchPrepare {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Prepare");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 101;
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    spriteC.turnToward(target);
+    combatC.setState(_CombatState.CombatState.PunchTelegraph, spriteC);
+    combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a heavy unblockable punch.`);
+    return false;
+  }
+
+}
+
+exports.SuperpunchPrepare = SuperpunchPrepare;
+
+class SuperpunchFollowthroughHit {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Followthrough (hit)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    }
+
+    return (0, _helpers.ensureTargetExists)(ctx, target);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+    return false;
+  }
+
+}
+
+exports.SuperpunchFollowthroughHit = SuperpunchFollowthroughHit;
+
+class SuperpunchFollowthroughMiss {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Followthrough (miss)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    } // TODO: allow punching allies?
+
+
+    return (0, _helpers.ensureTargetClear)(ctx, target);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC); // stumble forward
+
+    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
+
+    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
+    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
+    return false;
+  }
+
+}
+
+exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
