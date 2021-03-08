@@ -50012,7 +50012,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ALL_ASSETS = exports.EnvIndices = exports.SpriteIndices = void 0;
-exports.SpriteIndices = {
+var SpriteIndices = {
   STAND: 0,
   STUMBLING: 1,
   STUNNED: 2,
@@ -50050,60 +50050,34 @@ exports.SpriteIndices = {
   BM_DODGE_BACKWARD: 52,
   BM_DEAD: 53
 };
-exports.EnvIndices = {
+exports.SpriteIndices = SpriteIndices;
+var EnvIndices = {
   FLOOR: 0,
   WALL: 1,
   HOVER: 8
 };
-exports.ALL_ASSETS = [{
+exports.EnvIndices = EnvIndices;
+var ALL_ASSETS = [{
   name: "sprites",
   url: "sprites.png"
 }, {
   name: "env",
   url: "env.png"
 }];
+exports.ALL_ASSETS = ALL_ASSETS;
 },{}],"src/filmstrip.ts":[function(require,module,exports) {
 "use strict";
-
-var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  Object.defineProperty(o, k2, {
-    enumerable: true,
-    get: function get() {
-      return m[k];
-    }
-  });
-} : function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  o[k2] = m[k];
-});
-
-var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
-  Object.defineProperty(o, "default", {
-    enumerable: true,
-    value: v
-  });
-} : function (o, v) {
-  o["default"] = v;
-});
-
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) {
-    if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-  }
-
-  __setModuleDefault(result, mod);
-
-  return result;
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = filmstrip;
 
-var PIXI = __importStar(require("pixi.js"));
+var PIXI = _interopRequireWildcard(require("pixi.js"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function frames(texture, coordinates, frameWidth, frameHeight) {
   var baseTexture = new PIXI.Texture(texture.baseTexture);
@@ -50118,12 +50092,9 @@ function frames(texture, coordinates, frameWidth, frameHeight) {
   return textures;
 }
 
-function filmstrip(texture, frameWidth, frameHeight, spacing) {
-  if (spacing === void 0) {
-    spacing = 0;
-  } //An array to store the x/y positions of the frames
-
-
+function filmstrip(texture, frameWidth, frameHeight) {
+  var spacing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+  //An array to store the x/y positions of the frames
   var positions = []; //Find the width and height of the texture
 
   var textureWidth = texture.width,
@@ -50154,8 +50125,6 @@ function filmstrip(texture, frameWidth, frameHeight, spacing) {
 
   return frames(texture, positions, frameWidth, frameHeight);
 }
-
-exports.default = filmstrip;
 },{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js"}],"node_modules/vector2d/src/AbstractVector.js":[function(require,module,exports) {
 "use strict";
 
@@ -50780,29 +50749,35 @@ __export(require("./Vector"));
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.neighbors = exports.isAdjacent = exports.Tilemap = exports.Cell = void 0;
+exports.isAdjacent = isAdjacent;
+exports.neighbors = neighbors;
+exports.Tilemap = exports.Cell = void 0;
 
-var vector2d_1 = require("vector2d");
+var _vector2d = require("vector2d");
 
-var Cell =
-/** @class */
-function () {
-  function Cell(pos, index) {
-    this.sprite = null;
-    this.index = 0;
-    this.index = index;
-    this.pos = pos;
-  }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-  return Cell;
-}();
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Cell = function Cell(pos, index) {
+  _classCallCheck(this, Cell);
+
+  this.sprite = null;
+  this.index = 0;
+  this.index = index;
+  this.pos = pos;
+};
 
 exports.Cell = Cell;
 
 var Tilemap =
-/** @class */
+/*#__PURE__*/
 function () {
   function Tilemap(size) {
+    _classCallCheck(this, Tilemap);
+
     this.size = size;
     this.contents = new Array(size.y);
 
@@ -50810,15 +50785,18 @@ function () {
       this.contents[y] = new Array(size.x);
 
       for (var x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(new vector2d_1.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
+        this.contents[y][x] = new Cell(new _vector2d.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
       }
     }
   }
 
-  Tilemap.prototype.getCell = function (pos) {
-    if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y) return null;
-    return this.contents[pos.y][pos.x];
-  };
+  _createClass(Tilemap, [{
+    key: "getCell",
+    value: function getCell(pos) {
+      if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y) return null;
+      return this.contents[pos.y][pos.x];
+    }
+  }]);
 
   return Tilemap;
 }();
@@ -50830,22 +50808,18 @@ function isAdjacent(a, b) {
   return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
 }
 
-exports.isAdjacent = isAdjacent;
-
 function neighbors(a) {
   var val = [];
 
   for (var i = -1; i <= 1; i++) {
     for (var j = -1; j <= 1; j++) {
       if (i == 0 && j == 0) continue;
-      val.push(new vector2d_1.Vector(a.x + i, a.y + j));
+      val.push(new _vector2d.Vector(a.x + i, a.y + j));
     }
   }
 
   return val;
 }
-
-exports.neighbors = neighbors;
 },{"vector2d":"node_modules/vector2d/src/Vec2D.js"}],"node_modules/@nova-engine/ecs/lib/Engine.js":[function(require,module,exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -51318,6 +51292,7 @@ module.exports = require("./lib/index");
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = getID;
 var nextID = 0;
 
 function getID() {
@@ -51325,179 +51300,174 @@ function getID() {
   nextID += 1;
   return id;
 }
-
-exports.default = getID;
 },{}],"src/ecs/direction.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getNeighbors = exports.getDirectionVector = exports.DIRECTIONS = void 0;
+exports.getDirectionVector = getDirectionVector;
+exports.getNeighbors = getNeighbors;
+exports.DIRECTIONS = void 0;
 
-var vector2d_1 = require("vector2d");
+var _vector2d = require("vector2d");
 
-exports.DIRECTIONS = [[new vector2d_1.Vector(0, -1), 0], [new vector2d_1.Vector(1, -1), 0.5], [new vector2d_1.Vector(1, 0), 1], [new vector2d_1.Vector(1, 1), 1.5], [new vector2d_1.Vector(0, 1), 2], [new vector2d_1.Vector(-1, 1), 2.5], [new vector2d_1.Vector(-1, 0), 3], [new vector2d_1.Vector(-1, -1), 3.5]];
+var DIRECTIONS = [[new _vector2d.Vector(0, -1), 0], [new _vector2d.Vector(1, -1), 0.5], [new _vector2d.Vector(1, 0), 1], [new _vector2d.Vector(1, 1), 1.5], [new _vector2d.Vector(0, 1), 2], [new _vector2d.Vector(-1, 1), 2.5], [new _vector2d.Vector(-1, 0), 3], [new _vector2d.Vector(-1, -1), 3.5]];
+exports.DIRECTIONS = DIRECTIONS;
 
 function getDirectionVector(direction) {
   switch (direction) {
     case 0:
-      return new vector2d_1.Vector(0, -1);
+      return new _vector2d.Vector(0, -1);
 
     case 0.5:
-      return new vector2d_1.Vector(1, -1);
+      return new _vector2d.Vector(1, -1);
 
     case 1:
-      return new vector2d_1.Vector(1, 0);
+      return new _vector2d.Vector(1, 0);
 
     case 1.5:
-      return new vector2d_1.Vector(1, 1);
+      return new _vector2d.Vector(1, 1);
 
     case 2:
-      return new vector2d_1.Vector(0, 1);
+      return new _vector2d.Vector(0, 1);
 
     case 2.5:
-      return new vector2d_1.Vector(-1, 1);
+      return new _vector2d.Vector(-1, 1);
 
     case 3:
-      return new vector2d_1.Vector(-1, 0);
+      return new _vector2d.Vector(-1, 0);
 
     case 3.5:
-      return new vector2d_1.Vector(-1, -1);
+      return new _vector2d.Vector(-1, -1);
 
     default:
-      return new vector2d_1.Vector(0, -1);
+      return new _vector2d.Vector(0, -1);
   }
 }
-
-exports.getDirectionVector = getDirectionVector;
 
 function getNeighbors(v) {
-  return exports.DIRECTIONS.map(function (d) {
-    return new vector2d_1.Vector(v.x, v.y).add(d[0]);
+  return DIRECTIONS.map(function (d) {
+    return new _vector2d.Vector(v.x, v.y).add(d[0]);
   });
 }
-
-exports.getNeighbors = getNeighbors;
 },{"vector2d":"node_modules/vector2d/src/Vec2D.js"}],"src/ecs/sprite.ts":[function(require,module,exports) {
 "use strict";
-
-var __extends = this && this.__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-
-var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  Object.defineProperty(o, k2, {
-    enumerable: true,
-    get: function get() {
-      return m[k];
-    }
-  });
-} : function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  o[k2] = m[k];
-});
-
-var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
-  Object.defineProperty(o, "default", {
-    enumerable: true,
-    value: v
-  });
-} : function (o, v) {
-  o["default"] = v;
-});
-
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) {
-    if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-  }
-
-  __setModuleDefault(result, mod);
-
-  return result;
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.SpriteSystem = exports.SpriteC = void 0;
 
-var ecs_1 = require("@nova-engine/ecs");
+var _ecs = require("@nova-engine/ecs");
 
-var pixi_js_1 = require("pixi.js");
+var _pixi = require("pixi.js");
 
-var Vec2D = __importStar(require("vector2d"));
+var Vec2D = _interopRequireWildcard(require("vector2d"));
 
-var direction_1 = require("./direction");
+var _direction = require("./direction");
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var SpriteC =
-/** @class */
+/*#__PURE__*/
 function () {
   function SpriteC() {
+    _classCallCheck(this, SpriteC);
+
     this.pos = new Vec2D.Vector(0, 0);
     this.orientation = 0; // clockwise from up
 
     this._spriteIndex = 0;
     this.needsTextureReplacement = false;
+    this._label = "";
+    this.needsLabelUpdate = false;
+    this.text = null;
   }
 
-  SpriteC.prototype.build = function (pos, spriteIndex) {
-    this.pos = pos;
-    this.spriteIndex = spriteIndex;
-    return this;
-  };
-
-  Object.defineProperty(SpriteC.prototype, "spriteIndex", {
+  _createClass(SpriteC, [{
+    key: "build",
+    value: function build(pos, spriteIndex) {
+      this.pos = pos;
+      this.spriteIndex = spriteIndex;
+      return this;
+    }
+  }, {
+    key: "spriteIndex",
     get: function get() {
       return this._spriteIndex;
     },
     set: function set(value) {
       this._spriteIndex = value;
       this.needsTextureReplacement = true;
+    }
+  }, {
+    key: "label",
+    get: function get() {
+      return this._label;
     },
-    enumerable: false,
-    configurable: true
-  });
+    set: function set(value) {
+      this._label = value;
+      this.needsLabelUpdate = true;
+    }
+  }, {
+    key: "turnToward",
+    value: function turnToward(target) {
+      var direction = target.clone().subtract(this.pos);
 
-  SpriteC.prototype.turnToward = function (target) {
-    var direction = target.clone().subtract(this.pos);
+      var _iterator = _createForOfIteratorHelper(_direction.DIRECTIONS),
+          _step;
 
-    for (var _i = 0, DIRECTIONS_1 = direction_1.DIRECTIONS; _i < DIRECTIONS_1.length; _i++) {
-      var d2 = DIRECTIONS_1[_i];
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var d2 = _step.value;
 
-      if (d2[0].equals(direction)) {
-        this.orientation = d2[1];
-        break;
+          if (d2[0].equals(direction)) {
+            this.orientation = d2[1];
+            break;
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
       }
     }
-  };
+  }]);
 
   return SpriteC;
 }();
@@ -51505,59 +51475,104 @@ function () {
 exports.SpriteC = SpriteC;
 
 var SpriteSystem =
-/** @class */
-function (_super) {
-  __extends(SpriteSystem, _super);
+/*#__PURE__*/
+function (_System) {
+  _inherits(SpriteSystem, _System);
+
+  var _super = _createSuper(SpriteSystem);
 
   function SpriteSystem(game, container) {
-    var _this = _super.call(this) || this;
+    var _this;
 
+    _classCallCheck(this, SpriteSystem);
+
+    _this = _super.call(this);
     _this.game = game;
     _this.container = container;
     return _this;
   }
 
-  SpriteSystem.prototype.onAttach = function (engine) {
-    _super.prototype.onAttach.call(this, engine);
+  _createClass(SpriteSystem, [{
+    key: "onAttach",
+    value: function onAttach(engine) {
+      _get(_getPrototypeOf(SpriteSystem.prototype), "onAttach", this).call(this, engine);
 
-    this.family = new ecs_1.FamilyBuilder(engine).include(SpriteC).build();
-  };
+      this.family = new _ecs.FamilyBuilder(engine).include(SpriteC).build();
+    }
+  }, {
+    key: "update",
+    value: function update(engine, delta) {
+      var _iterator2 = _createForOfIteratorHelper(this.family.entities),
+          _step2;
 
-  SpriteSystem.prototype.update = function (engine, delta) {
-    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
-      var entity = _a[_i];
-      var spriteC = entity.getComponent(SpriteC);
+      try {
+        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+          var entity = _step2.value;
+          var spriteC = entity.getComponent(SpriteC);
 
-      if (!spriteC.sprite) {
-        spriteC.sprite = new pixi_js_1.Sprite(this.game.assets.sprites[spriteC.spriteIndex]);
-        spriteC.sprite.anchor.set(0.5, 0.5);
-        this.container.addChild(spriteC.sprite);
-      }
+          if (!spriteC.sprite) {
+            spriteC.sprite = new _pixi.Sprite(this.game.assets.sprites[spriteC.spriteIndex]);
+            spriteC.sprite.anchor.set(0.5, 0.5);
+            this.container.addChild(spriteC.sprite);
+          }
 
-      spriteC.sprite.position.set(spriteC.pos.x * this.game.tileSize + this.game.tileSize / 2, spriteC.pos.y * this.game.tileSize + this.game.tileSize / 2);
-      spriteC.sprite.angle = 90 * spriteC.orientation;
+          spriteC.sprite.position.set(spriteC.pos.x * this.game.tileSize + this.game.tileSize / 2, spriteC.pos.y * this.game.tileSize + this.game.tileSize / 2);
+          spriteC.sprite.angle = 90 * spriteC.orientation;
 
-      if (spriteC.needsTextureReplacement) {
-        spriteC.needsTextureReplacement = false;
-        spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
+          if (spriteC.needsTextureReplacement) {
+            spriteC.needsTextureReplacement = false;
+            spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
+          }
+
+          if (spriteC.needsLabelUpdate) {
+            spriteC.needsLabelUpdate = false;
+
+            if (spriteC.text === null) {
+              spriteC.text = new _pixi.Text(spriteC.label, {
+                fontSize: 36,
+                fontFamily: "Barlow Condensed",
+                fill: "red",
+                align: "left"
+              });
+              spriteC.text.position.set(4, 4);
+              spriteC.sprite.addChild(spriteC.text);
+            }
+
+            spriteC.text.text = spriteC.label;
+          }
+        }
+      } catch (err) {
+        _iterator2.e(err);
+      } finally {
+        _iterator2.f();
       }
     }
-  };
-  /* helpers */
+    /* helpers */
 
+  }, {
+    key: "findEntity",
+    value: function findEntity(pos) {
+      var _iterator3 = _createForOfIteratorHelper(this.family.entities),
+          _step3;
 
-  SpriteSystem.prototype.findEntity = function (pos) {
-    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
-      var entity = _a[_i];
-      var spriteC = entity.getComponent(SpriteC);
-      if (spriteC.pos.equals(pos)) return entity;
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var entity = _step3.value;
+          var spriteC = entity.getComponent(SpriteC);
+          if (spriteC.pos.equals(pos)) return entity;
+        }
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+
+      return null;
     }
-
-    return null;
-  };
+  }]);
 
   return SpriteSystem;
-}(ecs_1.System);
+}(_ecs.System);
 
 exports.SpriteSystem = SpriteSystem;
 },{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./direction":"src/ecs/direction.ts"}],"src/input.ts":[function(require,module,exports) {
@@ -51566,15 +51581,17 @@ exports.SpriteSystem = SpriteSystem;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.interpretEvent = exports.Action = void 0;
+exports.interpretEvent = interpretEvent;
+exports.Action = void 0;
 var Action;
+exports.Action = Action;
 
 (function (Action) {
   Action["A"] = "A";
   Action["B"] = "B";
   Action["X"] = "X";
   Action["Y"] = "Y";
-})(Action = exports.Action || (exports.Action = {}));
+})(Action || (exports.Action = Action = {}));
 
 function interpretEvent(e) {
   var mouseEvent = e.data.originalEvent;
@@ -51601,185 +51618,217 @@ function interpretEvent(e) {
 
   return null;
 }
-
-exports.interpretEvent = interpretEvent;
 },{}],"src/ecs/UnreachableCaseError.ts":[function(require,module,exports) {
 "use strict";
-
-var __extends = this && this.__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
+
+function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 var UnreachableCaseError =
-/** @class */
-function (_super) {
-  __extends(UnreachableCaseError, _super);
+/*#__PURE__*/
+function (_Error) {
+  _inherits(UnreachableCaseError, _Error);
+
+  var _super = _createSuper(UnreachableCaseError);
 
   function UnreachableCaseError(val) {
-    return _super.call(this, "Unreachable case: " + JSON.stringify(val)) || this;
+    _classCallCheck(this, UnreachableCaseError);
+
+    return _super.call(this, "Unreachable case: ".concat(JSON.stringify(val)));
   }
 
   return UnreachableCaseError;
-}(Error);
+}(
+/*#__PURE__*/
+_wrapNativeSuper(Error));
 
 exports.default = UnreachableCaseError;
 },{}],"src/ecs/combat.ts":[function(require,module,exports) {
 "use strict";
-
-var __extends = this && this.__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.CombatSystem = exports.CombatC = exports.CombatState = void 0;
 
-var ecs_1 = require("@nova-engine/ecs");
+var _ecs = require("@nova-engine/ecs");
 
-var assets_1 = require("../assets");
+var _assets = require("../assets");
 
-var direction_1 = require("./direction");
+var _direction = require("./direction");
 
-var sprite_1 = require("./sprite");
+var _sprite = require("./sprite");
 
-var UnreachableCaseError_1 = __importDefault(require("./UnreachableCaseError"));
+var _UnreachableCaseError = _interopRequireDefault(require("./UnreachableCaseError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var CombatState;
+exports.CombatState = CombatState;
 
 (function (CombatState) {
   CombatState["Normal"] = "Normal";
   CombatState["PunchTelegraph"] = "PunchTelegraph";
   CombatState["PunchFollowthrough"] = "PunchFollowthrough";
   CombatState["Punched"] = "Punched";
-})(CombatState = exports.CombatState || (exports.CombatState = {}));
+  CombatState["Prone"] = "Prone";
+})(CombatState || (exports.CombatState = CombatState = {}));
 
 function stateToPlayerSpriteIndex(state) {
   switch (state) {
     case CombatState.Normal:
-      return assets_1.SpriteIndices.BM_STAND;
+      return _assets.SpriteIndices.BM_STAND;
 
     case CombatState.PunchTelegraph:
-      return assets_1.SpriteIndices.BM_PUNCH_BEFORE;
+      return _assets.SpriteIndices.BM_PUNCH_BEFORE;
 
     case CombatState.PunchFollowthrough:
-      return assets_1.SpriteIndices.BM_PUNCH_AFTER;
+      return _assets.SpriteIndices.BM_PUNCH_AFTER;
 
     case CombatState.Punched:
-      return assets_1.SpriteIndices.STUMBLING;
+      return _assets.SpriteIndices.STUMBLING;
+
+    case CombatState.Prone:
+      return _assets.SpriteIndices.BM_DEAD;
 
     default:
-      throw new UnreachableCaseError_1.default(state);
+      throw new _UnreachableCaseError.default(state);
   }
 }
 
 function stateToHenchmanSpriteIndex(state) {
   switch (state) {
     case CombatState.Normal:
-      return assets_1.SpriteIndices.STAND;
+      return _assets.SpriteIndices.STAND;
 
     case CombatState.PunchTelegraph:
-      return assets_1.SpriteIndices.PUNCH_BEFORE;
+      return _assets.SpriteIndices.PUNCH_BEFORE;
 
     case CombatState.PunchFollowthrough:
-      return assets_1.SpriteIndices.PUNCH_AFTER;
+      return _assets.SpriteIndices.PUNCH_AFTER;
 
     case CombatState.Punched:
-      return assets_1.SpriteIndices.STUMBLING;
+      return _assets.SpriteIndices.STUMBLING;
+
+    case CombatState.Prone:
+      return _assets.SpriteIndices.PRONE;
 
     default:
-      throw new UnreachableCaseError_1.default(state);
+      throw new _UnreachableCaseError.default(state);
   }
 }
 
 var CombatC =
-/** @class */
+/*#__PURE__*/
 function () {
   function CombatC() {
+    _classCallCheck(this, CombatC);
+
     this.state = CombatState.Normal;
     this.spriteIndexOverride = null;
     this.needsToMove = true;
     this.moves = [];
     this.isPlayer = false;
+    this.proneTimer = 0;
   }
 
-  CombatC.prototype.build = function (moves) {
-    this.moves = moves;
-    return this;
-  };
-
-  CombatC.prototype.setState = function (newState, spriteC, spriteIndexOverride) {
-    this.state = newState;
-
-    if (spriteIndexOverride) {
-      spriteC.spriteIndex = spriteIndexOverride;
-      return;
+  _createClass(CombatC, [{
+    key: "build",
+    value: function build(moves) {
+      this.moves = moves;
+      return this;
     }
-
-    if (this.isPlayer) {
-      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
-    } else {
-      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
+  }, {
+    key: "becomeProne",
+    value: function becomeProne(turns, spriteC) {
+      this.setState(CombatState.Prone, spriteC);
+      this.proneTimer = turns;
+      spriteC.label = "".concat(turns);
+      this.needsToMove = false;
     }
-  };
+  }, {
+    key: "setState",
+    value: function setState(newState, spriteC, spriteIndexOverride) {
+      this.state = newState;
+
+      if (spriteIndexOverride) {
+        spriteC.spriteIndex = spriteIndexOverride;
+        return;
+      }
+
+      if (this.isPlayer) {
+        spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
+      } else {
+        spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
+      }
+    }
+  }]);
 
   return CombatC;
 }();
@@ -51787,13 +51836,18 @@ function () {
 exports.CombatC = CombatC;
 
 var CombatSystem =
-/** @class */
-function (_super) {
-  __extends(CombatSystem, _super);
+/*#__PURE__*/
+function (_System) {
+  _inherits(CombatSystem, _System);
+
+  var _super = _createSuper(CombatSystem);
 
   function CombatSystem(game) {
-    var _this = _super.call(this) || this;
+    var _this;
 
+    _classCallCheck(this, CombatSystem);
+
+    _this = _super.call(this);
     _this.isProcessing = false;
     _this.entitiesToProcess = []; // LevelScene may set this
 
@@ -51816,7 +51870,7 @@ function (_super) {
       if (combatC.isPlayer) return _this.processNextEntity();
       if (!combatC.needsToMove) return _this.processNextEntity();
       combatC.needsToMove = false;
-      var spriteC = entity.getComponent(sprite_1.SpriteC);
+      var spriteC = entity.getComponent(_sprite.SpriteC);
       var moveContext = {
         entity: entity,
         ecs: _this.ecs,
@@ -51824,16 +51878,34 @@ function (_super) {
       };
       var availableMoves = [];
 
-      for (var _i = 0, _a = combatC.moves; _i < _a.length; _i++) {
-        var m_1 = _a[_i];
+      var _iterator = _createForOfIteratorHelper(combatC.moves),
+          _step;
 
-        for (var _b = 0, _c = direction_1.getNeighbors(spriteC.pos).concat(spriteC.pos); _b < _c.length; _b++) {
-          var n = _c[_b];
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _m = _step.value;
 
-          if (m_1.check(moveContext, n).success) {
-            availableMoves.push([m_1, n]);
+          var _iterator2 = _createForOfIteratorHelper((0, _direction.getNeighbors)(spriteC.pos).concat(spriteC.pos)),
+              _step2;
+
+          try {
+            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+              var n = _step2.value;
+
+              if (_m.check(moveContext, n).success) {
+                availableMoves.push([_m, n]);
+              }
+            }
+          } catch (err) {
+            _iterator2.e(err);
+          } finally {
+            _iterator2.f();
           }
         }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
       }
 
       if (availableMoves.length < 1) {
@@ -51843,9 +51915,11 @@ function (_super) {
       availableMoves.sort(function (a, b) {
         return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
       });
-      var _d = availableMoves[0],
-          m = _d[0],
-          target = _d[1];
+
+      var _availableMoves$ = _slicedToArray(availableMoves[0], 2),
+          m = _availableMoves$[0],
+          target = _availableMoves$[1];
+
       console.log("Apply", m, "from", entity, "to", target);
       var isAsync = m.apply(moveContext, target, _this.processNextEntity); // if stack growth becomes a problem, this function can be refactored to use
       // a while loop instead of recursion.
@@ -51859,39 +51933,61 @@ function (_super) {
     return _this;
   }
 
-  CombatSystem.prototype.onAttach = function (engine) {
-    _super.prototype.onAttach.call(this, engine);
+  _createClass(CombatSystem, [{
+    key: "onAttach",
+    value: function onAttach(engine) {
+      _get(_getPrototypeOf(CombatSystem.prototype), "onAttach", this).call(this, engine);
 
-    this.family = new ecs_1.FamilyBuilder(engine).include(CombatC).include(sprite_1.SpriteC).build();
-  };
-
-  CombatSystem.prototype.update = function (engine, delta) {
-    this.isProcessing = true;
-    this.entitiesToProcess = [].concat(this.family.entities);
-    this.processNextEntity();
-  };
-
-  CombatSystem.prototype.reset = function (engine) {
-    for (var _i = 0, _a = this.family.entities; _i < _a.length; _i++) {
-      var entity = _a[_i];
-      entity.getComponent(CombatC).needsToMove = true;
+      this.family = new _ecs.FamilyBuilder(engine).include(CombatC).include(_sprite.SpriteC).build();
     }
-  };
-
-  CombatSystem.prototype.applyPunch = function (attacker, defender) {
-    var defenderCombatC = defender.getComponent(CombatC);
-
-    switch (defenderCombatC.state) {
-      case CombatState.Normal:
-      case CombatState.PunchTelegraph:
-      case CombatState.PunchFollowthrough:
-        defenderCombatC.setState(CombatState.Punched, defender.getComponent(sprite_1.SpriteC));
-        defenderCombatC.needsToMove = false;
+  }, {
+    key: "update",
+    value: function update(engine, delta) {
+      this.isProcessing = true;
+      this.entitiesToProcess = new Array().concat(this.family.entities);
+      this.processNextEntity();
     }
-  };
+  }, {
+    key: "reset",
+    value: function reset(engine) {
+      var _iterator3 = _createForOfIteratorHelper(this.family.entities),
+          _step3;
+
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var entity = _step3.value;
+          entity.getComponent(CombatC).needsToMove = true;
+        }
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+    }
+  }, {
+    key: "applyPunch",
+    value: function applyPunch(attacker, defender) {
+      var defenderCombatC = defender.getComponent(CombatC);
+      var state = defenderCombatC.state;
+
+      switch (state) {
+        case CombatState.Normal:
+        case CombatState.PunchTelegraph:
+        case CombatState.PunchFollowthrough:
+        case CombatState.Prone:
+        case CombatState.Punched:
+          defenderCombatC.setState(CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+          defenderCombatC.needsToMove = false;
+          break;
+
+        default:
+          throw new _UnreachableCaseError.default(state);
+      }
+    }
+  }]);
 
   return CombatSystem;
-}(ecs_1.System);
+}(_ecs.System);
 
 exports.CombatSystem = CombatSystem;
 },{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","./direction":"src/ecs/direction.ts","./sprite":"src/ecs/sprite.ts","./UnreachableCaseError":"src/ecs/UnreachableCaseError.ts"}],"src/ecs/moveHelpers.ts":[function(require,module,exports) {
@@ -51900,14 +51996,15 @@ exports.CombatSystem = CombatSystem;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ensureTargetIsEnemy = exports.ensureTargetClear = void 0;
+exports.ensureTargetClear = ensureTargetClear;
+exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 
-var assets_1 = require("../assets");
+var _assets = require("../assets");
 
-var combat_1 = require("./combat");
+var _combat = require("./combat");
 
 function ensureTargetClear(ctx, target) {
-  if (ctx.tilemap.getCell(target).index !== assets_1.EnvIndices.FLOOR) return {
+  if (ctx.tilemap.getCell(target).index !== _assets.EnvIndices.FLOOR) return {
     success: false,
     message: "Target is not floor"
   };
@@ -51920,10 +52017,8 @@ function ensureTargetClear(ctx, target) {
   };
 }
 
-exports.ensureTargetClear = ensureTargetClear;
-
 function ensureTargetIsEnemy(ctx, target, isPlayer) {
-  if (ctx.tilemap.getCell(target).index !== assets_1.EnvIndices.FLOOR) return {
+  if (ctx.tilemap.getCell(target).index !== _assets.EnvIndices.FLOOR) return {
     success: false,
     message: "Target is not floor"
   };
@@ -51936,7 +52031,7 @@ function ensureTargetIsEnemy(ctx, target, isPlayer) {
     };
   }
 
-  var combatC = entity.getComponent(combat_1.CombatC);
+  var combatC = entity.getComponent(_combat.CombatC);
   if (!combatC || combatC.isPlayer == isPlayer) return {
     success: false,
     message: "Target does not contain enemy"
@@ -51945,92 +52040,105 @@ function ensureTargetIsEnemy(ctx, target, isPlayer) {
     success: true
   };
 }
-
-exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
 },{"../assets":"src/assets.ts","./combat":"src/ecs/combat.ts"}],"src/ecs/moveLists.ts":[function(require,module,exports) {
 "use strict";
-
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.FastPunch = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
+exports.HENCHMAN_MOVES = exports.BM_MOVES = exports.Counter = exports.FastPunch = exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = exports.Wait = exports.Walk = void 0;
 
-var input_1 = require("../input");
+var _input = require("../input");
 
-var tilemap_1 = require("../tilemap");
+var _tilemap = require("../tilemap");
 
-var combat_1 = require("./combat");
+var _combat = require("./combat");
 
-var direction_1 = require("./direction");
+var _direction = require("./direction");
 
-var moveHelpers_1 = require("./moveHelpers");
+var _moveHelpers = require("./moveHelpers");
 
-var sprite_1 = require("./sprite");
+var _sprite = require("./sprite");
 
-var UnreachableCaseError_1 = __importDefault(require("./UnreachableCaseError"));
+var _UnreachableCaseError = _interopRequireDefault(require("./UnreachableCaseError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Walk =
-/** @class */
+/*#__PURE__*/
 function () {
   function Walk() {
+    _classCallCheck(this, Walk);
+
     this.name = "Walk";
     this.help = "no combat";
-    this.action = input_1.Action.X;
+    this.action = _input.Action.X;
   }
 
-  Walk.prototype.check = function (ctx, target) {
-    var checkResult = moveHelpers_1.ensureTargetClear(ctx, target);
-    if (!checkResult.success) return checkResult;
+  _createClass(Walk, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var checkResult = (0, _moveHelpers.ensureTargetClear)(ctx, target);
+      if (!checkResult.success) return checkResult;
 
-    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    var state = ctx.entity.getComponent(combat_1.CombatC).state;
-
-    switch (state) {
-      case combat_1.CombatState.Normal:
-        return {
-          success: true
-        };
-
-      case combat_1.CombatState.Punched:
+      if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
         return {
           success: false,
-          message: "Reeling from punch"
+          message: "Not adjacent"
         };
+      }
 
-      case combat_1.CombatState.PunchFollowthrough:
-      case combat_1.CombatState.PunchTelegraph:
-        return {
-          success: false,
-          message: "?"
-        };
+      var state = ctx.entity.getComponent(_combat.CombatC).state;
 
-      default:
-        throw new UnreachableCaseError_1.default(state);
+      switch (state) {
+        case _combat.CombatState.Normal:
+          return {
+            success: true
+          };
+
+        case _combat.CombatState.Prone:
+          return {
+            success: false,
+            message: "Prone"
+          };
+
+        case _combat.CombatState.Punched:
+          return {
+            success: false,
+            message: "Reeling from punch"
+          };
+
+        case _combat.CombatState.PunchFollowthrough:
+        case _combat.CombatState.PunchTelegraph:
+          return {
+            success: false,
+            message: "?"
+          };
+
+        default:
+          throw new _UnreachableCaseError.default(state);
+      }
     }
-  };
-
-  Walk.prototype.apply = function (ctx, target) {
-    var c = ctx.entity.getComponent(sprite_1.SpriteC);
-    c.turnToward(target);
-    c.pos = target;
-    return false;
-  };
-
-  Walk.prototype.computeValue = function (ctx, target) {
-    return 0;
-  };
+  }, {
+    key: "apply",
+    value: function apply(ctx, target) {
+      var c = ctx.entity.getComponent(_sprite.SpriteC);
+      c.turnToward(target);
+      c.pos = target;
+      return false;
+    }
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 0;
+    }
+  }]);
 
   return Walk;
 }();
@@ -52038,36 +52146,58 @@ function () {
 exports.Walk = Walk;
 
 var Wait =
-/** @class */
+/*#__PURE__*/
 function () {
   function Wait() {
+    _classCallCheck(this, Wait);
+
     this.name = "Wait";
     this.help = "no combat";
-    this.action = input_1.Action.X;
+    this.action = _input.Action.X;
   }
 
-  Wait.prototype.check = function (ctx, target) {
-    if (ctx.entity.getComponent(sprite_1.SpriteC).pos.equals(target)) {
-      return {
-        success: true
-      };
-    } else {
-      return {
-        success: false,
-        message: "Must click on yourself"
-      };
+  _createClass(Wait, [{
+    key: "check",
+    value: function check(ctx, target) {
+      if (ctx.entity.getComponent(_sprite.SpriteC).pos.equals(target)) {
+        return {
+          success: true
+        };
+      } else {
+        return {
+          success: false,
+          message: "Must click on yourself"
+        };
+      }
     }
-  };
+  }, {
+    key: "apply",
+    value: function apply(ctx) {
+      // Upon waiting, return to normal state
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
 
-  Wait.prototype.apply = function (ctx) {
-    // Upon waiting, return to normal state
-    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.Normal, ctx.entity.getComponent(sprite_1.SpriteC));
-    return false;
-  };
+      if (combatC.state === _combat.CombatState.Prone) {
+        var proneTimer = combatC.proneTimer - 1;
+        combatC.proneTimer = proneTimer;
+        spriteC.label = "".concat(proneTimer);
 
-  Wait.prototype.computeValue = function (ctx, target) {
-    return 0;
-  };
+        if (proneTimer <= 0) {
+          combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+          ctx.entity.getComponent(_sprite.SpriteC).label = "";
+        }
+      } else {
+        combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+      }
+
+      return false;
+    }
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 0;
+    }
+  }]);
 
   return Wait;
 }();
@@ -52075,48 +52205,55 @@ function () {
 exports.Wait = Wait;
 
 var TelegraphedPunchPrepare =
-/** @class */
+/*#__PURE__*/
 function () {
   function TelegraphedPunchPrepare() {
+    _classCallCheck(this, TelegraphedPunchPrepare);
+
     this.name = "Telegraphed Punch Prepare";
     this.help = "?";
   }
 
-  TelegraphedPunchPrepare.prototype.check = function (ctx, target) {
-    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+  _createClass(TelegraphedPunchPrepare, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != combat_1.CombatState.Normal) {
+      if (combatC.state != _combat.CombatState.Normal) {
+        return {
+          success: false,
+          message: "Not in the right state"
+        };
+      }
+
+      var checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+      if (!checkResult.success) return checkResult;
+
+      if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+        return {
+          success: false,
+          message: "Not adjacent"
+        };
+      }
+
       return {
-        success: false,
-        message: "Not in the right state"
+        success: true
       };
     }
-
-    var checkResult = moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 100; // henchmen really want to punch Batman.
     }
-
-    return {
-      success: true
-    };
-  };
-
-  TelegraphedPunchPrepare.prototype.computeValue = function (ctx, target) {
-    return 100; // henchmen really want to punch Batman.
-  };
-
-  TelegraphedPunchPrepare.prototype.apply = function (ctx, target) {
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.PunchTelegraph, spriteC);
-    return false;
-  };
+  }, {
+    key: "apply",
+    value: function apply(ctx, target) {
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      spriteC.turnToward(target);
+      ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
+      return false;
+    }
+  }]);
 
   return TelegraphedPunchPrepare;
 }();
@@ -52124,51 +52261,58 @@ function () {
 exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
 
 var TelegraphedPunchFollowthroughHit =
-/** @class */
+/*#__PURE__*/
 function () {
   function TelegraphedPunchFollowthroughHit() {
+    _classCallCheck(this, TelegraphedPunchFollowthroughHit);
+
     this.name = "Telegraphed Punch Followthrough (hit)";
     this.help = "?";
   }
 
-  TelegraphedPunchFollowthroughHit.prototype.check = function (ctx, target) {
-    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+  _createClass(TelegraphedPunchFollowthroughHit, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != combat_1.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
+      if (combatC.state != _combat.CombatState.PunchTelegraph) {
+        return {
+          success: false,
+          message: "Not in the right state"
+        };
+      }
+
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      var isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+      if (!isTargetInTheRightDirection) {
+        return {
+          success: false,
+          message: "Momentum is in a different direction"
+        };
+      }
+
+      return (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
     }
-
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    var isTargetInTheRightDirection = spriteC.pos.clone().add(direction_1.getDirectionVector(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 100;
     }
+  }, {
+    key: "apply",
+    value: function apply(ctx, target) {
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
+      combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
+      var enemy = ctx.ecs.spriteSystem.findEntity(target);
+      var enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
 
-    return moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
-  };
-
-  TelegraphedPunchFollowthroughHit.prototype.computeValue = function (ctx, target) {
-    return 100;
-  };
-
-  TelegraphedPunchFollowthroughHit.prototype.apply = function (ctx, target) {
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    var combatC = ctx.entity.getComponent(combat_1.CombatC);
-    combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC);
-    var enemy = ctx.ecs.spriteSystem.findEntity(target);
-    var enemySpriteC = enemy.getComponent(sprite_1.SpriteC); // face attacker
-
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
-    return false;
-  };
+      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+      return false;
+    }
+  }]);
 
   return TelegraphedPunchFollowthroughHit;
 }();
@@ -52176,50 +52320,57 @@ function () {
 exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
 
 var TelegraphedPunchFollowthroughMiss =
-/** @class */
+/*#__PURE__*/
 function () {
   function TelegraphedPunchFollowthroughMiss() {
+    _classCallCheck(this, TelegraphedPunchFollowthroughMiss);
+
     this.name = "Telegraphed Punch Followthrough (miss)";
     this.help = "?";
   }
 
-  TelegraphedPunchFollowthroughMiss.prototype.check = function (ctx, target) {
-    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+  _createClass(TelegraphedPunchFollowthroughMiss, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != combat_1.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
+      if (combatC.state != _combat.CombatState.PunchTelegraph) {
+        return {
+          success: false,
+          message: "Not in the right state"
+        };
+      }
+
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      var isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+      if (!isTargetInTheRightDirection) {
+        return {
+          success: false,
+          message: "Momentum is in a different direction"
+        };
+      } // TODO: allow punching allies?
+
+
+      return (0, _moveHelpers.ensureTargetClear)(ctx, target);
     }
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 100;
+    }
+  }, {
+    key: "apply",
+    value: function apply(ctx) {
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      var combatC = ctx.entity.getComponent(_combat.CombatC); // stumble forward
 
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    var isTargetInTheRightDirection = spriteC.pos.clone().add(direction_1.getDirectionVector(spriteC.orientation)).equals(target);
+      combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC); // ok
 
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    } // TODO: allow punching allies?
-
-
-    return moveHelpers_1.ensureTargetClear(ctx, target);
-  };
-
-  TelegraphedPunchFollowthroughMiss.prototype.computeValue = function (ctx, target) {
-    return 100;
-  };
-
-  TelegraphedPunchFollowthroughMiss.prototype.apply = function (ctx) {
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    var combatC = ctx.entity.getComponent(combat_1.CombatC); // stumble forward
-
-    combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC); // ok
-
-    spriteC.pos = spriteC.pos.add(direction_1.getDirectionVector(spriteC.orientation));
-    return false;
-  };
+      spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
+      return false;
+    }
+  }]);
 
   return TelegraphedPunchFollowthroughMiss;
 }();
@@ -52227,104 +52378,207 @@ function () {
 exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
 
 var FastPunch =
-/** @class */
+/*#__PURE__*/
 function () {
   function FastPunch() {
-    this.action = input_1.Action.X;
+    _classCallCheck(this, FastPunch);
+
+    this.action = _input.Action.X;
     this.name = "Punch";
     this.help = "Strike the enemy in the face";
   }
 
-  FastPunch.prototype.check = function (ctx, target) {
-    var combatC = ctx.entity.getComponent(combat_1.CombatC);
+  _createClass(FastPunch, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != combat_1.CombatState.Normal) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
+      if (combatC.state != _combat.CombatState.Normal) {
+        return {
+          success: false,
+          message: "Not in the right state"
+        };
+      }
 
-    var checkResult = moveHelpers_1.ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
+      var checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+      if (!checkResult.success) return checkResult;
 
-    if (!tilemap_1.isAdjacent(ctx.entity.getComponent(sprite_1.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
+      if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+        return {
+          success: false,
+          message: "Not adjacent"
+        };
+      }
 
-    return {
-      success: true
-    };
-  };
-
-  FastPunch.prototype.computeValue = function (ctx, target) {
-    return 200;
-  };
-
-  FastPunch.prototype.apply = function (ctx, target, doNext) {
-    var spriteC = ctx.entity.getComponent(sprite_1.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(combat_1.CombatC).setState(combat_1.CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    setTimeout(function () {
-      doNext();
-      var combatC = ctx.entity.getComponent(combat_1.CombatC);
-      combatC.setState(combat_1.CombatState.PunchFollowthrough, spriteC);
       var enemy = ctx.ecs.spriteSystem.findEntity(target);
-      var enemySpriteC = enemy.getComponent(sprite_1.SpriteC); // face attacker
+      var enemyState = enemy.getComponent(_combat.CombatC).state;
 
-      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+      switch (enemyState) {
+        case _combat.CombatState.Prone:
+          return {
+            success: false,
+            message: "Enemy is on the ground"
+          };
+
+        default:
+          break;
+      }
+
+      return {
+        success: true
+      };
+    }
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 200;
+    }
+  }, {
+    key: "apply",
+    value: function apply(ctx, target, doNext) {
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      spriteC.turnToward(target);
+      ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
       ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
       setTimeout(function () {
-        combatC.setState(combat_1.CombatState.Normal, spriteC);
+        var combatC = ctx.entity.getComponent(_combat.CombatC);
+        combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
+        var enemy = ctx.ecs.spriteSystem.findEntity(target);
+        var enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+        enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+        ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
         ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-        doNext();
-      }, 300);
-    }, 300);
-    return true;
-  };
+        setTimeout(function () {
+          combatC.setState(_combat.CombatState.Normal, spriteC);
+          ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+          doNext();
+        }, 500);
+      }, 500);
+      return true;
+    }
+  }]);
 
   return FastPunch;
 }();
 
 exports.FastPunch = FastPunch;
-exports.BM_MOVES = [new Wait(), new Walk(), new FastPunch()];
-exports.HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
+
+var Counter =
+/*#__PURE__*/
+function () {
+  function Counter() {
+    _classCallCheck(this, Counter);
+
+    this.action = _input.Action.Y;
+    this.name = "Counter";
+    this.help = "If an enemy is about to strike, counter their move";
+  }
+
+  _createClass(Counter, [{
+    key: "check",
+    value: function check(ctx, target) {
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+      if (combatC.state != _combat.CombatState.Normal) {
+        return {
+          success: false,
+          message: "Not in the right state"
+        };
+      }
+
+      var checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+      if (!checkResult.success) return checkResult;
+
+      if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
+        return {
+          success: false,
+          message: "Not adjacent"
+        };
+      }
+
+      var enemy = ctx.ecs.spriteSystem.findEntity(target);
+      var enemyState = enemy.getComponent(_combat.CombatC).state;
+
+      switch (enemyState) {
+        case _combat.CombatState.PunchTelegraph:
+          return {
+            success: true
+          };
+
+        default:
+          return {
+            success: false,
+            message: "Enemy is not winding up to strike"
+          };
+      }
+    }
+  }, {
+    key: "computeValue",
+    value: function computeValue(ctx, target) {
+      return 200;
+    }
+  }, {
+    key: "apply",
+    value: function apply(ctx, target, doNext) {
+      var spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+      var combatC = ctx.entity.getComponent(_combat.CombatC);
+      spriteC.turnToward(target); // swap positions, prone the enemy
+
+      var enemy = ctx.ecs.spriteSystem.findEntity(target);
+      var enemyCombatC = enemy.getComponent(_combat.CombatC);
+      var enemySpriteC = enemy.getComponent(_sprite.SpriteC); // const orientation = spriteC.orientation;
+
+      var enemyOrientation = enemySpriteC.orientation;
+      spriteC.orientation = enemyOrientation;
+      var playerPos = spriteC.pos;
+      spriteC.pos = enemySpriteC.pos;
+      enemySpriteC.pos = playerPos;
+      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      setTimeout(function () {
+        enemyCombatC.becomeProne(2, enemySpriteC);
+        doNext();
+      }, 500);
+      return true;
+    }
+  }]);
+
+  return Counter;
+}();
+
+exports.Counter = Counter;
+var BM_MOVES = [new Wait(), new Walk(), new FastPunch(), new Counter()];
+exports.BM_MOVES = BM_MOVES;
+var HENCHMAN_MOVES = [new TelegraphedPunchPrepare(), new TelegraphedPunchFollowthroughHit(), new TelegraphedPunchFollowthroughMiss(), new Wait()];
+exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
 },{"../input":"src/input.ts","../tilemap":"src/tilemap.ts","./combat":"src/ecs/combat.ts","./direction":"src/ecs/direction.ts","./moveHelpers":"src/ecs/moveHelpers.ts","./sprite":"src/ecs/sprite.ts","./UnreachableCaseError":"src/ecs/UnreachableCaseError.ts"}],"src/ecs/ecs.ts":[function(require,module,exports) {
 "use strict";
-
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.makeECS = void 0;
+exports.makeECS = makeECS;
 
-var ecs_1 = require("@nova-engine/ecs");
+var _ecs = require("@nova-engine/ecs");
 
-var assets_1 = require("../assets");
+var _assets = require("../assets");
 
-var getID_1 = __importDefault(require("../getID"));
+var _getID = _interopRequireDefault(require("../getID"));
 
-var sprite_1 = require("./sprite");
+var _sprite = require("./sprite");
 
-var vector2d_1 = require("vector2d");
+var _vector2d = require("vector2d");
 
-var moveLists_1 = require("./moveLists");
+var _moveLists = require("./moveLists");
 
-var combat_1 = require("./combat");
+var _combat = require("./combat");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function makeEntity() {
-  var e = new ecs_1.Entity();
-  e.id = getID_1.default();
+  var e = new _ecs.Entity();
+  e.id = (0, _getID.default)();
   return e;
 }
 
@@ -52335,30 +52589,30 @@ function makePlayer(pos, orientation) {
     throw new Error("player should always be 0");
   }
 
-  e.putComponent(sprite_1.SpriteC).build(pos, assets_1.SpriteIndices.BM_STAND);
-  e.getComponent(sprite_1.SpriteC).orientation = orientation;
-  e.putComponent(combat_1.CombatC).build(moveLists_1.BM_MOVES);
-  e.getComponent(combat_1.CombatC).isPlayer = true;
+  e.putComponent(_sprite.SpriteC).build(pos, _assets.SpriteIndices.BM_STAND);
+  e.getComponent(_sprite.SpriteC).orientation = orientation;
+  e.putComponent(_combat.CombatC).build(_moveLists.BM_MOVES);
+  e.getComponent(_combat.CombatC).isPlayer = true;
   return e;
 }
 
 function makeThug(pos, orientation) {
   var e = makeEntity();
-  e.putComponent(sprite_1.SpriteC).build(pos, assets_1.SpriteIndices.STAND);
-  e.getComponent(sprite_1.SpriteC).orientation = orientation;
-  e.putComponent(combat_1.CombatC).build(moveLists_1.HENCHMAN_MOVES);
+  e.putComponent(_sprite.SpriteC).build(pos, _assets.SpriteIndices.STAND);
+  e.getComponent(_sprite.SpriteC).orientation = orientation;
+  e.putComponent(_combat.CombatC).build(_moveLists.HENCHMAN_MOVES);
   return e;
 }
 
 function makeECS(game, container) {
-  var engine = new ecs_1.Engine();
-  var spriteSystem = new sprite_1.SpriteSystem(game, container);
-  var combatSystem = new combat_1.CombatSystem(game);
+  var engine = new _ecs.Engine();
+  var spriteSystem = new _sprite.SpriteSystem(game, container);
+  var combatSystem = new _combat.CombatSystem(game);
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
-  var player = makePlayer(new vector2d_1.Vector(7, 14), 0);
+  var player = makePlayer(new _vector2d.Vector(7, 14), 0);
   engine.addEntity(player);
-  engine.addEntity(makeThug(new vector2d_1.Vector(7, 11), 2));
+  engine.addEntity(makeThug(new _vector2d.Vector(7, 11), 2));
   var ecs = {
     engine: engine,
     combatSystem: combatSystem,
@@ -52368,45 +52622,63 @@ function makeECS(game, container) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-
-exports.makeECS = makeECS;
 },{"@nova-engine/ecs":"node_modules/@nova-engine/ecs/index.js","../assets":"src/assets.ts","../getID":"src/getID.ts","./sprite":"src/ecs/sprite.ts","vector2d":"node_modules/vector2d/src/Vec2D.js","./moveLists":"src/ecs/moveLists.ts","./combat":"src/ecs/combat.ts"}],"src/LevelScene.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.LevelScene = void 0; // import Mousetrap from "mousetrap";
+exports.LevelScene = void 0;
 
-var pixi_js_1 = require("pixi.js");
+var _pixi = require("pixi.js");
 
-var vector2d_1 = require("vector2d");
+var _vector2d = require("vector2d");
 
-var assets_1 = require("./assets");
+var _assets = require("./assets");
 
-var tilemap_1 = require("./tilemap");
+var _tilemap = require("./tilemap");
 
-var ecs_1 = require("./ecs/ecs");
+var _ecs = require("./ecs/ecs");
 
-var combat_1 = require("./ecs/combat");
+var _combat = require("./ecs/combat");
 
-var input_1 = require("./input");
+var _input = require("./input");
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var LevelScene =
-/** @class */
+/*#__PURE__*/
 function () {
   function LevelScene(game) {
+    _classCallCheck(this, LevelScene);
+
     this.game = game;
     /* pixi stuff */
 
-    this.container = new pixi_js_1.Container();
-    this.tilemapContainer = new pixi_js_1.Container();
-    this.arena = new pixi_js_1.Container();
-    this.overlayContainer = new pixi_js_1.Container();
-    this.hudContainer = new pixi_js_1.Container();
-    this.hoverSprite = new pixi_js_1.Sprite();
-    this.dbgText = new pixi_js_1.Text("");
-    this.map = new tilemap_1.Tilemap(new vector2d_1.Vector(16, 16));
+    this.container = new _pixi.Container();
+    this.tilemapContainer = new _pixi.Container();
+    this.arena = new _pixi.Container();
+    this.overlayContainer = new _pixi.Container();
+    this.hudContainer = new _pixi.Container();
+    this.hoverSprite = new _pixi.Sprite();
+    this.dbgText = new _pixi.Text("");
+    this.map = new _tilemap.Tilemap(new _vector2d.Vector(16, 16));
     this.possibleMoves = []; // debug state
 
     this.hoveredPos = null;
@@ -52418,189 +52690,220 @@ function () {
     this.container.interactive = true;
   }
 
-  LevelScene.prototype.enter = function () {
-    console.log("enter", this); // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
+  _createClass(LevelScene, [{
+    key: "enter",
+    value: function enter() {
+      console.log("enter", this); // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
 
-    this.game.app.ticker.add(this.gameLoop);
+      this.game.app.ticker.add(this.gameLoop);
 
-    if (!this.container.children.length) {
-      this.addChildren();
-    }
-
-    this.game.app.stage.addChild(this.container);
-  };
-
-  LevelScene.prototype.addChildren = function () {
-    this.container.addChild(this.tilemapContainer);
-    this.container.addChild(this.arena);
-    this.container.addChild(this.overlayContainer);
-    this.container.addChild(this.hudContainer);
-    this.tilemapContainer.interactive = true;
-    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
-    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.hoverSprite.texture = this.game.assets.env[assets_1.EnvIndices.HOVER];
-    this.hoverSprite.visible = false;
-    this.overlayContainer.addChild(this.hoverSprite);
-    this.dbgText.position.set(10, 10);
-    this.dbgText.style = new pixi_js_1.TextStyle({
-      fontSize: 18,
-      fontFamily: "Barlow Condensed",
-      fill: "white",
-      align: "left",
-      wordWrap: true,
-      wordWrapWidth: 320
-    });
-    this.hudContainer.addChild(this.dbgText);
-
-    for (var y = 0; y < this.map.size.y; y++) {
-      for (var x = 0; x < this.map.size.x; x++) {
-        var cellSprite = new pixi_js_1.Sprite();
-        var cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.assets.env[cell.index];
-        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
-        cellSprite.interactive = true;
-        this.bindEvents(cell, cellSprite);
-        cell.sprite = cellSprite;
-        this.tilemapContainer.addChild(cellSprite);
+      if (!this.container.children.length) {
+        this.addChildren();
       }
+
+      this.game.app.stage.addChild(this.container);
     }
-
-    this.ecs = ecs_1.makeECS(this.game, this.arena);
-    this.ecs.combatSystem.tilemap = this.map;
-    this.ecs.engine.update(1);
-    this.updateDbgText();
-  };
-
-  LevelScene.prototype.bindEvents = function (cell, cellSprite) {
-    var _this = this;
-
-    cellSprite.on("mouseover", function (e) {
-      if (_this.ecs.combatSystem.isProcessing) return;
-
-      _this.updateHoverCell(cell.pos);
-    });
-    cellSprite.on("click", function (e) {
-      if (_this.ecs.combatSystem.isProcessing) return;
-      var action = input_1.interpretEvent(e);
-      if (!action) return;
-
-      _this.handleClick(cell.pos, action);
-    });
-  };
-
-  LevelScene.prototype.exit = function () {
-    console.log("exit", this); // Mousetrap.unbind(["enter", "space"]);
-
-    this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
-  };
-
-  LevelScene.prototype.updateHoverCell = function (pos) {
-    this.hoveredPos = pos;
-    this.updatePossibleMoves();
-    this.updateDbgText();
-
-    if (this.possibleMoves.filter(function (_a) {
-      var m = _a[0],
-          r = _a[1];
-      return r.success;
-    }).length > 0) {
-      this.hoverSprite.visible = true;
-      this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
-    } else {
+  }, {
+    key: "addChildren",
+    value: function addChildren() {
+      this.container.addChild(this.tilemapContainer);
+      this.container.addChild(this.arena);
+      this.container.addChild(this.overlayContainer);
+      this.container.addChild(this.hudContainer);
+      this.tilemapContainer.interactive = true;
+      this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
+      this.arena.setTransform(undefined, undefined, 0.5, 0.5);
+      this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
+      this.hoverSprite.texture = this.game.assets.env[_assets.EnvIndices.HOVER];
       this.hoverSprite.visible = false;
-    }
-  };
-
-  LevelScene.prototype.updatePossibleMoves = function () {
-    var _this = this;
-
-    if (!this.hoveredPos) {
-      this.possibleMoves = this.ecs.player.getComponent(combat_1.CombatC).moves.map(function (m) {
-        return [m, {
-          success: false
-        }];
+      this.overlayContainer.addChild(this.hoverSprite);
+      this.dbgText.position.set(10, 10);
+      this.dbgText.style = new _pixi.TextStyle({
+        fontSize: 18,
+        fontFamily: "Barlow Condensed",
+        fill: "white",
+        align: "left",
+        wordWrap: true,
+        wordWrapWidth: 320
       });
-      return;
-    }
+      this.hudContainer.addChild(this.dbgText);
 
-    this.possibleMoves = this.ecs.player.getComponent(combat_1.CombatC).moves.map(function (m) {
-      return [m, m.check({
-        ecs: _this.ecs,
-        entity: _this.ecs.player,
-        tilemap: _this.map
-      }, _this.hoveredPos)];
-    });
-    this.possibleMoves.sort(function (_a, _b) {
-      var moveA = _a[0],
-          resultA = _a[1];
-      var moveB = _b[0],
-          resultB = _b[1];
-
-      if (resultA.success == resultB.success) {
-        return moveA.name.localeCompare(moveB.name);
-      } else if (resultA.success) {
-        return -1;
-      } else {
-        return 1;
+      for (var y = 0; y < this.map.size.y; y++) {
+        for (var x = 0; x < this.map.size.x; x++) {
+          var cellSprite = new _pixi.Sprite();
+          var cell = this.map.contents[y][x];
+          cellSprite.texture = this.game.assets.env[cell.index];
+          cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+          cellSprite.interactive = true;
+          this.bindEvents(cell, cellSprite);
+          cell.sprite = cellSprite;
+          this.tilemapContainer.addChild(cellSprite);
+        }
       }
-    });
-  };
 
-  LevelScene.prototype.updateDbgText = function () {
-    var okMoves = this.possibleMoves.filter(function (x) {
-      return x[1].success;
-    });
-    var notOkMoves = this.possibleMoves.filter(function (x) {
-      return !x[1].success;
-    });
-    this.dbgText.text = (this.hoveredPos || "(no selection)") + "\n" + okMoves.map(function (_a) {
-      var move = _a[0];
-      return move.action + " " + move.name + " (" + move.help + ")";
-    }).join("\n") + "\n\nOmitted:\n" + notOkMoves.map(function (_a) {
-      var move = _a[0],
-          result = _a[1];
-      return move.name + " (" + (result.message || "?") + ")";
-    }).join("\n");
-  };
-
-  LevelScene.prototype.tick = function () {
-    this.ecs.engine.update(1);
-  };
-
-  LevelScene.prototype.handleClick = function (pos, action) {
-    var _this = this;
-
-    var actionMoves = this.possibleMoves.filter(function (_a) {
-      var move = _a[0],
-          result = _a[1];
-      return result.success && move.action == action;
-    });
-
-    if (actionMoves.length > 1) {
-      console.log(actionMoves);
-      throw new Error("Conflicting moves: " + actionMoves);
+      this.ecs = (0, _ecs.makeECS)(this.game, this.arena);
+      this.ecs.combatSystem.tilemap = this.map;
+      this.ecs.engine.update(1);
+      this.updateDbgText();
     }
+  }, {
+    key: "bindEvents",
+    value: function bindEvents(cell, cellSprite) {
+      var _this = this;
 
-    if (actionMoves.length === 1) {
-      this.ecs.combatSystem.reset(this.ecs.engine);
-      this.ecs.combatSystem.isProcessing = true;
+      cellSprite.on("mouseover", function (e) {
+        if (_this.ecs.combatSystem.isProcessing) return;
 
-      var doNext = function doNext() {
-        _this.tick();
+        _this.updateHoverCell(cell.pos);
+      });
+      cellSprite.on("click", function (e) {
+        if (_this.ecs.combatSystem.isProcessing) return;
+        var action = (0, _input.interpretEvent)(e);
+        if (!action) return;
 
-        _this.updateHoverCell(_this.hoveredPos);
-      };
+        _this.handleClick(cell.pos, action);
+      });
+      cellSprite.on("rightclick", function (e) {
+        if (_this.ecs.combatSystem.isProcessing) return;
+        var action = (0, _input.interpretEvent)(e);
+        if (!action) return;
 
-      var isAsync = actionMoves[0][0].apply({
-        ecs: this.ecs,
-        entity: this.ecs.player,
-        tilemap: this.map
-      }, pos, doNext);
-      if (!isAsync) doNext();
+        _this.handleClick(cell.pos, action);
+      });
     }
-  };
+  }, {
+    key: "exit",
+    value: function exit() {
+      console.log("exit", this); // Mousetrap.unbind(["enter", "space"]);
+
+      this.game.app.ticker.remove(this.gameLoop);
+      this.game.app.stage.removeChild(this.container);
+    }
+  }, {
+    key: "updateHoverCell",
+    value: function updateHoverCell(pos) {
+      this.hoveredPos = pos;
+      this.updatePossibleMoves();
+      this.updateDbgText();
+
+      if (this.possibleMoves.filter(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            m = _ref2[0],
+            r = _ref2[1];
+
+        return r.success;
+      }).length > 0) {
+        this.hoverSprite.visible = true;
+        this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
+      } else {
+        this.hoverSprite.visible = false;
+      }
+    }
+  }, {
+    key: "updatePossibleMoves",
+    value: function updatePossibleMoves() {
+      var _this2 = this;
+
+      if (!this.hoveredPos) {
+        this.possibleMoves = this.ecs.player.getComponent(_combat.CombatC).moves.map(function (m) {
+          return [m, {
+            success: false
+          }];
+        });
+        return;
+      }
+
+      this.possibleMoves = this.ecs.player.getComponent(_combat.CombatC).moves.map(function (m) {
+        return [m, m.check({
+          ecs: _this2.ecs,
+          entity: _this2.ecs.player,
+          tilemap: _this2.map
+        }, _this2.hoveredPos)];
+      });
+      this.possibleMoves.sort(function (_ref3, _ref4) {
+        var _ref5 = _slicedToArray(_ref3, 2),
+            moveA = _ref5[0],
+            resultA = _ref5[1];
+
+        var _ref6 = _slicedToArray(_ref4, 2),
+            moveB = _ref6[0],
+            resultB = _ref6[1];
+
+        if (resultA.success == resultB.success) {
+          return moveA.name.localeCompare(moveB.name);
+        } else if (resultA.success) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+  }, {
+    key: "updateDbgText",
+    value: function updateDbgText() {
+      var okMoves = this.possibleMoves.filter(function (x) {
+        return x[1].success;
+      });
+      var notOkMoves = this.possibleMoves.filter(function (x) {
+        return !x[1].success;
+      });
+      this.dbgText.text = "".concat(this.hoveredPos || "(no selection)", "\n") + okMoves.map(function (_ref7) {
+        var _ref8 = _slicedToArray(_ref7, 1),
+            move = _ref8[0];
+
+        return "".concat(move.action, " ").concat(move.name, " (").concat(move.help, ")");
+      }).join("\n") + "\n\nOmitted:\n" + notOkMoves.map(function (_ref9) {
+        var _ref10 = _slicedToArray(_ref9, 2),
+            move = _ref10[0],
+            result = _ref10[1];
+
+        return "".concat(move.name, " (").concat(result.message || "?", ")");
+      }).join("\n");
+    }
+  }, {
+    key: "tick",
+    value: function tick() {
+      this.ecs.engine.update(1);
+    }
+  }, {
+    key: "handleClick",
+    value: function handleClick(pos, action) {
+      var _this3 = this;
+
+      console.log("Click", pos, action);
+      var actionMoves = this.possibleMoves.filter(function (_ref11) {
+        var _ref12 = _slicedToArray(_ref11, 2),
+            move = _ref12[0],
+            result = _ref12[1];
+
+        return result.success && move.action == action;
+      });
+
+      if (actionMoves.length > 1) {
+        console.log(actionMoves);
+        throw new Error("Conflicting moves: ".concat(actionMoves));
+      }
+
+      if (actionMoves.length === 1) {
+        this.ecs.combatSystem.reset(this.ecs.engine);
+        this.ecs.combatSystem.isProcessing = true;
+
+        var doNext = function doNext() {
+          _this3.tick();
+
+          _this3.updateHoverCell(_this3.hoveredPos);
+        };
+
+        console.log("Player move:", actionMoves[0][0]);
+        var isAsync = actionMoves[0][0].apply({
+          ecs: this.ecs,
+          entity: this.ecs.player,
+          tilemap: this.map
+        }, pos, doNext);
+        if (!isAsync) doNext();
+      }
+    }
+  }]);
 
   return LevelScene;
 }();
@@ -52609,65 +52912,46 @@ exports.LevelScene = LevelScene;
 },{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","vector2d":"node_modules/vector2d/src/Vec2D.js","./assets":"src/assets.ts","./tilemap":"src/tilemap.ts","./ecs/ecs":"src/ecs/ecs.ts","./ecs/combat":"src/ecs/combat.ts","./input":"src/input.ts"}],"src/game.ts":[function(require,module,exports) {
 "use strict";
 
-var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  Object.defineProperty(o, k2, {
-    enumerable: true,
-    get: function get() {
-      return m[k];
-    }
-  });
-} : function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  o[k2] = m[k];
-});
-
-var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
-  Object.defineProperty(o, "default", {
-    enumerable: true,
-    value: v
-  });
-} : function (o, v) {
-  o["default"] = v;
-});
-
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) {
-    if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-  }
-
-  __setModuleDefault(result, mod);
-
-  return result;
-};
-
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var PIXI = __importStar(require("pixi.js"));
+var PIXI = _interopRequireWildcard(require("pixi.js"));
 
-var webfontloader_1 = __importDefault(require("webfontloader"));
+var _webfontloader = _interopRequireDefault(require("webfontloader"));
 
-var assets_1 = require("./assets");
+var _assets = require("./assets");
 
-var filmstrip_1 = __importDefault(require("./filmstrip"));
+var _filmstrip = _interopRequireDefault(require("./filmstrip"));
 
-var LevelScene_1 = require("./LevelScene");
+var _LevelScene = require("./LevelScene");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Game =
-/** @class */
+/*#__PURE__*/
 function () {
   function Game() {
     var _this = this;
+
+    _classCallCheck(this, Game);
 
     this.scenes = new Array();
     this.isFontLoaded = false;
@@ -52679,19 +52963,26 @@ function () {
       if (_this.app.loader.progress < 100) return;
 
       var loadFilmstrip = function loadFilmstrip(name) {
-        var _a;
-
-        var texture = (_a = _this.app.loader.resources["" + name]) === null || _a === void 0 ? void 0 : _a.texture;
-        return filmstrip_1.default(texture, _this.tileSize, _this.tileSize);
+        var texture = _this.app.loader.resources["".concat(name)]?.texture;
+        return (0, _filmstrip.default)(texture, _this.tileSize, _this.tileSize);
       };
 
-      for (var _i = 0, ALL_ASSETS_1 = assets_1.ALL_ASSETS; _i < ALL_ASSETS_1.length; _i++) {
-        var asset = ALL_ASSETS_1[_i];
-        _this.assets[asset.name] = loadFilmstrip(asset.name);
-      } // this.pushScene(new MenuScene(this));
+      var _iterator = _createForOfIteratorHelper(_assets.ALL_ASSETS),
+          _step;
 
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var asset = _step.value;
+          _this.assets[asset.name] = loadFilmstrip(asset.name);
+        } // this.pushScene(new MenuScene(this));
 
-      _this.pushScene(new LevelScene_1.LevelScene(_this));
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
+      _this.pushScene(new _LevelScene.LevelScene(_this));
     };
 
     var pathname = location.pathname;
@@ -52707,8 +52998,9 @@ function () {
       // height: window.innerHeight,
 
     });
-    this.app.loader.baseUrl = "//" + location.host + "/" + pathname;
-    webfontloader_1.default.load({
+    this.app.loader.baseUrl = "//".concat(location.host, "/").concat(pathname);
+
+    _webfontloader.default.load({
       google: {
         families: ["Barlow Condensed"]
       },
@@ -52718,7 +53010,8 @@ function () {
         _this.setup();
       }
     });
-    this.app.loader.add(assets_1.ALL_ASSETS.map(function (asset) {
+
+    this.app.loader.add(_assets.ALL_ASSETS.map(function (asset) {
       return asset;
     })).load(this.setup);
     this.app.view.addEventListener("contextmenu", function (e) {
@@ -52726,49 +53019,44 @@ function () {
     }); // window.addEventListener("resize", this.handleResize);
   }
 
-  Object.defineProperty(Game.prototype, "scene", {
+  _createClass(Game, [{
+    key: "scene",
     get: function get() {
       return this.scenes.length ? this.scenes[this.scenes.length - 1] : null;
-    },
-    enumerable: false,
-    configurable: true
-  });
-
-  Game.prototype.teardown = function () {
-    var _a; // window.removeEventListener("resize", this.handleResize);
-
-
-    (_a = this.scene) === null || _a === void 0 ? void 0 : _a.exit();
-  }; // handleResize = () => {
-  //   this.app.renderer.resize(window.innerWidth, window.innerHeight);
-  // };
-
-
-  Game.prototype.pushScene = function (scene) {
-    var _a;
-
-    (_a = this.scene) === null || _a === void 0 ? void 0 : _a.exit();
-    this.scenes.push(scene);
-    scene.enter();
-  };
-
-  Game.prototype.popScene = function () {
-    var _a, _b;
-
-    if (this.scenes.length > 0) {
-      (_a = this.scene) === null || _a === void 0 ? void 0 : _a.exit();
-      this.scenes.pop();
-      (_b = this.scene) === null || _b === void 0 ? void 0 : _b.enter();
     }
-  };
+  }, {
+    key: "teardown",
+    value: function teardown() {
+      // window.removeEventListener("resize", this.handleResize);
+      this.scene?.exit();
+    } // handleResize = () => {
+    //   this.app.renderer.resize(window.innerWidth, window.innerHeight);
+    // };
 
-  Game.prototype.replaceScenes = function (scenes) {
-    var _a, _b;
-
-    (_a = this.scene) === null || _a === void 0 ? void 0 : _a.exit();
-    this.scenes = scenes;
-    (_b = this.scene) === null || _b === void 0 ? void 0 : _b.enter();
-  };
+  }, {
+    key: "pushScene",
+    value: function pushScene(scene) {
+      this.scene?.exit();
+      this.scenes.push(scene);
+      scene.enter();
+    }
+  }, {
+    key: "popScene",
+    value: function popScene() {
+      if (this.scenes.length > 0) {
+        this.scene?.exit();
+        this.scenes.pop();
+        this.scene?.enter();
+      }
+    }
+  }, {
+    key: "replaceScenes",
+    value: function replaceScenes(scenes) {
+      this.scene?.exit();
+      this.scenes = scenes;
+      this.scene?.enter();
+    }
+  }]);
 
   return Game;
 }();
@@ -52777,21 +53065,13 @@ exports.default = Game;
 },{"pixi.js":"node_modules/pixi.js/dist/esm/pixi.js","webfontloader":"node_modules/webfontloader/webfontloader.js","./assets":"src/assets.ts","./filmstrip":"src/filmstrip.ts","./LevelScene":"src/LevelScene.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
+var _game = _interopRequireDefault(require("./src/game"));
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var game_1 = __importDefault(require("./src/game"));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function main() {
   var root = document.getElementById("app");
-  var game = new game_1.default();
+  var game = new _game.default();
   root.appendChild(game.app.view);
 }
 
@@ -52824,7 +53104,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54216" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60607" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
