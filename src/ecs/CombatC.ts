@@ -24,14 +24,12 @@ export class CombatC implements Component {
   isPlayer = false;
   recoveryTimer = 0;
 
+  static tag = "CombatC";
+
   build(moves: Move[], traits: CombatTrait[]): CombatC {
     this.moves = moves;
     this.traits = traits;
     return this;
-  }
-
-  get tag(): string {
-    return "CombatC";
   }
 
   get hoverText(): string {

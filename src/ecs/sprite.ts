@@ -24,15 +24,13 @@ export class SpriteC implements Component {
 
   flavorName = ""; // sprites have names too, why not
 
+  static tag = "SpriteC";
+
   build(flavorName: string, pos: AbstractVector, spriteIndex: number): SpriteC {
     this.flavorName = flavorName;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
-  }
-
-  get tag(): string {
-    return "SpriteC";
   }
 
   get spriteIndex(): number {
