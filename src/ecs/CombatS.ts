@@ -121,15 +121,21 @@ export class CombatSystem extends System {
         case CombatState.Prone:
           // don't change state; enemy remains stunned
           defenderCombatC.needsToMove = false;
+          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
+        case CombatState.SuperpunchTelegraph:
+        case CombatState.SuperpunchFollowthrough:
+          ecs.writeMessage(
+            `${attackerName} lands a punch on ${defenderName}, but they are unfazed.`
+          );
         default:
           defenderCombatC.setState(
             CombatState.Punched,
             defender.getComponent(SpriteC)
           );
+          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
       }
-      ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
     };
     switch (state) {
       case CombatState.Stunned:
@@ -144,6 +150,8 @@ export class CombatSystem extends System {
       case CombatState.Standing:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
+      case CombatState.SuperpunchTelegraph:
+      case CombatState.SuperpunchFollowthrough:
         if (defenderCombatC.hasTrait(CombatTrait.Armored)) {
           ecs.writeMessage(
             `${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`
@@ -159,6 +167,8 @@ export class CombatSystem extends System {
 
   applyStun(attacker: Entity, defender: Entity, ecs: ECS) {
     const defenderCombatC = defender.getComponent(CombatC);
+    const attackerName = attacker.getComponent(SpriteC).flavorName;
+    const defenderName = defender.getComponent(SpriteC).flavorName;
     const state = defenderCombatC.state;
     switch (state) {
       case CombatState.Standing:
@@ -167,13 +177,15 @@ export class CombatSystem extends System {
       case CombatState.Prone:
       case CombatState.Punched:
       case CombatState.Stunned:
-        const attackerName = attacker.getComponent(SpriteC).name;
-        const defenderName = defender.getComponent(SpriteC).name;
         defenderCombatC.becomeStunned(
           this.STUN_TIMER,
           defender.getComponent(SpriteC)
         );
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
+        break;
+      case CombatState.SuperpunchTelegraph:
+      case CombatState.SuperpunchFollowthrough:
+        ecs.writeMessage(`${attackerName} fails to stun ${defenderName}!`);
         break;
       default:
         throw new UnreachableCaseError(state);
