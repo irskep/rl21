@@ -277,12 +277,16 @@ export class LevelScene implements GameScene {
       console.log(actionMoves);
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
+    const oldHoveredPos = this.hoveredPos;
     if (actionMoves.length === 1) {
+      this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;
       const doNext = () => {
         this.tick();
-        this.updateHoverCell(this.hoveredPos);
+        if (this.hoveredPos === null) {
+          this.updateHoverCell(oldHoveredPos);
+        }
       };
 
       console.log("Player move:", actionMoves[0][0]);

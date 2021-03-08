@@ -67,10 +67,14 @@ export class SpriteSystem extends System {
   game: GameInterface;
   container: Container;
 
+  static default: SpriteSystem;
+
   constructor(game: GameInterface, container: Container) {
     super();
     this.game = game;
     this.container = container;
+
+    SpriteSystem.default = this;
   }
 
   onAttach(engine: Engine) {

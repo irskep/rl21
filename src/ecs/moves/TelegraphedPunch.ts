@@ -1,9 +1,13 @@
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { isAdjacent } from "../../tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { getDirectionVector } from "../direction";
-import { ensureTargetClear, ensureTargetIsEnemy } from "./_helpers";
+import {
+  ensureTargetClear,
+  ensureTargetExists,
+  ensureTargetIsEnemy,
+} from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 
@@ -16,7 +20,7 @@ export class TelegraphedPunchPrepare implements Move {
     if (combatC.state != CombatState.Standing) {
       return { success: false, message: "Not in the right state" };
     }
-    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    const checkResult = ensureTargetIsEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
 
     if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
@@ -65,7 +69,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
       };
     }
 
-    return ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    return ensureTargetExists(ctx, target);
   }
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {

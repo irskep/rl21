@@ -35,6 +35,20 @@ export function ensureTargetIsEnemy(
   return { success: true };
 }
 
+export function ensureTargetExists(
+  ctx: MoveContext,
+  target: AbstractVector
+): MoveCheckResult {
+  const cell = ctx.ecs.tilemap.getCell(target);
+  if (!cell || cell.index !== EnvIndices.FLOOR)
+    return { success: false, message: "Target is not floor" };
+  const targetEntity = ctx.ecs.spriteSystem.findEntity(target);
+  if (!targetEntity) {
+    return { success: false, message: "Target does not contain an entity" };
+  }
+  return { success: true };
+}
+
 export function ensureStandingAndTargetIsAdjacentEnemy(
   ctx: MoveContext,
   target: AbstractVector

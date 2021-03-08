@@ -12,9 +12,9 @@ import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
 import { Move } from "./moves/_types";
-import { SpriteC } from "./sprite";
+import { SpriteC, SpriteSystem } from "./sprite";
 import UnreachableCaseError from "../UnreachableCaseError";
-import { CombatC } from "./CombatC";
+import { CombatC, CombatTrait } from "./CombatC";
 import { CombatState } from "./CombatState";
 
 export class CombatSystem extends System {
@@ -23,6 +23,8 @@ export class CombatSystem extends System {
   isProcessing = false;
   ecs!: ECS;
   tilemap!: Tilemap;
+
+  STUN_TIMER = 2;
 
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
@@ -92,7 +94,12 @@ export class CombatSystem extends System {
     // if stack growth becomes a problem, this function can be refactored to use
     // a while loop instead of recursion.
     if (!isAsync) {
-      this.processNextEntity();
+      SpriteSystem.default.cowboyUpdate();
+      if (this.entitiesToProcess.length > 0) {
+        setTimeout(this.processNextEntity, 300);
+      } else {
+        this.processNextEntity();
+      }
     }
   };
 
@@ -104,22 +111,46 @@ export class CombatSystem extends System {
 
   applyPunch(attacker: Entity, defender: Entity, ecs: ECS) {
     const defenderCombatC = defender.getComponent(CombatC);
+    const attackerName = attacker.getComponent(SpriteC).name;
+    const defenderName = defender.getComponent(SpriteC).name;
     const state = defenderCombatC.state;
+
+    const landPunch = () => {
+      switch (defenderCombatC.state) {
+        case CombatState.Stunned:
+        case CombatState.Prone:
+          // don't change state; enemy remains stunned
+          defenderCombatC.needsToMove = false;
+          break;
+        default:
+          defenderCombatC.setState(
+            CombatState.Punched,
+            defender.getComponent(SpriteC)
+          );
+          break;
+      }
+      ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+    };
     switch (state) {
+      case CombatState.Stunned:
+        landPunch();
+        defenderCombatC.recoveryTimer = this.STUN_TIMER; // reset
+        defenderCombatC.updateText(defender.getComponent(SpriteC));
+        break;
+      case CombatState.Punched:
+      case CombatState.Prone:
+        landPunch();
+        break;
       case CombatState.Standing:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
-      case CombatState.Prone:
-      case CombatState.Punched:
-      case CombatState.Stunned:
-        const attackerName = attacker.getComponent(SpriteC).name;
-        const defenderName = defender.getComponent(SpriteC).name;
-        defenderCombatC.setState(
-          CombatState.Punched,
-          defender.getComponent(SpriteC)
-        );
-        defenderCombatC.needsToMove = false;
-        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+        if (defenderCombatC.hasTrait(CombatTrait.Armored)) {
+          ecs.writeMessage(
+            `${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`
+          );
+        } else {
+          landPunch();
+        }
         break;
       default:
         throw new UnreachableCaseError(state);
@@ -138,7 +169,10 @@ export class CombatSystem extends System {
       case CombatState.Stunned:
         const attackerName = attacker.getComponent(SpriteC).name;
         const defenderName = defender.getComponent(SpriteC).name;
-        defenderCombatC.becomeStunned(2, defender.getComponent(SpriteC));
+        defenderCombatC.becomeStunned(
+          this.STUN_TIMER,
+          defender.getComponent(SpriteC)
+        );
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
         break;
       default:

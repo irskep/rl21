@@ -31,21 +31,42 @@ export class CombatC implements Component {
   }
 
   get hoverText(): string {
-    return `${this.state}\n\n${this.traits.join("\n")}`;
+    if (this.recoveryTimer) {
+      return `${this.state} for ${
+        this.recoveryTimer
+      } turns\n\n${this.traits.join("\n")}`;
+    } else {
+      return `${this.state}\n\n${this.traits.join("\n")}`;
+    }
+  }
+
+  hasTrait(trait: CombatTrait) {
+    return this.traits.indexOf(trait) !== -1;
   }
 
   becomeProne(turns: number, spriteC: SpriteC) {
     this.setState(CombatState.Prone, spriteC);
     this.recoveryTimer = turns;
-    spriteC.label = `${turns}`;
+    this.updateText(spriteC);
     this.needsToMove = false;
   }
 
   becomeStunned(turns: number, spriteC: SpriteC) {
     this.setState(CombatState.Stunned, spriteC);
     this.recoveryTimer = turns;
-    spriteC.label = `${turns}`;
+    this.updateText(spriteC);
     this.needsToMove = false;
+  }
+
+  updateText(spriteC: SpriteC) {
+    console.log("update text");
+    if (this.recoveryTimer) {
+      console.log(1);
+      spriteC.label = `${this.recoveryTimer}`;
+    } else {
+      console.log(2);
+      spriteC.label = "";
+    }
   }
 
   setState(
