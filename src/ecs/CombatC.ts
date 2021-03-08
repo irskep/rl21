@@ -87,3 +87,5 @@ export class CombatC implements Component {
     }
   }
 }
+
+(CombatC as any).tag = "CombatC";

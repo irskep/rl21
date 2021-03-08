@@ -24,8 +24,6 @@ export class SpriteC implements Component {
 
   flavorName = ""; // sprites have names too, why not
 
-  static tag = "SpriteC";
-
   build(flavorName: string, pos: AbstractVector, spriteIndex: number): SpriteC {
     this.flavorName = flavorName;
     this.pos = pos;
@@ -141,3 +139,5 @@ export class SpriteSystem extends System {
     return null;
   }
 }
+
+(SpriteC as any).tag = "SpriteC";
