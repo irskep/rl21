@@ -46555,11 +46555,13 @@ var _combat = require("./ecs/combat");
 
 var _input = require("./input");
 
+var _sprite = require("./ecs/sprite");
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class LevelScene {
   /* pixi stuff */
-  // debug state
+  // display
   constructor(game) {
     _defineProperty(this, "container", new _pixi.Container());
 
@@ -46579,11 +46581,19 @@ class LevelScene {
 
     _defineProperty(this, "messages", new Array());
 
+    _defineProperty(this, "mouseoverContainer", new _pixi.Container());
+
+    _defineProperty(this, "mouseoverBg", new _pixi.Graphics());
+
+    _defineProperty(this, "mouseoverText", new _pixi.Text(""));
+
     _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
 
     _defineProperty(this, "possibleMoves", []);
 
     _defineProperty(this, "hoveredPos", null);
+
+    _defineProperty(this, "hoveredEntity", null);
 
     _defineProperty(this, "writeMessage", msg => {
       this.messages.push(msg);
@@ -46646,6 +46656,11 @@ class LevelScene {
       wordWrapWidth: 400
     });
     this.hudContainer.addChild(this.messageLog);
+    this.mouseoverText.style = new _pixi.TextStyle(consoleStyle);
+    this.mouseoverContainer.addChild(this.mouseoverBg);
+    this.mouseoverContainer.addChild(this.mouseoverText);
+    this.mouseoverContainer.visible = false;
+    this.hudContainer.addChild(this.mouseoverContainer);
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
@@ -46703,6 +46718,35 @@ class LevelScene {
     } else {
       this.hoverSprite.visible = false;
     }
+
+    if (pos) {
+      this.updateHoveredEntity(this.ecs.spriteSystem.findEntity(pos) || null);
+    } else {
+      this.updateHoveredEntity(null);
+    }
+  }
+
+  updateHoveredEntity(e) {
+    if (!e) {
+      this.mouseoverContainer.visible = false;
+      return;
+    }
+
+    const tilePos = e.getComponent(_sprite.SpriteC).pos;
+    const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
+    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.visible = true;
+    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_combat.CombatC).hoverText}`;
+    this.mouseoverText.text = text;
+    const size = new _vector2d.Vector(this.mouseoverText.width, this.mouseoverText.height);
+    const gfx = this.mouseoverBg;
+    gfx.clear();
+    gfx.width = size.x;
+    gfx.height = size.y;
+    gfx.beginFill(0x000000);
+    gfx.drawRect(0, 0, size.x, size.y);
+    gfx.endFill();
+    console.log(this.mouseoverContainer);
   }
 
   updatePossibleMoves() {
@@ -46768,7 +46812,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/combat":"cb5a787c677bc498cfd6f61d61b50e74","./input":"7a6fba9761d9655e6215ca003429e87d"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/combat":"cb5a787c677bc498cfd6f61d61b50e74","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -47926,6 +47970,10 @@ class SpriteC {
     this.needsLabelUpdate = true;
   }
 
+  get hoverText() {
+    return this.name;
+  }
+
   turnToward(target) {
     const direction = target.clone().subtract(this.pos);
 
@@ -48079,7 +48127,7 @@ let CombatState;
 exports.CombatState = CombatState;
 
 (function (CombatState) {
-  CombatState["Normal"] = "Normal";
+  CombatState["Standing"] = "Standing";
   CombatState["PunchTelegraph"] = "PunchTelegraph";
   CombatState["PunchFollowthrough"] = "PunchFollowthrough";
   CombatState["Punched"] = "Punched";
@@ -48088,7 +48136,7 @@ exports.CombatState = CombatState;
 
 function stateToPlayerSpriteIndex(state) {
   switch (state) {
-    case CombatState.Normal:
+    case CombatState.Standing:
       return _assets.SpriteIndices.BM_STAND;
 
     case CombatState.PunchTelegraph:
@@ -48110,7 +48158,7 @@ function stateToPlayerSpriteIndex(state) {
 
 function stateToHenchmanSpriteIndex(state) {
   switch (state) {
-    case CombatState.Normal:
+    case CombatState.Standing:
       return _assets.SpriteIndices.STAND;
 
     case CombatState.PunchTelegraph:
@@ -48132,7 +48180,7 @@ function stateToHenchmanSpriteIndex(state) {
 
 class CombatC {
   constructor() {
-    _defineProperty(this, "state", CombatState.Normal);
+    _defineProperty(this, "state", CombatState.Standing);
 
     _defineProperty(this, "spriteIndexOverride", null);
 
@@ -48148,6 +48196,10 @@ class CombatC {
   build(moves) {
     this.moves = moves;
     return this;
+  }
+
+  get hoverText() {
+    return this.state;
   }
 
   becomeProne(turns, spriteC) {
@@ -48261,7 +48313,7 @@ class CombatSystem extends _ecs.System {
     const state = defenderCombatC.state;
 
     switch (state) {
-      case CombatState.Normal:
+      case CombatState.Standing:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:
@@ -48366,7 +48418,7 @@ class Walk {
     const state = ctx.entity.getComponent(_combat.CombatC).state;
 
     switch (state) {
-      case _combat.CombatState.Normal:
+      case _combat.CombatState.Standing:
         return {
           success: true
         };
@@ -48553,11 +48605,11 @@ class Wait {
       spriteC.label = `${proneTimer}`;
 
       if (proneTimer <= 0) {
-        combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+        combatC.setState(_combat.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
         ctx.entity.getComponent(_sprite.SpriteC).label = "";
       }
     } else {
-      combatC.setState(_combat.CombatState.Normal, ctx.entity.getComponent(_sprite.SpriteC));
+      combatC.setState(_combat.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
     }
 
     return false;
@@ -48600,7 +48652,7 @@ class TelegraphedPunchPrepare {
   check(ctx, target) {
     const combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != _combat.CombatState.Normal) {
+    if (combatC.state != _combat.CombatState.Standing) {
       return {
         success: false,
         message: "Not in the right state"
@@ -48769,7 +48821,7 @@ class FastPunch {
   check(ctx, target) {
     const combatC = ctx.entity.getComponent(_combat.CombatC);
 
-    if (combatC.state != _combat.CombatState.Normal) {
+    if (combatC.state != _combat.CombatState.Standing) {
       return {
         success: false,
         message: "Not in the right state"
@@ -48824,7 +48876,7 @@ class FastPunch {
       ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
       ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
       setTimeout(() => {
-        combatC.setState(_combat.CombatState.Normal, spriteC);
+        combatC.setState(_combat.CombatState.Standing, spriteC);
         ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
         doNext();
       }, 500);
@@ -48868,7 +48920,7 @@ class Counter {
     const combatC = ctx.entity.getComponent(_combat.CombatC);
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
 
-    if (combatC.state != _combat.CombatState.Normal) {
+    if (combatC.state != _combat.CombatState.Standing) {
       return {
         success: false,
         message: "Not in the right state"
