@@ -2,8 +2,8 @@ import { Vector } from "vector2d";
 import { isAdjacent } from "../../tilemap";
 import { CombatC, CombatState } from "../combat";
 import { getDirectionVector } from "../direction";
-import { ensureTargetClear, ensureTargetIsEnemy } from "./moveHelpers";
-import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
+import { ensureTargetClear, ensureTargetIsEnemy } from "./_helpers";
+import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 
 export class TelegraphedPunchPrepare implements Move {

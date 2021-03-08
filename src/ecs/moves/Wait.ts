@@ -1,7 +1,7 @@
 import { Vector } from "vector2d";
 import { Action } from "../../input";
 import { CombatC, CombatState } from "../combat";
-import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
+import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 
 export class Wait implements Move {

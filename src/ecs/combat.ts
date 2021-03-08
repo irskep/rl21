@@ -12,7 +12,7 @@ import { Tilemap } from "../tilemap";
 import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
-import { Move } from "./moves/moveTypes";
+import { Move } from "./moves/_types";
 import { SpriteC } from "./sprite";
 import UnreachableCaseError from "../UnreachableCaseError";
 

@@ -1,4 +1,4 @@
-import { Move } from "./moveTypes";
+import { Move } from "./_types";
 import { Walk } from "./Walk";
 import { Wait } from "./Wait";
 import {

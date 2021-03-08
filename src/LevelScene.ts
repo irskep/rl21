@@ -15,7 +15,7 @@ import { makeECS } from "./ecs/ecs";
 import { CombatC } from "./ecs/combat";
 import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
-import { Move, MoveCheckResult } from "./ecs/moves/moveTypes";
+import { Move, MoveCheckResult } from "./ecs/moves/_types";
 import { Action, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "./ecs/sprite";

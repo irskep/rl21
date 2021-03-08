@@ -2,8 +2,8 @@ import { Vector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
 import { CombatC, CombatState } from "../combat";
-import { ensureTargetClear } from "./moveHelpers";
-import { MoveContext, MoveCheckResult, Move } from "./moveTypes";
+import { ensureTargetClear } from "./_helpers";
+import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 import UnreachableCaseError from "../../UnreachableCaseError";
 
