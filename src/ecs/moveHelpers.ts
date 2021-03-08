@@ -7,7 +7,8 @@ export function ensureTargetClear(
   ctx: MoveContext,
   target: Vector
 ): MoveCheckResult {
-  if (ctx.tilemap.getCell(target)?.index !== EnvIndices.FLOOR)
+  const cell = ctx.tilemap.getCell(target);
+  if (!cell || cell.index !== EnvIndices.FLOOR)
     return { success: false, message: "Target is not floor" };
   if (ctx.ecs.spriteSystem.findEntity(target) !== null)
     return { success: false, message: "Target is occupied" };
@@ -19,7 +20,8 @@ export function ensureTargetIsEnemy(
   target: Vector,
   isPlayer: boolean
 ): MoveCheckResult {
-  if (ctx.tilemap.getCell(target)?.index !== EnvIndices.FLOOR)
+  const cell = ctx.tilemap.getCell(target);
+  if (!cell || cell.index !== EnvIndices.FLOOR)
     return { success: false, message: "Target is not floor" };
   const entity = ctx.ecs.spriteSystem.findEntity(target);
   if (!entity) {
