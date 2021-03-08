@@ -6,7 +6,7 @@ import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
 import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
-import { BM_MOVES, HENCHMAN_MOVES } from "./moveLists";
+import { BM_MOVES, HENCHMAN_MOVES } from "./moves/moveLists";
 import { CombatC, CombatSystem } from "./combat";
 
 function makeEntity(): Entity {

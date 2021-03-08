@@ -1,6 +1,6 @@
 import { Vector } from "vector2d";
-import { EnvIndices } from "../assets";
-import { CombatC } from "./combat";
+import { EnvIndices } from "../../assets";
+import { CombatC } from "../combat";
 import { MoveContext, MoveCheckResult } from "./moveTypes";
 
 export function ensureTargetClear(

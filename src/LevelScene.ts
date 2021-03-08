@@ -7,7 +7,7 @@ import { makeECS } from "./ecs/ecs";
 import { CombatC } from "./ecs/combat";
 import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
-import { Move, MoveCheckResult } from "./ecs/moveTypes";
+import { Move, MoveCheckResult } from "./ecs/moves/moveTypes";
 import { Action, interpretEvent } from "./input";
 
 export class LevelScene implements GameScene {

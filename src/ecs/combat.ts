@@ -12,9 +12,9 @@ import { Tilemap } from "../tilemap";
 import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
-import { Move } from "./moveTypes";
+import { Move } from "./moves/moveTypes";
 import { SpriteC } from "./sprite";
-import UnreachableCaseError from "./UnreachableCaseError";
+import UnreachableCaseError from "../UnreachableCaseError";
 
 export enum CombatState {
   Normal = "Normal",

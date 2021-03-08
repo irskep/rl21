@@ -1,8 +1,8 @@
 import { Entity } from "@nova-engine/ecs";
 import { Vector } from "vector2d";
-import { Action } from "../input";
-import { Tilemap } from "../tilemap";
-import { ECS } from "./ecsTypes";
+import { Action } from "../../input";
+import { Tilemap } from "../../tilemap";
+import { ECS } from "../ecsTypes";
 
 export interface MoveContext {
   entity: Entity;
