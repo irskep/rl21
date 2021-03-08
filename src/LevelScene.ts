@@ -210,8 +210,6 @@ export class LevelScene implements GameScene {
     gfx.beginFill(0x000000);
     gfx.drawRect(0, 0, size.x, size.y);
     gfx.endFill();
-
-    console.log(this.mouseoverContainer);
   }
 
   updatePossibleMoves() {

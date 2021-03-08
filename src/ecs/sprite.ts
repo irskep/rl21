@@ -19,6 +19,7 @@ export class SpriteC implements Component {
   private _label = "";
   needsLabelUpdate = false;
   sprite?: Sprite;
+  tint = 0xffffff;
   text: Text | null = null;
 
   name = ""; // sprites have names too, why not
@@ -88,6 +89,7 @@ export class SpriteSystem extends System {
         spriteC.sprite = new Sprite(
           this.game.assets.sprites[spriteC.spriteIndex]
         );
+        spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
       }

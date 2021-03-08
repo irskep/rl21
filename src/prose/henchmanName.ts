@@ -19,6 +19,7 @@ const adjs: string[] = [
   "Wind-up",
   "Yammerin’",
   "Killer",
+  "Scumbag",
 ];
 
 const names: string[] = [
@@ -47,5 +48,5 @@ const names: string[] = [
 
 export default function getHenchmanName(): string {
   const rng = new RNG(`${Math.random()}`);
-  return `${rng.choice(adjs)} ${rng.choice(names)} the Thug`;
+  return `${rng.choice(adjs)} ${rng.choice(names)}`;
 }

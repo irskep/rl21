@@ -7,21 +7,31 @@ import {
   stateToHenchmanSpriteIndex,
 } from "./CombatState";
 
+export enum CombatTrait {
+  Armored = "Armored",
+  Fluid = "Fluid",
+  WieldingGun = "WieldingGun",
+  WieldingShield = "WieldingShield",
+  WieldingShockBaton = "WieldingShockBaton",
+}
+
 export class CombatC implements Component {
   state = CombatState.Standing;
+  traits = new Array<CombatTrait>();
   spriteIndexOverride: number | null = null;
   needsToMove = true;
   moves: Move[] = [];
   isPlayer = false;
   recoveryTimer = 0;
 
-  build(moves: Move[]): CombatC {
+  build(moves: Move[], traits: CombatTrait[]): CombatC {
     this.moves = moves;
+    this.traits = traits;
     return this;
   }
 
   get hoverText(): string {
-    return this.state;
+    return `${this.state}\n\n${this.traits.join("\n")}`;
   }
 
   becomeProne(turns: number, spriteC: SpriteC) {

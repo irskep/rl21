@@ -8,7 +8,7 @@ import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES } from "./moves";
 import { CombatSystem } from "./CombatS";
-import { CombatC } from "./CombatC";
+import { CombatC, CombatTrait } from "./CombatC";
 import { Tilemap } from "../tilemap";
 import getHenchmanName from "../prose/henchmanName";
 
@@ -26,7 +26,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
 
   e.putComponent(SpriteC).build("Atman", pos, SpriteIndices.BM_STAND);
   e.getComponent(SpriteC).orientation = orientation;
-  e.putComponent(CombatC).build(BM_MOVES);
+  e.putComponent(CombatC).build(BM_MOVES, []);
   e.getComponent(CombatC).isPlayer = true;
 
   return e;
@@ -34,9 +34,22 @@ function makePlayer(pos: Vector, orientation: number): Entity {
 
 function makeThug(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
-  e.putComponent(SpriteC).build(getHenchmanName(), pos, SpriteIndices.STAND);
+  e.putComponent(SpriteC).build(
+    `${getHenchmanName()} the Thug`,
+    pos,
+    SpriteIndices.STAND
+  );
   e.getComponent(SpriteC).orientation = orientation;
-  e.putComponent(CombatC).build(HENCHMAN_MOVES);
+  e.getComponent(SpriteC).tint = 0x8888ff;
+  e.putComponent(CombatC).build(HENCHMAN_MOVES, []);
+  return e;
+}
+
+function makeArmoredThug(pos: Vector, orientation: number): Entity {
+  const e = makeThug(pos, orientation);
+  e.getComponent(CombatC).traits.push(CombatTrait.Armored);
+  e.getComponent(SpriteC).tint = 0xffff66;
+  e.getComponent(SpriteC).name = `${getHenchmanName()} the Armored Thug`;
   return e;
 }
 
@@ -62,6 +75,12 @@ export function makeECS(
 
   engine.addEntity(
     makeThug(new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2)
+  );
+  engine.addEntity(
+    makeArmoredThug(
+      new Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5),
+      2
+    )
   );
 
   const ecs = {
