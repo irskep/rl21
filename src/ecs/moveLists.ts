@@ -66,12 +66,15 @@ export class Wait implements Move {
   apply(ctx: MoveContext): boolean {
     // Upon waiting, return to normal state
     const combatC = ctx.entity.getComponent(CombatC);
+    const spriteC = ctx.entity.getComponent(SpriteC);
 
     if (combatC.state === CombatState.Prone) {
       const proneTimer = combatC.proneTimer - 1;
       combatC.proneTimer = proneTimer;
+      spriteC.label = `${proneTimer}`;
       if (proneTimer <= 0) {
         combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+        ctx.entity.getComponent(SpriteC).label = "";
       }
     } else {
       combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
@@ -222,6 +225,15 @@ export class FastPunch implements Move {
       return { success: false, message: "Not adjacent" };
     }
 
+    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemyState = enemy.getComponent(CombatC).state;
+    switch (enemyState) {
+      case CombatState.Prone:
+        return { success: false, message: "Enemy is on the ground" };
+      default:
+        break;
+    }
+
     return { success: true };
   }
 
@@ -312,9 +324,7 @@ export class Counter implements Move {
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
     setTimeout(() => {
-      enemyCombatC.setState(CombatState.Prone, enemySpriteC);
-      enemyCombatC.proneTimer = 2;
-      enemyCombatC.needsToMove = false;
+      enemyCombatC.becomeProne(2, enemySpriteC);
       doNext();
     }, 500);
     return true;

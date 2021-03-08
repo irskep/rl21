@@ -6,7 +6,7 @@ import {
   Family,
   Entity,
 } from "@nova-engine/ecs";
-import { Container, Sprite } from "pixi.js";
+import { Container, Sprite, Text } from "pixi.js";
 import * as Vec2D from "vector2d";
 import { Vector } from "vector2d";
 import { GameInterface } from "../types";
@@ -17,7 +17,10 @@ export class SpriteC implements Component {
   orientation = 0; // clockwise from up
   private _spriteIndex = 0;
   needsTextureReplacement = false;
+  private _label = "";
+  needsLabelUpdate = false;
   sprite?: Sprite;
+  text: Text | null = null;
 
   build(pos: Vec2D.Vector, spriteIndex: number): SpriteC {
     this.pos = pos;
@@ -31,6 +34,14 @@ export class SpriteC implements Component {
   set spriteIndex(value: number) {
     this._spriteIndex = value;
     this.needsTextureReplacement = true;
+  }
+
+  get label(): string {
+    return this._label;
+  }
+  set label(value: string) {
+    this._label = value;
+    this.needsLabelUpdate = true;
   }
 
   turnToward(target: Vector) {
@@ -80,6 +91,21 @@ export class SpriteSystem extends System {
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
         spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
+      }
+
+      if (spriteC.needsLabelUpdate) {
+        spriteC.needsLabelUpdate = false;
+        if (spriteC.text === null) {
+          spriteC.text = new Text(spriteC.label, {
+            fontSize: 36,
+            fontFamily: "Barlow Condensed",
+            fill: "red",
+            align: "left",
+          });
+          spriteC.text.position.set(4, 4);
+          spriteC.sprite.addChild(spriteC.text);
+        }
+        spriteC.text.text = spriteC.label;
       }
     }
   }

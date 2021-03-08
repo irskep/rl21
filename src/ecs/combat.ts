@@ -71,6 +71,13 @@ export class CombatC implements Component {
     return this;
   }
 
+  becomeProne(turns: number, spriteC: SpriteC) {
+    this.setState(CombatState.Prone, spriteC);
+    this.proneTimer = turns;
+    spriteC.label = `${turns}`;
+    this.needsToMove = false;
+  }
+
   setState(
     newState: CombatState,
     spriteC: SpriteC,
