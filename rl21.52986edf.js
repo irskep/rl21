@@ -47957,15 +47957,19 @@ class SpriteC {
 
     _defineProperty(this, "text", null);
 
-    _defineProperty(this, "name", "");
+    _defineProperty(this, "flavorName", "");
   }
 
   // sprites have names too, why not
-  build(name, pos, spriteIndex) {
-    this.name = name;
+  build(flavorName, pos, spriteIndex) {
+    this.flavorName = flavorName;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
+  }
+
+  get tag() {
+    return "SpriteC";
   }
 
   get spriteIndex() {
@@ -47987,7 +47991,7 @@ class SpriteC {
   }
 
   get hoverText() {
-    return this.name;
+    return this.flavorName;
   }
 
   turnToward(target) {
@@ -48442,6 +48446,10 @@ class CombatC {
     return this;
   }
 
+  get tag() {
+    return "CombatC";
+  }
+
   get hoverText() {
     if (this.recoveryTimer) {
       return `${this.state} for ${this.recoveryTimer} turns\n\n${this.traits.join("\n")}`;
@@ -48469,13 +48477,9 @@ class CombatC {
   }
 
   updateText(spriteC) {
-    console.log("update text");
-
     if (this.recoveryTimer) {
-      console.log(1);
       spriteC.label = `${this.recoveryTimer}`;
     } else {
-      console.log(2);
       spriteC.label = "";
     }
   }
@@ -48734,7 +48738,7 @@ class TelegraphedPunchPrepare {
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
     spriteC.turnToward(target);
     ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.writeMessage(`${spriteC.name} winds up for a punch.`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a punch.`);
     return false;
   }
 
@@ -48834,7 +48838,7 @@ class TelegraphedPunchFollowthroughMiss {
     combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
 
     spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.name} swings at nothing but air!`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
     return false;
   }
 
@@ -48966,7 +48970,7 @@ class Counter {
       };
     }
 
-    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target);
     if (!checkResult.success) return checkResult;
 
     if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
@@ -49012,10 +49016,10 @@ class Counter {
     spriteC.pos = enemySpriteC.pos;
     enemySpriteC.pos = playerPos;
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    ctx.ecs.writeMessage(`${spriteC.name} counters ${enemySpriteC.name}’s punch!`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch!`);
     setTimeout(() => {
       enemyCombatC.becomeProne(2, enemySpriteC);
-      ctx.ecs.writeMessage(`${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`);
+      ctx.ecs.writeMessage(`${enemySpriteC.flavorName} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`);
       doNext();
     }, 500);
     return true;
@@ -49202,8 +49206,8 @@ class CombatSystem extends _ecs.System {
 
   applyPunch(attacker, defender, ecs) {
     const defenderCombatC = defender.getComponent(_CombatC.CombatC);
-    const attackerName = attacker.getComponent(_sprite.SpriteC).name;
-    const defenderName = defender.getComponent(_sprite.SpriteC).name;
+    const attackerName = attacker.getComponent(_sprite.SpriteC).flavorName;
+    const defenderName = defender.getComponent(_sprite.SpriteC).flavorName;
     const state = defenderCombatC.state;
 
     const landPunch = () => {
