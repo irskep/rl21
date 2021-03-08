@@ -47958,8 +47958,6 @@ class SpriteC {
     _defineProperty(this, "text", null);
 
     _defineProperty(this, "flavorName", "");
-
-    _defineProperty(this, "tag", "SpriteC");
   }
 
   build(flavorName, pos, spriteIndex) {
@@ -48005,6 +48003,8 @@ class SpriteC {
 }
 
 exports.SpriteC = SpriteC;
+
+_defineProperty(SpriteC, "tag", "SpriteC");
 
 class SpriteSystem extends _ecs.System {
   constructor(game, container) {
@@ -48449,8 +48449,6 @@ class CombatC {
     _defineProperty(this, "isPlayer", false);
 
     _defineProperty(this, "recoveryTimer", 0);
-
-    _defineProperty(this, "tag", "CombatC");
   }
 
   build(moves, traits) {
@@ -48511,6 +48509,8 @@ class CombatC {
 }
 
 exports.CombatC = CombatC;
+
+_defineProperty(CombatC, "tag", "CombatC");
 },{"./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"3574a7b057a78c60c72a4af34ca2c56d":[function(require,module,exports) {
 "use strict";
 
