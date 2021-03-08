@@ -30,6 +30,10 @@ export class CombatC implements Component {
     return this;
   }
 
+  get tag(): string {
+    return "CombatC";
+  }
+
   get hoverText(): string {
     if (this.recoveryTimer) {
       return `${this.state} for ${
@@ -59,12 +63,9 @@ export class CombatC implements Component {
   }
 
   updateText(spriteC: SpriteC) {
-    console.log("update text");
     if (this.recoveryTimer) {
-      console.log(1);
       spriteC.label = `${this.recoveryTimer}`;
     } else {
-      console.log(2);
       spriteC.label = "";
     }
   }

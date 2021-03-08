@@ -40,7 +40,7 @@ export class TelegraphedPunchPrepare implements Move {
     ctx.entity
       .getComponent(CombatC)
       .setState(CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.writeMessage(`${spriteC.name} winds up for a punch.`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a punch.`);
     return false;
   }
 }
@@ -128,7 +128,7 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     // stumble forward
     combatC.setState(CombatState.PunchFollowthrough, spriteC); // ok
     spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.name} swings at nothing but air!`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
     return false;
   }
 }

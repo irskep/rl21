@@ -22,13 +22,17 @@ export class SpriteC implements Component {
   tint = 0xffffff;
   text: Text | null = null;
 
-  name = ""; // sprites have names too, why not
+  flavorName = ""; // sprites have names too, why not
 
-  build(name: string, pos: AbstractVector, spriteIndex: number): SpriteC {
-    this.name = name;
+  build(flavorName: string, pos: AbstractVector, spriteIndex: number): SpriteC {
+    this.flavorName = flavorName;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;
+  }
+
+  get tag(): string {
+    return "SpriteC";
   }
 
   get spriteIndex(): number {
@@ -48,7 +52,7 @@ export class SpriteC implements Component {
   }
 
   get hoverText(): string {
-    return this.name;
+    return this.flavorName;
   }
 
   turnToward(target: AbstractVector) {

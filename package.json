@@ -16,7 +16,7 @@
     "webfontloader": "^1.6.28"
   },
   "scripts": {
-    "deploy": "parcel build index.html --public-url ./ && gh-pages -d dist",
+    "deploy": "parcel build index.html --public-url /rl21/ && gh-pages -d dist",
     "watch": "parcel serve index.html",
     "build": "parcel build index.html"
   },

@@ -111,8 +111,8 @@ export class CombatSystem extends System {
 
   applyPunch(attacker: Entity, defender: Entity, ecs: ECS) {
     const defenderCombatC = defender.getComponent(CombatC);
-    const attackerName = attacker.getComponent(SpriteC).name;
-    const defenderName = defender.getComponent(SpriteC).name;
+    const attackerName = attacker.getComponent(SpriteC).flavorName;
+    const defenderName = defender.getComponent(SpriteC).flavorName;
     const state = defenderCombatC.state;
 
     const landPunch = () => {

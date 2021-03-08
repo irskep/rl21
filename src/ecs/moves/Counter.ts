@@ -1,4 +1,4 @@
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
 import { CombatState } from "../CombatState";
@@ -18,7 +18,7 @@ export class Counter implements Move {
     if (combatC.state != CombatState.Standing) {
       return { success: false, message: "Not in the right state" };
     }
-    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    const checkResult = ensureTargetIsEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
 
     if (!isAdjacent(spriteC.pos, target)) {
@@ -59,13 +59,13 @@ export class Counter implements Move {
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
     ctx.ecs.writeMessage(
-      `${spriteC.name} counters ${enemySpriteC.name}’s punch!`
+      `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch!`
     );
 
     setTimeout(() => {
       enemyCombatC.becomeProne(2, enemySpriteC);
       ctx.ecs.writeMessage(
-        `${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
+        `${enemySpriteC.flavorName} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
       );
       doNext();
     }, 500);
