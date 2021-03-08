@@ -183,7 +183,7 @@ export class CombatSystem extends System {
     }
   }
 
-  applyPunch(attacker: Entity, defender: Entity) {
+  applyPunch(attacker: Entity, defender: Entity, ecs: ECS) {
     const defenderCombatC = defender.getComponent(CombatC);
     const state = defenderCombatC.state;
     switch (state) {
@@ -192,11 +192,14 @@ export class CombatSystem extends System {
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:
       case CombatState.Punched:
+        const attackerName = attacker.getComponent(SpriteC).name;
+        const defenderName = defender.getComponent(SpriteC).name;
         defenderCombatC.setState(
           CombatState.Punched,
           defender.getComponent(SpriteC)
         );
         defenderCombatC.needsToMove = false;
+        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
         break;
       default:
         throw new UnreachableCaseError(state);

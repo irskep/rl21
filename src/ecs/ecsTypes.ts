@@ -9,4 +9,5 @@ export interface ECS {
   spriteSystem: SpriteSystem;
   player: Entity;
   tilemap: Tilemap;
+  writeMessage: (msg: string) => void;
 }

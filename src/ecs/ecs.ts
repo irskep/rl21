@@ -9,6 +9,7 @@ import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES } from "./moves/moveLists";
 import { CombatC, CombatSystem } from "./combat";
 import { Tilemap } from "../tilemap";
+import getHenchmanName from "../prose/henchmanName";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -22,7 +23,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     throw new Error("player should always be 0");
   }
 
-  e.putComponent(SpriteC).build(pos, SpriteIndices.BM_STAND);
+  e.putComponent(SpriteC).build("Atman", pos, SpriteIndices.BM_STAND);
   e.getComponent(SpriteC).orientation = orientation;
   e.putComponent(CombatC).build(BM_MOVES);
   e.getComponent(CombatC).isPlayer = true;
@@ -32,7 +33,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
 
 function makeThug(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
-  e.putComponent(SpriteC).build(pos, SpriteIndices.STAND);
+  e.putComponent(SpriteC).build(getHenchmanName(), pos, SpriteIndices.STAND);
   e.getComponent(SpriteC).orientation = orientation;
   e.putComponent(CombatC).build(HENCHMAN_MOVES);
   return e;
@@ -41,7 +42,8 @@ function makeThug(pos: Vector, orientation: number): Entity {
 export function makeECS(
   game: GameInterface,
   container: Container,
-  tilemap: Tilemap
+  tilemap: Tilemap,
+  writeMessage: (msg: string) => void
 ): ECS {
   const engine = new Engine();
 
@@ -67,6 +69,7 @@ export function makeECS(
     spriteSystem: spriteSystem,
     tilemap,
     player,
+    writeMessage,
   };
   combatSystem.ecs = ecs;
   return ecs;

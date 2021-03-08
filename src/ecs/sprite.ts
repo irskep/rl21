@@ -22,7 +22,10 @@ export class SpriteC implements Component {
   sprite?: Sprite;
   text: Text | null = null;
 
-  build(pos: Vec2D.Vector, spriteIndex: number): SpriteC {
+  name = ""; // sprites have names too, why not
+
+  build(name: string, pos: Vec2D.Vector, spriteIndex: number): SpriteC {
+    this.name = name;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
     return this;

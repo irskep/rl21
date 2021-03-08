@@ -1,5 +1,12 @@
 // import Mousetrap from "mousetrap";
-import { Container, InteractionEvent, Sprite, TextStyle, Text } from "pixi.js";
+import {
+  Container,
+  InteractionEvent,
+  Sprite,
+  TextStyle,
+  Text,
+  ITextStyle,
+} from "pixi.js";
 import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
 import { Cell, Tilemap } from "./tilemap";
@@ -21,6 +28,8 @@ export class LevelScene implements GameScene {
 
   hoverSprite = new Sprite();
   dbgText = new Text("");
+  messageLog = new Text("");
+  messages = new Array<string>();
 
   /* state management */
 
@@ -45,6 +54,7 @@ export class LevelScene implements GameScene {
     }
 
     this.game.app.stage.addChild(this.container);
+    this.writeMessage("Atman enters the room.");
   }
 
   addChildren() {
@@ -63,16 +73,27 @@ export class LevelScene implements GameScene {
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
 
-    this.dbgText.position.set(10, 10);
-    this.dbgText.style = new TextStyle({
+    const consoleStyle: Partial<ITextStyle> = {
       fontSize: 18,
       fontFamily: "Barlow Condensed",
       fill: "white",
       align: "left",
       wordWrap: true,
       wordWrapWidth: 320,
-    });
+    };
+
+    this.dbgText.position.set(10, 10);
+    this.dbgText.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.dbgText);
+
+    this.messageLog.anchor.set(1, 0);
+    this.messageLog.position.set(this.game.app.screen.width - 10, 10);
+    this.messageLog.style = new TextStyle({
+      ...consoleStyle,
+      align: "right",
+      wordWrapWidth: 400,
+    });
+    this.hudContainer.addChild(this.messageLog);
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
@@ -87,7 +108,7 @@ export class LevelScene implements GameScene {
       }
     }
 
-    this.ecs = makeECS(this.game, this.arena, this.map);
+    this.ecs = makeECS(this.game, this.arena, this.map, this.writeMessage);
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateDbgText();
@@ -149,10 +170,7 @@ export class LevelScene implements GameScene {
       .getComponent(CombatC)
       .moves.map((m) => [
         m,
-        m.check(
-          { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
-          this.hoveredPos!
-        ),
+        m.check({ ecs: this.ecs, entity: this.ecs.player }, this.hoveredPos!),
       ]);
 
     this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
@@ -179,6 +197,14 @@ export class LevelScene implements GameScene {
         .map(([move, result]) => `${move.name} (${result.message || "?"})`)
         .join("\n");
   }
+
+  writeMessage = (msg: string) => {
+    this.messages.push(msg);
+    while (this.messages.length > 10) {
+      this.messages.shift();
+    }
+    this.messageLog.text = this.messages.join("\n");
+  };
 
   gameLoop = (dt: number) => {
     /* hi */
@@ -207,7 +233,7 @@ export class LevelScene implements GameScene {
 
       console.log("Player move:", actionMoves[0][0]);
       const isAsync = actionMoves[0][0].apply(
-        { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
+        { ecs: this.ecs, entity: this.ecs.player },
         pos,
         doNext
       );

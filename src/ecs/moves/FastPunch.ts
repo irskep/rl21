@@ -55,7 +55,7 @@ export class FastPunch implements Move {
       const enemySpriteC = enemy.getComponent(SpriteC);
       // face attacker
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy);
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
 
       ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 

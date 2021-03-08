@@ -57,8 +57,15 @@ export class Counter implements Move {
 
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
+    ctx.ecs.writeMessage(
+      `${spriteC.name} counters ${enemySpriteC.name}’s punch!`
+    );
+
     setTimeout(() => {
       enemyCombatC.becomeProne(2, enemySpriteC);
+      ctx.ecs.writeMessage(
+        `${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.proneTimer} turns.`
+      );
       doNext();
     }, 500);
     return true;

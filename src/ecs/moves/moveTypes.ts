@@ -7,7 +7,6 @@ import { ECS } from "../ecsTypes";
 export interface MoveContext {
   entity: Entity;
   ecs: ECS;
-  tilemap: Tilemap;
 }
 
 export interface Move {
