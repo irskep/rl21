@@ -46445,8 +46445,8 @@ const SpriteIndices = {
   BOX_FLYING: 35,
   LOSING_WEAPON: 36,
   BM_STAND: 40,
-  BM_PARRY_BEFORE: 41,
-  BM_PARRY_AFTER: 42,
+  BM_STUN_AFTER: 41,
+  BM_STUN_BEFORE: 42,
   BM_DODGE_FORWARD: 43,
   BM_THROW_BEFORE: 44,
   BM_THROW_AFTER: 45,
@@ -46551,7 +46551,7 @@ var _tilemap = require("./tilemap");
 
 var _ecs = require("./ecs/ecs");
 
-var _combat = require("./ecs/combat");
+var _CombatC = require("./ecs/CombatC");
 
 var _input = require("./input");
 
@@ -46736,7 +46736,7 @@ class LevelScene {
     const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
     this.mouseoverContainer.position.set(pos.x, pos.y);
     this.mouseoverContainer.visible = true;
-    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_combat.CombatC).hoverText}`;
+    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_CombatC.CombatC).hoverText}`;
     this.mouseoverText.text = text;
     const size = new _vector2d.Vector(this.mouseoverText.width, this.mouseoverText.height);
     const gfx = this.mouseoverBg;
@@ -46751,13 +46751,13 @@ class LevelScene {
 
   updatePossibleMoves() {
     if (!this.hoveredPos) {
-      this.possibleMoves = this.ecs.player.getComponent(_combat.CombatC).moves.map(m => [m, {
+      this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, {
         success: false
       }]);
       return;
     }
 
-    this.possibleMoves = this.ecs.player.getComponent(_combat.CombatC).moves.map(m => [m, m.check({
+    this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, m.check({
       ecs: this.ecs,
       entity: this.ecs.player
     }, this.hoveredPos)]);
@@ -46775,7 +46775,8 @@ class LevelScene {
   updateDbgText() {
     const okMoves = this.possibleMoves.filter(x => x[1].success);
     const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
-    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n` + okMoves.map(([move]) => `${move.action} ${move.name} (${move.help})`).join("\n") + "\n\nOmitted:\n" + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("\n");
+    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n` + okMoves.map(([move]) => `${move.action} ${move.name}`) // (${move.help})`)
+    .join("\n") + "\n\nOmitted:\n" + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("\n");
   }
 
   tick() {
@@ -46812,7 +46813,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/combat":"cb5a787c677bc498cfd6f61d61b50e74","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008","./ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -47367,9 +47368,11 @@ var _sprite = require("./sprite");
 
 var _vector2d = require("vector2d");
 
-var _moveLists = require("./moves/moveLists");
+var _moves = require("./moves");
 
-var _combat = require("./combat");
+var _CombatS = require("./CombatS");
+
+var _CombatC = require("./CombatC");
 
 var _henchmanName = _interopRequireDefault(require("../prose/henchmanName"));
 
@@ -47390,8 +47393,8 @@ function makePlayer(pos, orientation) {
 
   e.putComponent(_sprite.SpriteC).build("Atman", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_combat.CombatC).build(_moveLists.BM_MOVES);
-  e.getComponent(_combat.CombatC).isPlayer = true;
+  e.putComponent(_CombatC.CombatC).build(_moves.BM_MOVES);
+  e.getComponent(_CombatC.CombatC).isPlayer = true;
   return e;
 }
 
@@ -47399,14 +47402,14 @@ function makeThug(pos, orientation) {
   const e = makeEntity();
   e.putComponent(_sprite.SpriteC).build((0, _henchmanName.default)(), pos, _assets.SpriteIndices.STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_combat.CombatC).build(_moveLists.HENCHMAN_MOVES);
+  e.putComponent(_CombatC.CombatC).build(_moves.HENCHMAN_MOVES);
   return e;
 }
 
 function makeECS(game, container, tilemap, writeMessage) {
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
-  const combatSystem = new _combat.CombatSystem(game);
+  const combatSystem = new _CombatS.CombatSystem(game);
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
   const player = makePlayer(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 2), 0);
@@ -47423,7 +47426,7 @@ function makeECS(game, container, tilemap, writeMessage) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./combat":"cb5a787c677bc498cfd6f61d61b50e74","./moves/moveLists":"6dd31a59032b34c546712b3a11f701f3","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -47915,19 +47918,15 @@ var _ecs = require("@nova-engine/ecs");
 
 var _pixi = require("pixi.js");
 
-var Vec2D = _interopRequireWildcard(require("vector2d"));
+var _vector2d = require("vector2d");
 
 var _direction = require("./direction");
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class SpriteC {
   constructor() {
-    _defineProperty(this, "pos", new Vec2D.Vector(0, 0));
+    _defineProperty(this, "pos", new _vector2d.Vector(0, 0));
 
     _defineProperty(this, "orientation", 0);
 
@@ -48001,6 +48000,10 @@ class SpriteSystem extends _ecs.System {
     this.family = new _ecs.FamilyBuilder(engine).include(SpriteC).build();
   }
 
+  cowboyUpdate() {
+    this.update(this.engines[0], 0);
+  }
+
   update(engine, delta) {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
@@ -48034,6 +48037,10 @@ class SpriteSystem extends _ecs.System {
         }
 
         spriteC.text.text = spriteC.label;
+      }
+
+      if (spriteC.text) {
+        spriteC.text.angle = 90 * (4 - spriteC.orientation);
       }
     }
   }
@@ -48101,891 +48108,7 @@ function getDirectionVector(direction) {
 function getNeighbors(v) {
   return DIRECTIONS.map(d => new _vector2d.Vector(v.x, v.y).add(d[0]));
 }
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"cb5a787c677bc498cfd6f61d61b50e74":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.CombatSystem = exports.CombatC = exports.CombatState = void 0;
-
-var _ecs = require("@nova-engine/ecs");
-
-var _assets = require("../assets");
-
-var _direction = require("./direction");
-
-var _sprite = require("./sprite");
-
-var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-let CombatState;
-exports.CombatState = CombatState;
-
-(function (CombatState) {
-  CombatState["Standing"] = "Standing";
-  CombatState["PunchTelegraph"] = "PunchTelegraph";
-  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
-  CombatState["Punched"] = "Punched";
-  CombatState["Prone"] = "Prone";
-})(CombatState || (exports.CombatState = CombatState = {}));
-
-function stateToPlayerSpriteIndex(state) {
-  switch (state) {
-    case CombatState.Standing:
-      return _assets.SpriteIndices.BM_STAND;
-
-    case CombatState.PunchTelegraph:
-      return _assets.SpriteIndices.BM_PUNCH_BEFORE;
-
-    case CombatState.PunchFollowthrough:
-      return _assets.SpriteIndices.BM_PUNCH_AFTER;
-
-    case CombatState.Punched:
-      return _assets.SpriteIndices.STUMBLING;
-
-    case CombatState.Prone:
-      return _assets.SpriteIndices.BM_DEAD;
-
-    default:
-      throw new _UnreachableCaseError.default(state);
-  }
-}
-
-function stateToHenchmanSpriteIndex(state) {
-  switch (state) {
-    case CombatState.Standing:
-      return _assets.SpriteIndices.STAND;
-
-    case CombatState.PunchTelegraph:
-      return _assets.SpriteIndices.PUNCH_BEFORE;
-
-    case CombatState.PunchFollowthrough:
-      return _assets.SpriteIndices.PUNCH_AFTER;
-
-    case CombatState.Punched:
-      return _assets.SpriteIndices.STUMBLING;
-
-    case CombatState.Prone:
-      return _assets.SpriteIndices.PRONE;
-
-    default:
-      throw new _UnreachableCaseError.default(state);
-  }
-}
-
-class CombatC {
-  constructor() {
-    _defineProperty(this, "state", CombatState.Standing);
-
-    _defineProperty(this, "spriteIndexOverride", null);
-
-    _defineProperty(this, "needsToMove", true);
-
-    _defineProperty(this, "moves", []);
-
-    _defineProperty(this, "isPlayer", false);
-
-    _defineProperty(this, "proneTimer", 0);
-  }
-
-  build(moves) {
-    this.moves = moves;
-    return this;
-  }
-
-  get hoverText() {
-    return this.state;
-  }
-
-  becomeProne(turns, spriteC) {
-    this.setState(CombatState.Prone, spriteC);
-    this.proneTimer = turns;
-    spriteC.label = `${turns}`;
-    this.needsToMove = false;
-  }
-
-  setState(newState, spriteC, spriteIndexOverride) {
-    this.state = newState;
-
-    if (spriteIndexOverride) {
-      spriteC.spriteIndex = spriteIndexOverride;
-      return;
-    }
-
-    if (this.isPlayer) {
-      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
-    } else {
-      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
-    }
-  }
-
-}
-
-exports.CombatC = CombatC;
-
-class CombatSystem extends _ecs.System {
-  // LevelScene may set this
-  constructor(game) {
-    super();
-
-    _defineProperty(this, "isProcessing", false);
-
-    _defineProperty(this, "entitiesToProcess", []);
-
-    _defineProperty(this, "onProcessingFinished", null);
-
-    _defineProperty(this, "processNextEntity", () => {
-      if (this.entitiesToProcess.length < 1) {
-        this.isProcessing = false;
-
-        if (this.onProcessingFinished) {
-          this.onProcessingFinished();
-        }
-
-        return;
-      }
-
-      const entity = this.entitiesToProcess.shift();
-      const combatC = entity.getComponent(CombatC);
-      if (combatC.isPlayer) return this.processNextEntity();
-      if (!combatC.needsToMove) return this.processNextEntity();
-      combatC.needsToMove = false;
-      const spriteC = entity.getComponent(_sprite.SpriteC);
-      const moveContext = {
-        entity,
-        ecs: this.ecs,
-        tilemap: this.tilemap
-      };
-      const availableMoves = [];
-
-      for (let m of combatC.moves) {
-        for (let n of (0, _direction.getNeighbors)(spriteC.pos).concat(spriteC.pos)) {
-          if (m.check(moveContext, n).success) {
-            availableMoves.push([m, n]);
-          }
-        }
-      }
-
-      if (availableMoves.length < 1) {
-        return this.processNextEntity();
-      }
-
-      availableMoves.sort((a, b) => {
-        return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
-      });
-      const [m, target] = availableMoves[0];
-      console.log("Apply", m, "from", entity, "to", target);
-      const isAsync = m.apply(moveContext, target, this.processNextEntity); // if stack growth becomes a problem, this function can be refactored to use
-      // a while loop instead of recursion.
-
-      if (!isAsync) {
-        this.processNextEntity();
-      }
-    });
-
-    this.game = game;
-  }
-
-  onAttach(engine) {
-    super.onAttach(engine);
-    this.family = new _ecs.FamilyBuilder(engine).include(CombatC).include(_sprite.SpriteC).build();
-  }
-
-  update(engine, delta) {
-    this.isProcessing = true;
-    this.entitiesToProcess = new Array().concat(this.family.entities);
-    this.processNextEntity();
-  }
-
-  reset(engine) {
-    for (let entity of this.family.entities) {
-      entity.getComponent(CombatC).needsToMove = true;
-    }
-  }
-
-  applyPunch(attacker, defender, ecs) {
-    const defenderCombatC = defender.getComponent(CombatC);
-    const state = defenderCombatC.state;
-
-    switch (state) {
-      case CombatState.Standing:
-      case CombatState.PunchTelegraph:
-      case CombatState.PunchFollowthrough:
-      case CombatState.Prone:
-      case CombatState.Punched:
-        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
-        const defenderName = defender.getComponent(_sprite.SpriteC).name;
-        defenderCombatC.setState(CombatState.Punched, defender.getComponent(_sprite.SpriteC));
-        defenderCombatC.needsToMove = false;
-        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
-        break;
-
-      default:
-        throw new _UnreachableCaseError.default(state);
-    }
-  }
-
-}
-
-exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-class UnreachableCaseError extends Error {
-  constructor(val) {
-    super(`Unreachable case: ${JSON.stringify(val)}`);
-  }
-
-}
-
-exports.default = UnreachableCaseError;
-},{}],"6dd31a59032b34c546712b3a11f701f3":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.HENCHMAN_MOVES = exports.BM_MOVES = void 0;
-
-var _Walk = require("./Walk");
-
-var _Wait = require("./Wait");
-
-var _TelegraphedPunch = require("./TelegraphedPunch");
-
-var _FastPunch = require("./FastPunch");
-
-var _Counter = require("./Counter");
-
-const BM_MOVES = [new _Wait.Wait(), new _Walk.Walk(), new _FastPunch.FastPunch(), new _Counter.Counter()];
-exports.BM_MOVES = BM_MOVES;
-const HENCHMAN_MOVES = [new _TelegraphedPunch.TelegraphedPunchPrepare(), new _TelegraphedPunch.TelegraphedPunchFollowthroughHit(), new _TelegraphedPunch.TelegraphedPunchFollowthroughMiss(), new _Wait.Wait()];
-exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
-},{"./Walk":"fc6817f8979026dd6927ff37ee14e529","./Wait":"5f653e4293240883170322ba382d4013","./TelegraphedPunch":"b99ca3553cd73cf95091d9e983745d90","./FastPunch":"3c317739c70eba769b5ef5cf0eb645ff","./Counter":"f8ca4efbddc20d7e5b79d513fdc0d887"}],"fc6817f8979026dd6927ff37ee14e529":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Walk = void 0;
-
-var _input = require("../../input");
-
-var _tilemap = require("../../tilemap");
-
-var _combat = require("../combat");
-
-var _moveHelpers = require("./moveHelpers");
-
-var _sprite = require("../sprite");
-
-var _UnreachableCaseError = _interopRequireDefault(require("../../UnreachableCaseError"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class Walk {
-  constructor() {
-    _defineProperty(this, "name", "Walk");
-
-    _defineProperty(this, "help", "no combat");
-
-    _defineProperty(this, "action", _input.Action.X);
-  }
-
-  check(ctx, target) {
-    const checkResult = (0, _moveHelpers.ensureTargetClear)(ctx, target);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const state = ctx.entity.getComponent(_combat.CombatC).state;
-
-    switch (state) {
-      case _combat.CombatState.Standing:
-        return {
-          success: true
-        };
-
-      case _combat.CombatState.Prone:
-        return {
-          success: false,
-          message: "Prone"
-        };
-
-      case _combat.CombatState.Punched:
-        return {
-          success: false,
-          message: "Reeling from punch"
-        };
-
-      case _combat.CombatState.PunchFollowthrough:
-      case _combat.CombatState.PunchTelegraph:
-        return {
-          success: false,
-          message: "?"
-        };
-
-      default:
-        throw new _UnreachableCaseError.default(state);
-    }
-  }
-
-  apply(ctx, target) {
-    const c = ctx.entity.getComponent(_sprite.SpriteC);
-    c.turnToward(target);
-    c.pos = target;
-    return false;
-  }
-
-  computeValue(ctx, target) {
-    return 0;
-  }
-
-}
-
-exports.Walk = Walk;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"7a6fba9761d9655e6215ca003429e87d":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.interpretEvent = interpretEvent;
-exports.Action = void 0;
-let Action;
-exports.Action = Action;
-
-(function (Action) {
-  Action["A"] = "A";
-  Action["B"] = "B";
-  Action["X"] = "X";
-  Action["Y"] = "Y";
-})(Action || (exports.Action = Action = {}));
-
-function interpretEvent(e) {
-  const mouseEvent = e.data.originalEvent;
-
-  if (mouseEvent.button === 0) {
-    if (mouseEvent.shiftKey) {
-      return Action.A;
-    } else {
-      return Action.X;
-    }
-  }
-
-  if (mouseEvent.button === 1) {
-    return Action.B;
-  }
-
-  if (mouseEvent.button === 2) {
-    if (mouseEvent.shiftKey) {
-      return Action.B;
-    } else {
-      return Action.Y;
-    }
-  }
-
-  return null;
-}
-},{}],"03a0ec7ec078c042fc54124d5b564f82":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ensureTargetClear = ensureTargetClear;
-exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
-
-var _assets = require("../../assets");
-
-var _combat = require("../combat");
-
-function ensureTargetClear(ctx, target) {
-  const cell = ctx.ecs.tilemap.getCell(target);
-  if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
-    success: false,
-    message: "Target is not floor"
-  };
-  if (ctx.ecs.spriteSystem.findEntity(target) !== null) return {
-    success: false,
-    message: "Target is occupied"
-  };
-  return {
-    success: true
-  };
-}
-
-function ensureTargetIsEnemy(ctx, target, isPlayer) {
-  const cell = ctx.ecs.tilemap.getCell(target);
-  if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
-    success: false,
-    message: "Target is not floor"
-  };
-  const entity = ctx.ecs.spriteSystem.findEntity(target);
-
-  if (!entity) {
-    return {
-      success: false,
-      message: "Target does not contain an entity"
-    };
-  }
-
-  const combatC = entity.getComponent(_combat.CombatC);
-  if (!combatC || combatC.isPlayer == isPlayer) return {
-    success: false,
-    message: "Target does not contain enemy"
-  };
-  return {
-    success: true
-  };
-}
-},{"../../assets":"be73c6663579275afb4521336d5df627","../combat":"cb5a787c677bc498cfd6f61d61b50e74"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Wait = void 0;
-
-var _input = require("../../input");
-
-var _combat = require("../combat");
-
-var _sprite = require("../sprite");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class Wait {
-  constructor() {
-    _defineProperty(this, "name", "Wait");
-
-    _defineProperty(this, "help", "no combat");
-
-    _defineProperty(this, "action", _input.Action.X);
-  }
-
-  check(ctx, target) {
-    if (ctx.entity.getComponent(_sprite.SpriteC).pos.equals(target)) {
-      return {
-        success: true
-      };
-    } else {
-      return {
-        success: false,
-        message: "Must click on yourself"
-      };
-    }
-  }
-
-  apply(ctx) {
-    // Upon waiting, return to normal state
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-
-    if (combatC.state === _combat.CombatState.Prone) {
-      const proneTimer = combatC.proneTimer - 1;
-      combatC.proneTimer = proneTimer;
-      spriteC.label = `${proneTimer}`;
-
-      if (proneTimer <= 0) {
-        combatC.setState(_combat.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
-        ctx.entity.getComponent(_sprite.SpriteC).label = "";
-      }
-    } else {
-      combatC.setState(_combat.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
-    }
-
-    return false;
-  }
-
-  computeValue(ctx, target) {
-    return 0;
-  }
-
-}
-
-exports.Wait = Wait;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../combat":"cb5a787c677bc498cfd6f61d61b50e74","../sprite":"488445ffc318f5d280c0d86556dce008"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = void 0;
-
-var _tilemap = require("../../tilemap");
-
-var _combat = require("../combat");
-
-var _direction = require("../direction");
-
-var _moveHelpers = require("./moveHelpers");
-
-var _sprite = require("../sprite");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class TelegraphedPunchPrepare {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Prepare");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.Standing) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 100; // henchmen really want to punch Batman.
-  }
-
-  apply(ctx, target) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.writeMessage(`${spriteC.name} winds up for a punch.`);
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
-
-class TelegraphedPunchFollowthroughHit {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Followthrough (hit)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    }
-
-    return (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx, target) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
-
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
-
-class TelegraphedPunchFollowthroughMiss {
-  constructor() {
-    _defineProperty(this, "name", "Telegraphed Punch Followthrough (miss)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.PunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
-
-    if (!isTargetInTheRightDirection) {
-      return {
-        success: false,
-        message: "Momentum is in a different direction"
-      };
-    } // TODO: allow punching allies?
-
-
-    return (0, _moveHelpers.ensureTargetClear)(ctx, target);
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC); // stumble forward
-
-    combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC); // ok
-
-    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.name} swings at nothing but air!`);
-    return false;
-  }
-
-}
-
-exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
-},{"../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","../direction":"8d08baf8b9861766c30a87961a2d3da1","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.FastPunch = void 0;
-
-var _input = require("../../input");
-
-var _tilemap = require("../../tilemap");
-
-var _combat = require("../combat");
-
-var _moveHelpers = require("./moveHelpers");
-
-var _sprite = require("../sprite");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class FastPunch {
-  constructor() {
-    _defineProperty(this, "action", _input.Action.X);
-
-    _defineProperty(this, "name", "Punch");
-
-    _defineProperty(this, "help", "Strike the enemy in the face");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-
-    if (combatC.state != _combat.CombatState.Standing) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyState = enemy.getComponent(_combat.CombatC).state;
-
-    switch (enemyState) {
-      case _combat.CombatState.Prone:
-        return {
-          success: false,
-          message: "Enemy is on the ground"
-        };
-
-      default:
-        break;
-    }
-
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 200;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    spriteC.turnToward(target);
-    ctx.entity.getComponent(_combat.CombatC).setState(_combat.CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    setTimeout(() => {
-      const combatC = ctx.entity.getComponent(_combat.CombatC);
-      combatC.setState(_combat.CombatState.PunchFollowthrough, spriteC);
-      const enemy = ctx.ecs.spriteSystem.findEntity(target);
-      const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
-
-      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-      setTimeout(() => {
-        combatC.setState(_combat.CombatState.Standing, spriteC);
-        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-        doNext();
-      }, 500);
-    }, 500);
-    return true;
-  }
-
-}
-
-exports.FastPunch = FastPunch;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Counter = void 0;
-
-var _input = require("../../input");
-
-var _tilemap = require("../../tilemap");
-
-var _combat = require("../combat");
-
-var _moveHelpers = require("./moveHelpers");
-
-var _sprite = require("../sprite");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class Counter {
-  constructor() {
-    _defineProperty(this, "action", _input.Action.Y);
-
-    _defineProperty(this, "name", "Counter");
-
-    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-
-    if (combatC.state != _combat.CombatState.Standing) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const checkResult = (0, _moveHelpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
-    if (!checkResult.success) return checkResult;
-
-    if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyState = enemy.getComponent(_combat.CombatC).state;
-
-    switch (enemyState) {
-      case _combat.CombatState.PunchTelegraph:
-        return {
-          success: true
-        };
-
-      default:
-        return {
-          success: false,
-          message: "Enemy is not winding up to strike"
-        };
-    }
-  }
-
-  computeValue(ctx, target) {
-    return 200;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_combat.CombatC);
-    spriteC.turnToward(target); // swap positions, prone the enemy
-
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
-    const enemyCombatC = enemy.getComponent(_combat.CombatC);
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // const orientation = spriteC.orientation;
-
-    const enemyOrientation = enemySpriteC.orientation;
-    spriteC.orientation = enemyOrientation;
-    const playerPos = spriteC.pos;
-    spriteC.pos = enemySpriteC.pos;
-    enemySpriteC.pos = playerPos;
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
-    ctx.ecs.writeMessage(`${spriteC.name} counters ${enemySpriteC.name}’s punch!`);
-    setTimeout(() => {
-      enemyCombatC.becomeProne(2, enemySpriteC);
-      ctx.ecs.writeMessage(`${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.proneTimer} turns.`);
-      doNext();
-    }, 500);
-    return true;
-  }
-
-}
-
-exports.Counter = Counter;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../combat":"cb5a787c677bc498cfd6f61d61b50e74","./moveHelpers":"03a0ec7ec078c042fc54124d5b564f82","../sprite":"488445ffc318f5d280c0d86556dce008"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48997,8 +48120,8 @@ var _RNG = _interopRequireDefault(require("../RNG"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’"];
-const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv"];
+const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’", "Killer"];
+const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv", "Pete", "Stu", "Jeff", "Judd", "Dave", "Mike", "Mikey"];
 
 function getHenchmanName() {
   const rng = new _RNG.default(`${Math.random()}`);
@@ -50176,6 +49299,1063 @@ Math // math: package containing random, pow, and seedrandom
 );
 },{"crypto":"d0c8cb413b8a918e0130e85e831bf0d4"}],"d0c8cb413b8a918e0130e85e831bf0d4":[function(require,module,exports) {
 "use strict";
-},{}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
+},{}],"73d749e6e343a99543ba0639dd49d959":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HENCHMAN_MOVES = exports.BM_MOVES = void 0;
+
+var _Walk = require("./Walk");
+
+var _Wait = require("./Wait");
+
+var _TelegraphedPunch = require("./TelegraphedPunch");
+
+var _FastPunch = require("./FastPunch");
+
+var _Counter = require("./Counter");
+
+var _Stun = require("./Stun");
+
+const BM_MOVES = [new _Wait.Wait(), new _Walk.Walk(), new _FastPunch.FastPunch(), new _Counter.Counter(), new _Stun.Stun()];
+exports.BM_MOVES = BM_MOVES;
+const HENCHMAN_MOVES = [new _TelegraphedPunch.TelegraphedPunchPrepare(), new _TelegraphedPunch.TelegraphedPunchFollowthroughHit(), new _TelegraphedPunch.TelegraphedPunchFollowthroughMiss(), new _Wait.Wait()];
+exports.HENCHMAN_MOVES = HENCHMAN_MOVES;
+},{"./Walk":"fc6817f8979026dd6927ff37ee14e529","./Wait":"5f653e4293240883170322ba382d4013","./TelegraphedPunch":"b99ca3553cd73cf95091d9e983745d90","./FastPunch":"3c317739c70eba769b5ef5cf0eb645ff","./Counter":"f8ca4efbddc20d7e5b79d513fdc0d887","./Stun":"2d5a54111a7878180d9a627ddc8d0b53"}],"fc6817f8979026dd6927ff37ee14e529":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Walk = void 0;
+
+var _input = require("../../input");
+
+var _tilemap = require("../../tilemap");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _UnreachableCaseError = _interopRequireDefault(require("../../UnreachableCaseError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Walk {
+  constructor() {
+    _defineProperty(this, "name", "Walk");
+
+    _defineProperty(this, "help", "no combat");
+
+    _defineProperty(this, "action", _input.Action.X);
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureTargetClear)(ctx, target);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const state = ctx.entity.getComponent(_CombatC.CombatC).state;
+
+    switch (state) {
+      case _CombatState.CombatState.Standing:
+        return {
+          success: true
+        };
+
+      case _CombatState.CombatState.Prone:
+        return {
+          success: false,
+          message: "Prone"
+        };
+
+      case _CombatState.CombatState.Punched:
+        return {
+          success: false,
+          message: "Reeling from punch"
+        };
+
+      case _CombatState.CombatState.PunchFollowthrough:
+      case _CombatState.CombatState.PunchTelegraph:
+        return {
+          success: false,
+          message: "?"
+        };
+
+      default:
+        throw new _UnreachableCaseError.default(state);
+    }
+  }
+
+  apply(ctx, target) {
+    const c = ctx.entity.getComponent(_sprite.SpriteC);
+    c.turnToward(target);
+    c.pos = target;
+    return false;
+  }
+
+  computeValue(ctx, target) {
+    return 0;
+  }
+
+}
+
+exports.Walk = Walk;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"7a6fba9761d9655e6215ca003429e87d":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.interpretEvent = interpretEvent;
+exports.Action = void 0;
+let Action;
+exports.Action = Action;
+
+(function (Action) {
+  Action["A"] = "A";
+  Action["B"] = "B";
+  Action["X"] = "X";
+  Action["Y"] = "Y";
+})(Action || (exports.Action = Action = {}));
+
+function interpretEvent(e) {
+  const mouseEvent = e.data.originalEvent;
+
+  if (mouseEvent.button === 0) {
+    if (mouseEvent.shiftKey) {
+      return Action.A;
+    } else {
+      return Action.X;
+    }
+  }
+
+  if (mouseEvent.button === 1) {
+    return Action.B;
+  }
+
+  if (mouseEvent.button === 2) {
+    if (mouseEvent.shiftKey) {
+      return Action.B;
+    } else {
+      return Action.Y;
+    }
+  }
+
+  return null;
+}
+},{}],"3574a7b057a78c60c72a4af34ca2c56d":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ensureTargetClear = ensureTargetClear;
+exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
+exports.ensureStandingAndTargetIsAdjacentEnemy = ensureStandingAndTargetIsAdjacentEnemy;
+
+var _assets = require("../../assets");
+
+var _tilemap = require("../../tilemap");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _sprite = require("../sprite");
+
+function ensureTargetClear(ctx, target) {
+  const cell = ctx.ecs.tilemap.getCell(target);
+  if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
+    success: false,
+    message: "Target is not floor"
+  };
+  if (ctx.ecs.spriteSystem.findEntity(target) !== null) return {
+    success: false,
+    message: "Target is occupied"
+  };
+  return {
+    success: true
+  };
+}
+
+function ensureTargetIsEnemy(ctx, target) {
+  const cell = ctx.ecs.tilemap.getCell(target);
+  if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
+    success: false,
+    message: "Target is not floor"
+  };
+  const targetEntity = ctx.ecs.spriteSystem.findEntity(target);
+
+  if (!targetEntity) {
+    return {
+      success: false,
+      message: "Target does not contain an entity"
+    };
+  }
+
+  const combatC = targetEntity.getComponent(_CombatC.CombatC);
+  if (!combatC || combatC.isPlayer == ctx.entity.getComponent(_CombatC.CombatC).isPlayer) return {
+    success: false,
+    message: "Target does not contain enemy"
+  };
+  return {
+    success: true
+  };
+}
+
+function ensureStandingAndTargetIsAdjacentEnemy(ctx, target) {
+  const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+  const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+  if (combatC.state != _CombatState.CombatState.Standing) {
+    return {
+      success: false,
+      message: "Not in the right state"
+    };
+  }
+
+  const checkResult = ensureTargetIsEnemy(ctx, target);
+  if (!checkResult.success) return checkResult;
+
+  if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
+    return {
+      success: false,
+      message: "Not adjacent"
+    };
+  }
+
+  return {
+    success: true
+  };
+}
+},{"../../assets":"be73c6663579275afb4521336d5df627","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"b6e902b421f06cf2a74c6c109af52761":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatC = void 0;
+
+var _CombatState = require("./CombatState");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class CombatC {
+  constructor() {
+    _defineProperty(this, "state", _CombatState.CombatState.Standing);
+
+    _defineProperty(this, "spriteIndexOverride", null);
+
+    _defineProperty(this, "needsToMove", true);
+
+    _defineProperty(this, "moves", []);
+
+    _defineProperty(this, "isPlayer", false);
+
+    _defineProperty(this, "recoveryTimer", 0);
+  }
+
+  build(moves) {
+    this.moves = moves;
+    return this;
+  }
+
+  get hoverText() {
+    return this.state;
+  }
+
+  becomeProne(turns, spriteC) {
+    this.setState(_CombatState.CombatState.Prone, spriteC);
+    this.recoveryTimer = turns;
+    spriteC.label = `${turns}`;
+    this.needsToMove = false;
+  }
+
+  becomeStunned(turns, spriteC) {
+    this.setState(_CombatState.CombatState.Stunned, spriteC);
+    this.recoveryTimer = turns;
+    spriteC.label = `${turns}`;
+    this.needsToMove = false;
+  }
+
+  setState(newState, spriteC, spriteIndexOverride) {
+    this.state = newState;
+
+    if (spriteIndexOverride) {
+      spriteC.spriteIndex = spriteIndexOverride;
+      return;
+    }
+
+    if (this.isPlayer) {
+      spriteC.spriteIndex = (0, _CombatState.stateToPlayerSpriteIndex)(newState);
+    } else {
+      spriteC.spriteIndex = (0, _CombatState.stateToHenchmanSpriteIndex)(newState);
+    }
+  }
+
+}
+
+exports.CombatC = CombatC;
+},{"./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"5ebcbb2585b4779db34c41483d6ad94f":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.stateToPlayerSpriteIndex = stateToPlayerSpriteIndex;
+exports.stateToHenchmanSpriteIndex = stateToHenchmanSpriteIndex;
+exports.CombatState = void 0;
+
+var _assets = require("../assets");
+
+var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let CombatState;
+exports.CombatState = CombatState;
+
+(function (CombatState) {
+  CombatState["Standing"] = "Standing";
+  CombatState["PunchTelegraph"] = "PunchTelegraph";
+  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
+  CombatState["Punched"] = "Punched";
+  CombatState["Prone"] = "Prone";
+  CombatState["Stunned"] = "Stunned";
+})(CombatState || (exports.CombatState = CombatState = {}));
+
+function stateToPlayerSpriteIndex(state) {
+  switch (state) {
+    case CombatState.Standing:
+      return _assets.SpriteIndices.BM_STAND;
+
+    case CombatState.PunchTelegraph:
+      return _assets.SpriteIndices.BM_PUNCH_BEFORE;
+
+    case CombatState.PunchFollowthrough:
+      return _assets.SpriteIndices.BM_PUNCH_AFTER;
+
+    case CombatState.Punched:
+      return _assets.SpriteIndices.STUMBLING;
+
+    case CombatState.Prone:
+      return _assets.SpriteIndices.BM_DEAD;
+
+    case CombatState.Stunned:
+      return _assets.SpriteIndices.STUNNED;
+
+    default:
+      throw new _UnreachableCaseError.default(state);
+  }
+}
+
+function stateToHenchmanSpriteIndex(state) {
+  switch (state) {
+    case CombatState.Standing:
+      return _assets.SpriteIndices.STAND;
+
+    case CombatState.PunchTelegraph:
+      return _assets.SpriteIndices.PUNCH_BEFORE;
+
+    case CombatState.PunchFollowthrough:
+      return _assets.SpriteIndices.PUNCH_AFTER;
+
+    case CombatState.Punched:
+      return _assets.SpriteIndices.STUMBLING;
+
+    case CombatState.Prone:
+      return _assets.SpriteIndices.PRONE;
+
+    case CombatState.Stunned:
+      return _assets.SpriteIndices.STUNNED;
+
+    default:
+      throw new _UnreachableCaseError.default(state);
+  }
+}
+},{"../assets":"be73c6663579275afb4521336d5df627","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+class UnreachableCaseError extends Error {
+  constructor(val) {
+    super(`Unreachable case: ${JSON.stringify(val)}`);
+  }
+
+}
+
+exports.default = UnreachableCaseError;
+},{}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Wait = void 0;
+
+var _input = require("../../input");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Wait {
+  constructor() {
+    _defineProperty(this, "name", "Wait");
+
+    _defineProperty(this, "help", "no combat");
+
+    _defineProperty(this, "action", _input.Action.X);
+  }
+
+  check(ctx, target) {
+    if (ctx.entity.getComponent(_sprite.SpriteC).pos.equals(target)) {
+      return {
+        success: true
+      };
+    } else {
+      return {
+        success: false,
+        message: "Must click on yourself"
+      };
+    }
+  }
+
+  apply(ctx) {
+    // Upon waiting, return to normal state
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (combatC.state === _CombatState.CombatState.Prone || combatC.state == _CombatState.CombatState.Stunned) {
+      const proneTimer = combatC.recoveryTimer - 1;
+      combatC.recoveryTimer = proneTimer;
+      spriteC.label = `${proneTimer}`;
+
+      if (proneTimer <= 0) {
+        combatC.setState(_CombatState.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
+        ctx.entity.getComponent(_sprite.SpriteC).label = "";
+      }
+    } else {
+      combatC.setState(_CombatState.CombatState.Standing, ctx.entity.getComponent(_sprite.SpriteC));
+    }
+
+    return false;
+  }
+
+  computeValue(ctx, target) {
+    return 0;
+  }
+
+}
+
+exports.Wait = Wait;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = void 0;
+
+var _tilemap = require("../../tilemap");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _direction = require("../direction");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class TelegraphedPunchPrepare {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Prepare");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.Standing) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 100; // henchmen really want to punch Batman.
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.writeMessage(`${spriteC.name} winds up for a punch.`);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchPrepare = TelegraphedPunchPrepare;
+
+class TelegraphedPunchFollowthroughHit {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Followthrough (hit)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    }
+
+    return (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchFollowthroughHit = TelegraphedPunchFollowthroughHit;
+
+class TelegraphedPunchFollowthroughMiss {
+  constructor() {
+    _defineProperty(this, "name", "Telegraphed Punch Followthrough (miss)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.PunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const isTargetInTheRightDirection = spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)).equals(target);
+
+    if (!isTargetInTheRightDirection) {
+      return {
+        success: false,
+        message: "Momentum is in a different direction"
+      };
+    } // TODO: allow punching allies?
+
+
+    return (0, _helpers.ensureTargetClear)(ctx, target);
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC); // stumble forward
+
+    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
+
+    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
+    ctx.ecs.writeMessage(`${spriteC.name} swings at nothing but air!`);
+    return false;
+  }
+
+}
+
+exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
+},{"../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.FastPunch = void 0;
+
+var _input = require("../../input");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _assets = require("../../assets");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class FastPunch {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.X);
+
+    _defineProperty(this, "name", "Punch");
+
+    _defineProperty(this, "help", "Strike the enemy in the face");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyState = enemy.getComponent(_CombatC.CombatC).state;
+
+    switch (enemyState) {
+      case _CombatState.CombatState.Prone:
+        return {
+          success: false,
+          message: "Enemy is on the ground"
+        };
+
+      default:
+        break;
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    setTimeout(() => {
+      const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+      combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // face attacker
+
+      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+      ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+      setTimeout(() => {
+        combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_PUNCH_AFTER);
+        ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+        doNext();
+      }, 500);
+    }, 500);
+    return true;
+  }
+
+}
+
+exports.FastPunch = FastPunch;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Counter = void 0;
+
+var _input = require("../../input");
+
+var _tilemap = require("../../tilemap");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Counter {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.Y);
+
+    _defineProperty(this, "name", "Counter");
+
+    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (combatC.state != _CombatState.CombatState.Standing) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!(0, _tilemap.isAdjacent)(spriteC.pos, target)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyState = enemy.getComponent(_CombatC.CombatC).state;
+
+    switch (enemyState) {
+      case _CombatState.CombatState.PunchTelegraph:
+        return {
+          success: true
+        };
+
+      default:
+        return {
+          success: false,
+          message: "Enemy is not winding up to strike"
+        };
+    }
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    spriteC.turnToward(target); // swap positions, prone the enemy
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemyCombatC = enemy.getComponent(_CombatC.CombatC);
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC); // const orientation = spriteC.orientation;
+
+    const enemyOrientation = enemySpriteC.orientation;
+    spriteC.orientation = enemyOrientation;
+    const playerPos = spriteC.pos;
+    spriteC.pos = enemySpriteC.pos;
+    enemySpriteC.pos = playerPos;
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    ctx.ecs.writeMessage(`${spriteC.name} counters ${enemySpriteC.name}’s punch!`);
+    setTimeout(() => {
+      enemyCombatC.becomeProne(2, enemySpriteC);
+      ctx.ecs.writeMessage(`${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`);
+      doNext();
+    }, 500);
+    return true;
+  }
+
+}
+
+exports.Counter = Counter;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"2d5a54111a7878180d9a627ddc8d0b53":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Stun = void 0;
+
+var _input = require("../../input");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _assets = require("../../assets");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Stun {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.B);
+
+    _defineProperty(this, "name", "Stun");
+
+    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 150;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_BEFORE);
+    ctx.ecs.spriteSystem.cowboyUpdate();
+    setTimeout(() => {
+      // apply stun to enemy
+      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      ctx.ecs.combatSystem.applyStun(ctx.entity, enemy, ctx.ecs);
+      combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_AFTER);
+      doNext();
+    }, 300);
+    return true;
+  }
+
+}
+
+exports.Stun = Stun;
+},{"../../input":"7a6fba9761d9655e6215ca003429e87d","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatSystem = void 0;
+
+var _ecs = require("@nova-engine/ecs");
+
+var _assets = require("../assets");
+
+var _direction = require("./direction");
+
+var _sprite = require("./sprite");
+
+var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+
+var _CombatC = require("./CombatC");
+
+var _CombatState = require("./CombatState");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class CombatSystem extends _ecs.System {
+  // LevelScene may set this
+  constructor(game) {
+    super();
+
+    _defineProperty(this, "isProcessing", false);
+
+    _defineProperty(this, "entitiesToProcess", []);
+
+    _defineProperty(this, "onProcessingFinished", null);
+
+    _defineProperty(this, "processNextEntity", () => {
+      if (this.entitiesToProcess.length < 1) {
+        this.isProcessing = false;
+
+        if (this.onProcessingFinished) {
+          this.onProcessingFinished();
+        }
+
+        return;
+      }
+
+      const entity = this.entitiesToProcess.shift();
+      const combatC = entity.getComponent(_CombatC.CombatC);
+      if (combatC.isPlayer) return this.processNextEntity();
+      if (!combatC.needsToMove) return this.processNextEntity();
+      combatC.needsToMove = false;
+      const spriteC = entity.getComponent(_sprite.SpriteC);
+      const moveContext = {
+        entity,
+        ecs: this.ecs,
+        tilemap: this.tilemap
+      };
+      const availableMoves = [];
+
+      for (let m of combatC.moves) {
+        for (let n of (0, _direction.getNeighbors)(spriteC.pos).concat(spriteC.pos)) {
+          if (m.check(moveContext, n).success) {
+            availableMoves.push([m, n]);
+          }
+        }
+      }
+
+      if (availableMoves.length < 1) {
+        return this.processNextEntity();
+      }
+
+      availableMoves.sort((a, b) => {
+        return b[0].computeValue(moveContext, b[1]) - a[0].computeValue(moveContext, a[1]);
+      });
+      const [m, target] = availableMoves[0];
+      console.log("Apply", m, "from", entity, "to", target);
+      const isAsync = m.apply(moveContext, target, this.processNextEntity); // if stack growth becomes a problem, this function can be refactored to use
+      // a while loop instead of recursion.
+
+      if (!isAsync) {
+        this.processNextEntity();
+      }
+    });
+
+    this.game = game;
+  }
+
+  onAttach(engine) {
+    super.onAttach(engine);
+    this.family = new _ecs.FamilyBuilder(engine).include(_CombatC.CombatC).include(_sprite.SpriteC).build();
+  }
+
+  update(engine, delta) {
+    this.isProcessing = true;
+    this.entitiesToProcess = new Array().concat(this.family.entities);
+    this.processNextEntity();
+  }
+
+  reset(engine) {
+    for (let entity of this.family.entities) {
+      entity.getComponent(_CombatC.CombatC).needsToMove = true;
+    }
+  }
+
+  applyPunch(attacker, defender, ecs) {
+    const defenderCombatC = defender.getComponent(_CombatC.CombatC);
+    const state = defenderCombatC.state;
+
+    switch (state) {
+      case _CombatState.CombatState.Standing:
+      case _CombatState.CombatState.PunchTelegraph:
+      case _CombatState.CombatState.PunchFollowthrough:
+      case _CombatState.CombatState.Prone:
+      case _CombatState.CombatState.Punched:
+      case _CombatState.CombatState.Stunned:
+        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
+        const defenderName = defender.getComponent(_sprite.SpriteC).name;
+        defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+        defenderCombatC.needsToMove = false;
+        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+        break;
+
+      default:
+        throw new _UnreachableCaseError.default(state);
+    }
+  }
+
+  applyStun(attacker, defender, ecs) {
+    const defenderCombatC = defender.getComponent(_CombatC.CombatC);
+    const state = defenderCombatC.state;
+
+    switch (state) {
+      case _CombatState.CombatState.Standing:
+      case _CombatState.CombatState.PunchTelegraph:
+      case _CombatState.CombatState.PunchFollowthrough:
+      case _CombatState.CombatState.Prone:
+      case _CombatState.CombatState.Punched:
+      case _CombatState.CombatState.Stunned:
+        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
+        const defenderName = defender.getComponent(_sprite.SpriteC).name;
+        defenderCombatC.becomeStunned(2, defender.getComponent(_sprite.SpriteC));
+        ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
+        break;
+
+      default:
+        throw new _UnreachableCaseError.default(state);
+    }
+  } /// Move defender away from attacker, assuming they are adjacent
+
+
+  push(attacker, defender, ecs, n = 1) {
+    const posA = attacker.getComponent(_sprite.SpriteC).pos;
+    const defenderSpriteC = defender.getComponent(_sprite.SpriteC);
+    const posD = defenderSpriteC.pos;
+    const delta = posD.clone().subtract(posA);
+    let newPosD = posD;
+    newPosD = newPosD.clone().add(delta);
+    let i = 0;
+
+    while (ecs.tilemap.getCell(newPosD)?.index === _assets.EnvIndices.FLOOR && i < n) {
+      i += 1;
+      defenderSpriteC.pos = newPosD;
+    }
+  }
+
+}
+
+exports.CombatSystem = CombatSystem;
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
