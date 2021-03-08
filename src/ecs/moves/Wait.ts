@@ -1,6 +1,7 @@
 import { Vector } from "vector2d";
 import { Action } from "../../input";
-import { CombatC, CombatState } from "../combat";
+import { CombatState } from "../CombatState";
+import { CombatC } from "../CombatC";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 
@@ -9,7 +10,7 @@ export class Wait implements Move {
   help = "no combat";
   action = Action.X;
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     if (ctx.entity.getComponent(SpriteC).pos.equals(target)) {
       return { success: true };
     } else {
@@ -22,9 +23,12 @@ export class Wait implements Move {
     const combatC = ctx.entity.getComponent(CombatC);
     const spriteC = ctx.entity.getComponent(SpriteC);
 
-    if (combatC.state === CombatState.Prone) {
-      const proneTimer = combatC.proneTimer - 1;
-      combatC.proneTimer = proneTimer;
+    if (
+      combatC.state === CombatState.Prone ||
+      combatC.state == CombatState.Stunned
+    ) {
+      const proneTimer = combatC.recoveryTimer - 1;
+      combatC.recoveryTimer = proneTimer;
       spriteC.label = `${proneTimer}`;
       if (proneTimer <= 0) {
         combatC.setState(
@@ -40,7 +44,7 @@ export class Wait implements Move {
     return false;
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 0;
   }
 }

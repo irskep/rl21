@@ -1,6 +1,7 @@
 import { Vector } from "vector2d";
 import { isAdjacent } from "../../tilemap";
-import { CombatC, CombatState } from "../combat";
+import { CombatState } from "../CombatState";
+import { CombatC } from "../CombatC";
 import { getDirectionVector } from "../direction";
 import { ensureTargetClear, ensureTargetIsEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
@@ -10,7 +11,7 @@ export class TelegraphedPunchPrepare implements Move {
   name = "Telegraphed Punch Prepare";
   help = "?";
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
     if (combatC.state != CombatState.Standing) {
       return { success: false, message: "Not in the right state" };
@@ -25,11 +26,11 @@ export class TelegraphedPunchPrepare implements Move {
     return { success: true };
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 100; // henchmen really want to punch Batman.
   }
 
-  apply(ctx: MoveContext, target: Vector): boolean {
+  apply(ctx: MoveContext, target: AbstractVector): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     spriteC.turnToward(target);
     ctx.entity
@@ -44,7 +45,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
   name = "Telegraphed Punch Followthrough (hit)";
   help = "?";
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
 
     if (combatC.state != CombatState.PunchTelegraph) {
@@ -67,11 +68,11 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     return ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 100;
   }
 
-  apply(ctx: MoveContext, target: Vector): boolean {
+  apply(ctx: MoveContext, target: AbstractVector): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
 
@@ -90,7 +91,7 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
   name = "Telegraphed Punch Followthrough (miss)";
   help = "?";
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
     if (combatC.state != CombatState.PunchTelegraph) {
       return { success: false, message: "Not in the right state" };
@@ -113,7 +114,7 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     return ensureTargetClear(ctx, target);
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 100;
   }
 

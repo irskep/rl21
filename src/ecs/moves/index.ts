@@ -8,12 +8,14 @@ import {
 } from "./TelegraphedPunch";
 import { FastPunch } from "./FastPunch";
 import { Counter } from "./Counter";
+import { Stun } from "./Stun";
 
 export const BM_MOVES: Move[] = [
   new Wait(),
   new Walk(),
   new FastPunch(),
   new Counter(),
+  new Stun(),
 ];
 export const HENCHMAN_MOVES: Move[] = [
   new TelegraphedPunchPrepare(),

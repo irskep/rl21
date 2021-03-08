@@ -1,13 +1,12 @@
 import {
-  Component,
   Engine,
   Entity,
   Family,
   FamilyBuilder,
   System,
 } from "@nova-engine/ecs";
-import { Vector } from "vector2d";
-import { SpriteIndices } from "../assets";
+import { AbstractVector } from "vector2d";
+import { EnvIndices } from "../assets";
 import { Tilemap } from "../tilemap";
 import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
@@ -15,92 +14,8 @@ import { ECS } from "./ecsTypes";
 import { Move } from "./moves/_types";
 import { SpriteC } from "./sprite";
 import UnreachableCaseError from "../UnreachableCaseError";
-
-export enum CombatState {
-  Standing = "Standing",
-  PunchTelegraph = "PunchTelegraph",
-  PunchFollowthrough = "PunchFollowthrough",
-  Punched = "Punched",
-  Prone = "Prone",
-}
-
-function stateToPlayerSpriteIndex(state: CombatState): number {
-  switch (state) {
-    case CombatState.Standing:
-      return SpriteIndices.BM_STAND;
-    case CombatState.PunchTelegraph:
-      return SpriteIndices.BM_PUNCH_BEFORE;
-    case CombatState.PunchFollowthrough:
-      return SpriteIndices.BM_PUNCH_AFTER;
-    case CombatState.Punched:
-      return SpriteIndices.STUMBLING;
-    case CombatState.Prone:
-      return SpriteIndices.BM_DEAD;
-    default:
-      throw new UnreachableCaseError(state);
-  }
-}
-
-function stateToHenchmanSpriteIndex(state: CombatState): number {
-  switch (state) {
-    case CombatState.Standing:
-      return SpriteIndices.STAND;
-    case CombatState.PunchTelegraph:
-      return SpriteIndices.PUNCH_BEFORE;
-    case CombatState.PunchFollowthrough:
-      return SpriteIndices.PUNCH_AFTER;
-    case CombatState.Punched:
-      return SpriteIndices.STUMBLING;
-    case CombatState.Prone:
-      return SpriteIndices.PRONE;
-    default:
-      throw new UnreachableCaseError(state);
-  }
-}
-
-export class CombatC implements Component {
-  state = CombatState.Standing;
-  spriteIndexOverride: number | null = null;
-  needsToMove = true;
-  moves: Move[] = [];
-  isPlayer = false;
-  proneTimer = 0;
-
-  build(moves: Move[]): CombatC {
-    this.moves = moves;
-    return this;
-  }
-
-  get hoverText(): string {
-    return this.state;
-  }
-
-  becomeProne(turns: number, spriteC: SpriteC) {
-    this.setState(CombatState.Prone, spriteC);
-    this.proneTimer = turns;
-    spriteC.label = `${turns}`;
-    this.needsToMove = false;
-  }
-
-  setState(
-    newState: CombatState,
-    spriteC: SpriteC,
-    spriteIndexOverride?: number
-  ) {
-    this.state = newState;
-
-    if (spriteIndexOverride) {
-      spriteC.spriteIndex = spriteIndexOverride;
-      return;
-    }
-
-    if (this.isPlayer) {
-      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
-    } else {
-      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
-    }
-  }
-}
+import { CombatC } from "./CombatC";
+import { CombatState } from "./CombatState";
 
 export class CombatSystem extends System {
   family!: Family;
@@ -151,7 +66,7 @@ export class CombatSystem extends System {
     const spriteC = entity.getComponent(SpriteC);
 
     const moveContext = { entity, ecs: this.ecs, tilemap: this.tilemap };
-    const availableMoves: [Move, Vector][] = [];
+    const availableMoves: [Move, AbstractVector][] = [];
     for (let m of combatC.moves) {
       for (let n of getNeighbors(spriteC.pos).concat(spriteC.pos)) {
         if (m.check(moveContext, n).success) {
@@ -196,6 +111,7 @@ export class CombatSystem extends System {
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:
       case CombatState.Punched:
+      case CombatState.Stunned:
         const attackerName = attacker.getComponent(SpriteC).name;
         const defenderName = defender.getComponent(SpriteC).name;
         defenderCombatC.setState(
@@ -207,6 +123,42 @@ export class CombatSystem extends System {
         break;
       default:
         throw new UnreachableCaseError(state);
+    }
+  }
+
+  applyStun(attacker: Entity, defender: Entity, ecs: ECS) {
+    const defenderCombatC = defender.getComponent(CombatC);
+    const state = defenderCombatC.state;
+    switch (state) {
+      case CombatState.Standing:
+      case CombatState.PunchTelegraph:
+      case CombatState.PunchFollowthrough:
+      case CombatState.Prone:
+      case CombatState.Punched:
+      case CombatState.Stunned:
+        const attackerName = attacker.getComponent(SpriteC).name;
+        const defenderName = defender.getComponent(SpriteC).name;
+        defenderCombatC.becomeStunned(2, defender.getComponent(SpriteC));
+        ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
+        break;
+      default:
+        throw new UnreachableCaseError(state);
+    }
+  }
+
+  /// Move defender away from attacker, assuming they are adjacent
+  push(attacker: Entity, defender: Entity, ecs: ECS, n: number = 1) {
+    const posA = attacker.getComponent(SpriteC).pos;
+    const defenderSpriteC = defender.getComponent(SpriteC);
+    const posD = defenderSpriteC.pos;
+    const delta = posD.clone().subtract(posA);
+
+    let newPosD = posD;
+    newPosD = newPosD.clone().add(delta);
+    let i = 0;
+    while (ecs.tilemap.getCell(newPosD)?.index === EnvIndices.FLOOR && i < n) {
+      i += 1;
+      defenderSpriteC.pos = newPosD;
     }
   }
 }

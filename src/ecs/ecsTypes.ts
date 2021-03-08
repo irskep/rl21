@@ -1,6 +1,6 @@
 import { Engine, Entity } from "@nova-engine/ecs";
 import { Tilemap } from "../tilemap";
-import { CombatSystem } from "./combat";
+import { CombatSystem } from "./CombatS";
 import { SpriteSystem } from "./sprite";
 
 export interface ECS {

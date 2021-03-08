@@ -1,7 +1,8 @@
 import { Vector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
-import { CombatC, CombatState } from "../combat";
+import { CombatState } from "../CombatState";
+import { CombatC } from "../CombatC";
 import { ensureTargetClear } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
@@ -12,7 +13,7 @@ export class Walk implements Move {
   help = "no combat";
   action = Action.X;
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const checkResult = ensureTargetClear(ctx, target);
     if (!checkResult.success) return checkResult;
 
@@ -36,7 +37,7 @@ export class Walk implements Move {
     }
   }
 
-  apply(ctx: MoveContext, target: Vector): boolean {
+  apply(ctx: MoveContext, target: AbstractVector): boolean {
     const c = ctx.entity.getComponent(SpriteC);
     c.turnToward(target);
     c.pos = target;
@@ -44,7 +45,7 @@ export class Walk implements Move {
     return false;
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 0;
   }
 }

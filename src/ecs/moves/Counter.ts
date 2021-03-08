@@ -1,7 +1,8 @@
 import { Vector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
-import { CombatC, CombatState } from "../combat";
+import { CombatState } from "../CombatState";
+import { CombatC } from "../CombatC";
 import { ensureTargetIsEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
@@ -11,7 +12,7 @@ export class Counter implements Move {
   name = "Counter";
   help = "If an enemy is about to strike, counter their move";
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
     const spriteC = ctx.entity.getComponent(SpriteC);
     if (combatC.state != CombatState.Standing) {
@@ -34,11 +35,11 @@ export class Counter implements Move {
     }
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 200;
   }
 
-  apply(ctx: MoveContext, target: Vector, doNext: () => void): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
     spriteC.turnToward(target);
@@ -64,7 +65,7 @@ export class Counter implements Move {
     setTimeout(() => {
       enemyCombatC.becomeProne(2, enemySpriteC);
       ctx.ecs.writeMessage(
-        `${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.proneTimer} turns.`
+        `${enemySpriteC.name} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
       );
       doNext();
     }, 500);

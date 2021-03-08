@@ -1,7 +1,6 @@
 import { Entity } from "@nova-engine/ecs";
-import { Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { Action } from "../../input";
-import { Tilemap } from "../../tilemap";
 import { ECS } from "../ecsTypes";
 
 export interface MoveContext {
@@ -13,10 +12,14 @@ export interface Move {
   name: string;
   help: string;
   action?: Action;
-  check: (ctx: MoveContext, target: Vector) => MoveCheckResult;
-  computeValue?: (ctx: MoveContext, target: Vector) => number;
+  check: (ctx: MoveContext, target: AbstractVector) => MoveCheckResult;
+  computeValue?: (ctx: MoveContext, target: AbstractVector) => number;
   // return true if doing async work. if return true, must call doNext().
-  apply: (ctx: MoveContext, target: Vector, doNext: () => void) => boolean;
+  apply: (
+    ctx: MoveContext,
+    target: AbstractVector,
+    doNext: () => void
+  ) => boolean;
 }
 
 export interface MoveCheckResult {

@@ -7,7 +7,8 @@ import { GameInterface } from "../types";
 import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES } from "./moves";
-import { CombatC, CombatSystem } from "./combat";
+import { CombatSystem } from "./CombatS";
+import { CombatC } from "./CombatC";
 import { Tilemap } from "../tilemap";
 import getHenchmanName from "../prose/henchmanName";
 

@@ -7,13 +7,12 @@ import {
   Entity,
 } from "@nova-engine/ecs";
 import { Container, Sprite, Text } from "pixi.js";
-import * as Vec2D from "vector2d";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { GameInterface } from "../types";
 import { DIRECTIONS } from "./direction";
 
 export class SpriteC implements Component {
-  pos = new Vec2D.Vector(0, 0);
+  pos: AbstractVector = new Vector(0, 0);
   orientation = 0; // clockwise from up
   private _spriteIndex = 0;
   needsTextureReplacement = false;
@@ -24,7 +23,7 @@ export class SpriteC implements Component {
 
   name = ""; // sprites have names too, why not
 
-  build(name: string, pos: Vec2D.Vector, spriteIndex: number): SpriteC {
+  build(name: string, pos: AbstractVector, spriteIndex: number): SpriteC {
     this.name = name;
     this.pos = pos;
     this.spriteIndex = spriteIndex;
@@ -51,7 +50,7 @@ export class SpriteC implements Component {
     return this.name;
   }
 
-  turnToward(target: Vector) {
+  turnToward(target: AbstractVector) {
     const direction = target.clone().subtract(this.pos);
     for (const d2 of DIRECTIONS) {
       if (d2[0].equals(direction)) {
@@ -76,6 +75,10 @@ export class SpriteSystem extends System {
   onAttach(engine: Engine) {
     super.onAttach(engine);
     this.family = new FamilyBuilder(engine).include(SpriteC).build();
+  }
+
+  cowboyUpdate() {
+    this.update(this.engines[0], 0);
   }
 
   update(engine: Engine, delta: number) {
@@ -114,12 +117,15 @@ export class SpriteSystem extends System {
         }
         spriteC.text.text = spriteC.label;
       }
+      if (spriteC.text) {
+        spriteC.text.angle = 90 * (4 - spriteC.orientation);
+      }
     }
   }
 
   /* helpers */
 
-  findEntity(pos: Vector): Entity | null {
+  findEntity(pos: AbstractVector): Entity | null {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
       if (spriteC.pos.equals(pos)) return entity;

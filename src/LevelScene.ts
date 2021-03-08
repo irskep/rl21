@@ -12,7 +12,7 @@ import { Vector } from "vector2d";
 import { EnvIndices } from "./assets";
 import { Cell, Tilemap } from "./tilemap";
 import { makeECS } from "./ecs/ecs";
-import { CombatC } from "./ecs/combat";
+import { CombatC } from "./ecs/CombatC";
 import { ECS } from "./ecs/ecsTypes";
 import { GameScene, GameInterface } from "./types";
 import { Move, MoveCheckResult } from "./ecs/moves/_types";
@@ -246,7 +246,7 @@ export class LevelScene implements GameScene {
     this.dbgText.text =
       `${this.hoveredPos || "(no selection)"}\n` +
       okMoves
-        .map(([move]) => `${move.action} ${move.name} (${move.help})`)
+        .map(([move]) => `${move.action} ${move.name}`) // (${move.help})`)
         .join("\n") +
       "\n\nOmitted:\n" +
       notOkMoves

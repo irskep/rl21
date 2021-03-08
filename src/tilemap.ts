@@ -1,8 +1,8 @@
 import { Sprite } from "pixi.js";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 
 export class Cell {
-  sprite?: Sprite = null;
+  sprite: Sprite | null = null;
   index: number = 0;
   pos: Vector;
   constructor(pos: Vector, index: number) {
@@ -13,8 +13,8 @@ export class Cell {
 
 export class Tilemap {
   contents: Cell[][];
-  size: Vector;
-  constructor(size: Vector) {
+  size: AbstractVector;
+  constructor(size: AbstractVector) {
     this.size = size;
     this.contents = new Array(size.y);
 
@@ -29,19 +29,19 @@ export class Tilemap {
     }
   }
 
-  getCell(pos: Vector): Cell | null {
+  getCell(pos: AbstractVector): Cell | null {
     if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y)
       return null;
     return this.contents[pos.y][pos.x];
   }
 }
 
-export function isAdjacent(a: Vector, b: Vector): boolean {
+export function isAdjacent(a: AbstractVector, b: AbstractVector): boolean {
   if (a.equals(b)) return false;
   return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
 }
 
-export function neighbors(a: Vector): Vector[] {
+export function neighbors(a: AbstractVector): AbstractVector[] {
   const val: Vector[] = [];
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {

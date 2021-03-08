@@ -1,6 +1,6 @@
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 
-export const DIRECTIONS: [Vector, number][] = [
+export const DIRECTIONS: [AbstractVector, number][] = [
   [new Vector(0, -1), 0],
   [new Vector(1, -1), 0.5],
   [new Vector(1, 0), 1],
@@ -11,7 +11,7 @@ export const DIRECTIONS: [Vector, number][] = [
   [new Vector(-1, -1), 3.5],
 ];
 
-export function getDirectionVector(direction: number): Vector {
+export function getDirectionVector(direction: number): AbstractVector {
   switch (direction) {
     case 0:
       return new Vector(0, -1);
@@ -34,6 +34,6 @@ export function getDirectionVector(direction: number): Vector {
   }
 }
 
-export function getNeighbors(v: Vector): Vector[] {
+export function getNeighbors(v: AbstractVector): AbstractVector[] {
   return DIRECTIONS.map((d) => new Vector(v.x, v.y).add(d[0]));
 }

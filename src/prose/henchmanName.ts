@@ -18,6 +18,7 @@ const adjs: string[] = [
   "Belchin’",
   "Wind-up",
   "Yammerin’",
+  "Killer",
 ];
 
 const names: string[] = [
@@ -35,6 +36,13 @@ const names: string[] = [
   "James",
   "Steve",
   "Marv",
+  "Pete",
+  "Stu",
+  "Jeff",
+  "Judd",
+  "Dave",
+  "Mike",
+  "Mikey",
 ];
 
 export default function getHenchmanName(): string {

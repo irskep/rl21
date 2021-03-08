@@ -1,27 +1,24 @@
 import { Vector } from "vector2d";
 import { Action } from "../../input";
 import { isAdjacent } from "../../tilemap";
-import { CombatC, CombatState } from "../combat";
-import { ensureTargetIsEnemy } from "./_helpers";
+import { CombatState } from "../CombatState";
+import { CombatC } from "../CombatC";
+import {
+  ensureStandingAndTargetIsAdjacentEnemy,
+  ensureTargetIsEnemy,
+} from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
+import { SpriteIndices } from "../../assets";
 
 export class FastPunch implements Move {
   action = Action.X;
   name = "Punch";
   help = "Strike the enemy in the face";
 
-  check(ctx: MoveContext, target: Vector): MoveCheckResult {
-    const combatC = ctx.entity.getComponent(CombatC);
-    if (combatC.state != CombatState.Standing) {
-      return { success: false, message: "Not in the right state" };
-    }
-    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
+    const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
-
-    if (!isAdjacent(ctx.entity.getComponent(SpriteC).pos, target)) {
-      return { success: false, message: "Not adjacent" };
-    }
 
     const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
     const enemyState = enemy.getComponent(CombatC).state;
@@ -35,11 +32,11 @@ export class FastPunch implements Move {
     return { success: true };
   }
 
-  computeValue(ctx: MoveContext, target: Vector): number {
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 200;
   }
 
-  apply(ctx: MoveContext, target: Vector, doNext: () => void): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     spriteC.turnToward(target);
     ctx.entity
@@ -60,7 +57,11 @@ export class FastPunch implements Move {
       ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
       setTimeout(() => {
-        combatC.setState(CombatState.Standing, spriteC);
+        combatC.setState(
+          CombatState.Standing,
+          spriteC,
+          SpriteIndices.BM_PUNCH_AFTER
+        );
         ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
         doNext();
       }, 500);
