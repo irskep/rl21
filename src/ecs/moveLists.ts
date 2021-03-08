@@ -25,6 +25,8 @@ export class Walk implements Move {
     switch (state) {
       case CombatState.Normal:
         return { success: true };
+      case CombatState.Prone:
+        return { success: false, message: "Prone" };
       case CombatState.Punched:
         return { success: false, message: "Reeling from punch" };
       case CombatState.PunchFollowthrough:
@@ -63,9 +65,17 @@ export class Wait implements Move {
 
   apply(ctx: MoveContext): boolean {
     // Upon waiting, return to normal state
-    ctx.entity
-      .getComponent(CombatC)
-      .setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+    const combatC = ctx.entity.getComponent(CombatC);
+
+    if (combatC.state === CombatState.Prone) {
+      const proneTimer = combatC.proneTimer - 1;
+      combatC.proneTimer = proneTimer;
+      if (proneTimer <= 0) {
+        combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+      }
+    } else {
+      combatC.setState(CombatState.Normal, ctx.entity.getComponent(SpriteC));
+    }
 
     return false;
   }
@@ -114,6 +124,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
 
   check(ctx: MoveContext, target: Vector): MoveCheckResult {
     const combatC = ctx.entity.getComponent(CombatC);
+
     if (combatC.state != CombatState.PunchTelegraph) {
       return { success: false, message: "Not in the right state" };
     }
@@ -144,7 +155,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
 
     combatC.setState(CombatState.PunchFollowthrough, spriteC);
 
-    const enemy = ctx.ecs.spriteSystem.findEntity(target);
+    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
     const enemySpriteC = enemy.getComponent(SpriteC);
     // face attacker
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
@@ -227,12 +238,10 @@ export class FastPunch implements Move {
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
     setTimeout(() => {
-      doNext();
-
       const combatC = ctx.entity.getComponent(CombatC);
       combatC.setState(CombatState.PunchFollowthrough, spriteC);
 
-      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
       const enemySpriteC = enemy.getComponent(SpriteC);
       // face attacker
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
@@ -244,13 +253,80 @@ export class FastPunch implements Move {
         combatC.setState(CombatState.Normal, spriteC);
         ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
         doNext();
-      }, 300);
-    }, 300);
+      }, 500);
+    }, 500);
     return true;
   }
 }
 
-export const BM_MOVES: Move[] = [new Wait(), new Walk(), new FastPunch()];
+export class Counter implements Move {
+  action = Action.Y;
+  name = "Counter";
+  help = "If an enemy is about to strike, counter their move";
+
+  check(ctx: MoveContext, target: Vector): MoveCheckResult {
+    const combatC = ctx.entity.getComponent(CombatC);
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    if (combatC.state != CombatState.Normal) {
+      return { success: false, message: "Not in the right state" };
+    }
+    const checkResult = ensureTargetIsEnemy(ctx, target, combatC.isPlayer);
+    if (!checkResult.success) return checkResult;
+
+    if (!isAdjacent(spriteC.pos, target)) {
+      return { success: false, message: "Not adjacent" };
+    }
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemyState = enemy.getComponent(CombatC).state;
+    switch (enemyState) {
+      case CombatState.PunchTelegraph:
+        return { success: true };
+      default:
+        return { success: false, message: "Enemy is not winding up to strike" };
+    }
+  }
+
+  computeValue(ctx: MoveContext, target: Vector): number {
+    return 200;
+  }
+
+  apply(ctx: MoveContext, target: Vector, doNext: () => void): boolean {
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    const combatC = ctx.entity.getComponent(CombatC);
+    spriteC.turnToward(target);
+
+    // swap positions, prone the enemy
+
+    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemyCombatC = enemy.getComponent(CombatC);
+    const enemySpriteC = enemy.getComponent(SpriteC);
+
+    // const orientation = spriteC.orientation;
+    const enemyOrientation = enemySpriteC.orientation;
+    spriteC.orientation = enemyOrientation;
+    const playerPos = spriteC.pos;
+    spriteC.pos = enemySpriteC.pos;
+    enemySpriteC.pos = playerPos;
+
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+
+    setTimeout(() => {
+      enemyCombatC.setState(CombatState.Prone, enemySpriteC);
+      enemyCombatC.proneTimer = 2;
+      enemyCombatC.needsToMove = false;
+      doNext();
+    }, 500);
+    return true;
+  }
+}
+
+export const BM_MOVES: Move[] = [
+  new Wait(),
+  new Walk(),
+  new FastPunch(),
+  new Counter(),
+];
 export const HENCHMAN_MOVES: Move[] = [
   new TelegraphedPunchPrepare(),
   new TelegraphedPunchFollowthroughHit(),

@@ -1,6 +1,9 @@
 {
-  "strict": true,
-  "strictNullChecks": true,
-  "target": "esnext",
-  "module": "esnext"
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "strictNullChecks": true,
+    "strict": true,
+    "moduleResolution": "node"
+  }
 }

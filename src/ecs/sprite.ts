@@ -45,7 +45,7 @@ export class SpriteC implements Component {
 }
 
 export class SpriteSystem extends System {
-  family: Family;
+  family!: Family;
   game: GameInterface;
   container: Container;
 

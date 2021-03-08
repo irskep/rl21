@@ -24,7 +24,7 @@ export class LevelScene implements GameScene {
 
   /* state management */
 
-  ecs: ECS;
+  ecs!: ECS;
   map = new Tilemap(new Vector(16, 16));
   possibleMoves: [Move, MoveCheckResult][] = [];
 
@@ -105,6 +105,13 @@ export class LevelScene implements GameScene {
       if (!action) return;
       this.handleClick(cell.pos, action);
     });
+
+    (cellSprite as any).on("rightclick", (e: InteractionEvent) => {
+      if (this.ecs.combatSystem.isProcessing) return;
+      const action = interpretEvent(e);
+      if (!action) return;
+      this.handleClick(cell.pos, action);
+    });
   }
 
   exit() {
@@ -122,8 +129,8 @@ export class LevelScene implements GameScene {
     if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
       this.hoverSprite.visible = true;
       this.hoverSprite.position.set(
-        this.hoveredPos.x * this.game.tileSize,
-        this.hoveredPos.y * this.game.tileSize
+        this.hoveredPos!.x * this.game.tileSize,
+        this.hoveredPos!.y * this.game.tileSize
       );
     } else {
       this.hoverSprite.visible = false;
@@ -144,7 +151,7 @@ export class LevelScene implements GameScene {
         m,
         m.check(
           { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
-          this.hoveredPos
+          this.hoveredPos!
         ),
       ]);
 
@@ -182,6 +189,7 @@ export class LevelScene implements GameScene {
   }
 
   handleClick(pos: Vector, action: Action) {
+    console.log("Click", pos, action);
     const actionMoves = this.possibleMoves.filter(
       ([move, result]) => result.success && move.action == action
     );
@@ -196,6 +204,8 @@ export class LevelScene implements GameScene {
         this.tick();
         this.updateHoverCell(this.hoveredPos);
       };
+
+      console.log("Player move:", actionMoves[0][0]);
       const isAsync = actionMoves[0][0].apply(
         { ecs: this.ecs, entity: this.ecs.player, tilemap: this.map },
         pos,

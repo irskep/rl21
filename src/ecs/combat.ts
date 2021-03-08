@@ -21,6 +21,7 @@ export enum CombatState {
   PunchTelegraph = "PunchTelegraph",
   PunchFollowthrough = "PunchFollowthrough",
   Punched = "Punched",
+  Prone = "Prone",
 }
 
 function stateToPlayerSpriteIndex(state: CombatState): number {
@@ -33,6 +34,8 @@ function stateToPlayerSpriteIndex(state: CombatState): number {
       return SpriteIndices.BM_PUNCH_AFTER;
     case CombatState.Punched:
       return SpriteIndices.STUMBLING;
+    case CombatState.Prone:
+      return SpriteIndices.BM_DEAD;
     default:
       throw new UnreachableCaseError(state);
   }
@@ -48,6 +51,8 @@ function stateToHenchmanSpriteIndex(state: CombatState): number {
       return SpriteIndices.PUNCH_AFTER;
     case CombatState.Punched:
       return SpriteIndices.STUMBLING;
+    case CombatState.Prone:
+      return SpriteIndices.PRONE;
     default:
       throw new UnreachableCaseError(state);
   }
@@ -59,6 +64,7 @@ export class CombatC implements Component {
   needsToMove = true;
   moves: Move[] = [];
   isPlayer = false;
+  proneTimer = 0;
 
   build(moves: Move[]): CombatC {
     this.moves = moves;
@@ -86,11 +92,11 @@ export class CombatC implements Component {
 }
 
 export class CombatSystem extends System {
-  family: Family;
+  family!: Family;
   game: GameInterface;
   isProcessing = false;
-  ecs: ECS;
-  tilemap: Tilemap;
+  ecs!: ECS;
+  tilemap!: Tilemap;
 
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
@@ -111,11 +117,11 @@ export class CombatSystem extends System {
 
   update(engine: Engine, delta: number) {
     this.isProcessing = true;
-    this.entitiesToProcess = [].concat(this.family.entities);
+    this.entitiesToProcess = new Array<Entity>().concat(this.family.entities);
     this.processNextEntity();
   }
 
-  processNextEntity = () => {
+  processNextEntity = (): void => {
     if (this.entitiesToProcess.length < 1) {
       this.isProcessing = false;
       if (this.onProcessingFinished) {
@@ -124,7 +130,7 @@ export class CombatSystem extends System {
       return;
     }
 
-    const entity = this.entitiesToProcess.shift();
+    const entity = this.entitiesToProcess.shift()!;
     const combatC = entity.getComponent(CombatC);
     if (combatC.isPlayer) return this.processNextEntity();
     if (!combatC.needsToMove) return this.processNextEntity();
@@ -149,8 +155,8 @@ export class CombatSystem extends System {
 
     availableMoves.sort((a, b) => {
       return (
-        b[0].computeValue(moveContext, b[1]) -
-        a[0].computeValue(moveContext, a[1])
+        b[0].computeValue!(moveContext, b[1]) -
+        a[0].computeValue!(moveContext, a[1])
       );
     });
 
@@ -172,15 +178,21 @@ export class CombatSystem extends System {
 
   applyPunch(attacker: Entity, defender: Entity) {
     const defenderCombatC = defender.getComponent(CombatC);
-    switch (defenderCombatC.state) {
+    const state = defenderCombatC.state;
+    switch (state) {
       case CombatState.Normal:
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
+      case CombatState.Prone:
+      case CombatState.Punched:
         defenderCombatC.setState(
           CombatState.Punched,
           defender.getComponent(SpriteC)
         );
         defenderCombatC.needsToMove = false;
+        break;
+      default:
+        throw new UnreachableCaseError(state);
     }
   }
 }
