@@ -46746,7 +46746,6 @@ class LevelScene {
     gfx.beginFill(0x000000);
     gfx.drawRect(0, 0, size.x, size.y);
     gfx.endFill();
-    console.log(this.mouseoverContainer);
   }
 
   updatePossibleMoves() {
@@ -46775,7 +46774,7 @@ class LevelScene {
   updateDbgText() {
     const okMoves = this.possibleMoves.filter(x => x[1].success);
     const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
-    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n` + okMoves.map(([move]) => `${move.action} ${move.name}`) // (${move.help})`)
+    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n` + okMoves.map(([move]) => `${(0, _input.getActionText)(move.action)}: ${move.name}`) // (${move.help})`)
     .join("\n") + "\n\nOmitted:\n" + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("\n");
   }
 
@@ -46792,13 +46791,19 @@ class LevelScene {
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
 
+    const oldHoveredPos = this.hoveredPos;
+
     if (actionMoves.length === 1) {
+      this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;
 
       const doNext = () => {
         this.tick();
-        this.updateHoverCell(this.hoveredPos);
+
+        if (this.hoveredPos === null) {
+          this.updateHoverCell(oldHoveredPos);
+        }
       };
 
       console.log("Player move:", actionMoves[0][0]);
@@ -47393,16 +47398,25 @@ function makePlayer(pos, orientation) {
 
   e.putComponent(_sprite.SpriteC).build("Atman", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_CombatC.CombatC).build(_moves.BM_MOVES);
+  e.putComponent(_CombatC.CombatC).build(_moves.BM_MOVES, []);
   e.getComponent(_CombatC.CombatC).isPlayer = true;
   return e;
 }
 
 function makeThug(pos, orientation) {
   const e = makeEntity();
-  e.putComponent(_sprite.SpriteC).build((0, _henchmanName.default)(), pos, _assets.SpriteIndices.STAND);
+  e.putComponent(_sprite.SpriteC).build(`${(0, _henchmanName.default)()} the Thug`, pos, _assets.SpriteIndices.STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_CombatC.CombatC).build(_moves.HENCHMAN_MOVES);
+  e.getComponent(_sprite.SpriteC).tint = 0x8888ff;
+  e.putComponent(_CombatC.CombatC).build(_moves.HENCHMAN_MOVES, []);
+  return e;
+}
+
+function makeArmoredThug(pos, orientation) {
+  const e = makeThug(pos, orientation);
+  e.getComponent(_CombatC.CombatC).traits.push(_CombatC.CombatTrait.Armored);
+  e.getComponent(_sprite.SpriteC).tint = 0xffff66;
+  e.getComponent(_sprite.SpriteC).name = `${(0, _henchmanName.default)()} the Armored Thug`;
   return e;
 }
 
@@ -47415,6 +47429,7 @@ function makeECS(game, container, tilemap, writeMessage) {
   const player = makePlayer(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 2), 0);
   engine.addEntity(player);
   engine.addEntity(makeThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2));
+  engine.addEntity(makeArmoredThug(new _vector2d.Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5), 2));
   const ecs = {
     engine: engine,
     combatSystem: combatSystem,
@@ -47938,6 +47953,8 @@ class SpriteC {
 
     _defineProperty(this, "needsLabelUpdate", false);
 
+    _defineProperty(this, "tint", 0xffffff);
+
     _defineProperty(this, "text", null);
 
     _defineProperty(this, "name", "");
@@ -47993,6 +48010,7 @@ class SpriteSystem extends _ecs.System {
     super();
     this.game = game;
     this.container = container;
+    SpriteSystem.default = this;
   }
 
   onAttach(engine) {
@@ -48010,6 +48028,7 @@ class SpriteSystem extends _ecs.System {
 
       if (!spriteC.sprite) {
         spriteC.sprite = new _pixi.Sprite(this.game.assets.sprites[spriteC.spriteIndex]);
+        spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
       }
@@ -48120,12 +48139,12 @@ var _RNG = _interopRequireDefault(require("../RNG"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’", "Killer"];
+const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’", "Killer", "Scumbag"];
 const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv", "Pete", "Stu", "Jeff", "Judd", "Dave", "Mike", "Mikey"];
 
 function getHenchmanName() {
   const rng = new _RNG.default(`${Math.random()}`);
-  return `${rng.choice(adjs)} ${rng.choice(names)} the Thug`;
+  return `${rng.choice(adjs)} ${rng.choice(names)}`;
 }
 },{"../RNG":"930b9d1127b4b9643f68937ef97d4a53"}],"930b9d1127b4b9643f68937ef97d4a53":[function(require,module,exports) {
 "use strict";
@@ -49422,6 +49441,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.interpretEvent = interpretEvent;
+exports.getActionText = getActionText;
 exports.Action = void 0;
 let Action;
 exports.Action = Action;
@@ -49458,6 +49478,22 @@ function interpretEvent(e) {
 
   return null;
 }
+
+function getActionText(action) {
+  switch (action) {
+    case Action.A:
+      return "Shift + left click";
+
+    case Action.B:
+      return "Shift + right click";
+
+    case Action.X:
+      return "Left click";
+
+    case Action.Y:
+      return "Right click";
+  }
+}
 },{}],"3574a7b057a78c60c72a4af34ca2c56d":[function(require,module,exports) {
 "use strict";
 
@@ -49466,6 +49502,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ensureTargetClear = ensureTargetClear;
 exports.ensureTargetIsEnemy = ensureTargetIsEnemy;
+exports.ensureTargetExists = ensureTargetExists;
 exports.ensureStandingAndTargetIsAdjacentEnemy = ensureStandingAndTargetIsAdjacentEnemy;
 
 var _assets = require("../../assets");
@@ -49518,6 +49555,26 @@ function ensureTargetIsEnemy(ctx, target) {
   };
 }
 
+function ensureTargetExists(ctx, target) {
+  const cell = ctx.ecs.tilemap.getCell(target);
+  if (!cell || cell.index !== _assets.EnvIndices.FLOOR) return {
+    success: false,
+    message: "Target is not floor"
+  };
+  const targetEntity = ctx.ecs.spriteSystem.findEntity(target);
+
+  if (!targetEntity) {
+    return {
+      success: false,
+      message: "Target does not contain an entity"
+    };
+  }
+
+  return {
+    success: true
+  };
+}
+
 function ensureStandingAndTargetIsAdjacentEnemy(ctx, target) {
   const combatC = ctx.entity.getComponent(_CombatC.CombatC);
   const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
@@ -49549,15 +49606,28 @@ function ensureStandingAndTargetIsAdjacentEnemy(ctx, target) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CombatC = void 0;
+exports.CombatC = exports.CombatTrait = void 0;
 
 var _CombatState = require("./CombatState");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+let CombatTrait;
+exports.CombatTrait = CombatTrait;
+
+(function (CombatTrait) {
+  CombatTrait["Armored"] = "Armored";
+  CombatTrait["Fluid"] = "Fluid";
+  CombatTrait["WieldingGun"] = "WieldingGun";
+  CombatTrait["WieldingShield"] = "WieldingShield";
+  CombatTrait["WieldingShockBaton"] = "WieldingShockBaton";
+})(CombatTrait || (exports.CombatTrait = CombatTrait = {}));
+
 class CombatC {
   constructor() {
     _defineProperty(this, "state", _CombatState.CombatState.Standing);
+
+    _defineProperty(this, "traits", new Array());
 
     _defineProperty(this, "spriteIndexOverride", null);
 
@@ -49570,27 +49640,48 @@ class CombatC {
     _defineProperty(this, "recoveryTimer", 0);
   }
 
-  build(moves) {
+  build(moves, traits) {
     this.moves = moves;
+    this.traits = traits;
     return this;
   }
 
   get hoverText() {
-    return this.state;
+    if (this.recoveryTimer) {
+      return `${this.state} for ${this.recoveryTimer} turns\n\n${this.traits.join("\n")}`;
+    } else {
+      return `${this.state}\n\n${this.traits.join("\n")}`;
+    }
+  }
+
+  hasTrait(trait) {
+    return this.traits.indexOf(trait) !== -1;
   }
 
   becomeProne(turns, spriteC) {
     this.setState(_CombatState.CombatState.Prone, spriteC);
     this.recoveryTimer = turns;
-    spriteC.label = `${turns}`;
+    this.updateText(spriteC);
     this.needsToMove = false;
   }
 
   becomeStunned(turns, spriteC) {
     this.setState(_CombatState.CombatState.Stunned, spriteC);
     this.recoveryTimer = turns;
-    spriteC.label = `${turns}`;
+    this.updateText(spriteC);
     this.needsToMove = false;
+  }
+
+  updateText(spriteC) {
+    console.log("update text");
+
+    if (this.recoveryTimer) {
+      console.log(1);
+      spriteC.label = `${this.recoveryTimer}`;
+    } else {
+      console.log(2);
+      spriteC.label = "";
+    }
   }
 
   setState(newState, spriteC, spriteIndexOverride) {
@@ -49811,7 +49902,7 @@ class TelegraphedPunchPrepare {
       };
     }
 
-    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    const checkResult = (0, _helpers.ensureTargetIsEnemy)(ctx, target);
     if (!checkResult.success) return checkResult;
 
     if (!(0, _tilemap.isAdjacent)(ctx.entity.getComponent(_sprite.SpriteC).pos, target)) {
@@ -49869,7 +49960,7 @@ class TelegraphedPunchFollowthroughHit {
       };
     }
 
-    return (0, _helpers.ensureTargetIsEnemy)(ctx, target, combatC.isPlayer);
+    return (0, _helpers.ensureTargetExists)(ctx, target);
   }
 
   computeValue(ctx, target) {
@@ -50219,6 +50310,8 @@ class CombatSystem extends _ecs.System {
 
     _defineProperty(this, "isProcessing", false);
 
+    _defineProperty(this, "STUN_TIMER", 2);
+
     _defineProperty(this, "entitiesToProcess", []);
 
     _defineProperty(this, "onProcessingFinished", null);
@@ -50268,7 +50361,13 @@ class CombatSystem extends _ecs.System {
       // a while loop instead of recursion.
 
       if (!isAsync) {
-        this.processNextEntity();
+        _sprite.SpriteSystem.default.cowboyUpdate();
+
+        if (this.entitiesToProcess.length > 0) {
+          setTimeout(this.processNextEntity, 300);
+        } else {
+          this.processNextEntity();
+        }
       }
     });
 
@@ -50294,20 +50393,48 @@ class CombatSystem extends _ecs.System {
 
   applyPunch(attacker, defender, ecs) {
     const defenderCombatC = defender.getComponent(_CombatC.CombatC);
+    const attackerName = attacker.getComponent(_sprite.SpriteC).name;
+    const defenderName = defender.getComponent(_sprite.SpriteC).name;
     const state = defenderCombatC.state;
 
+    const landPunch = () => {
+      switch (defenderCombatC.state) {
+        case _CombatState.CombatState.Stunned:
+        case _CombatState.CombatState.Prone:
+          // don't change state; enemy remains stunned
+          defenderCombatC.needsToMove = false;
+          break;
+
+        default:
+          defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+          break;
+      }
+
+      ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+    };
+
     switch (state) {
+      case _CombatState.CombatState.Stunned:
+        landPunch();
+        defenderCombatC.recoveryTimer = this.STUN_TIMER; // reset
+
+        defenderCombatC.updateText(defender.getComponent(_sprite.SpriteC));
+        break;
+
+      case _CombatState.CombatState.Punched:
+      case _CombatState.CombatState.Prone:
+        landPunch();
+        break;
+
       case _CombatState.CombatState.Standing:
       case _CombatState.CombatState.PunchTelegraph:
       case _CombatState.CombatState.PunchFollowthrough:
-      case _CombatState.CombatState.Prone:
-      case _CombatState.CombatState.Punched:
-      case _CombatState.CombatState.Stunned:
-        const attackerName = attacker.getComponent(_sprite.SpriteC).name;
-        const defenderName = defender.getComponent(_sprite.SpriteC).name;
-        defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
-        defenderCombatC.needsToMove = false;
-        ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+        if (defenderCombatC.hasTrait(_CombatC.CombatTrait.Armored)) {
+          ecs.writeMessage(`${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`);
+        } else {
+          landPunch();
+        }
+
         break;
 
       default:
@@ -50328,7 +50455,7 @@ class CombatSystem extends _ecs.System {
       case _CombatState.CombatState.Stunned:
         const attackerName = attacker.getComponent(_sprite.SpriteC).name;
         const defenderName = defender.getComponent(_sprite.SpriteC).name;
-        defenderCombatC.becomeStunned(2, defender.getComponent(_sprite.SpriteC));
+        defenderCombatC.becomeStunned(this.STUN_TIMER, defender.getComponent(_sprite.SpriteC));
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
         break;
 
