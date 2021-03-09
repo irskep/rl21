@@ -11,6 +11,7 @@ export interface GameInterface {
   pushScene: (scene: GameScene) => void;
   popScene: () => void;
   replaceScenes: (scenes: GameScene[]) => void;
-  assets: Record<string, Texture[]>;
+  filmstrips: Record<string, Texture[]>;
+  images: Record<string, Texture>;
   tileSize: number;
 }

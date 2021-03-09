@@ -3,7 +3,6 @@ import { Texture } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
-import { TelegraphedPunchFollowthroughMiss } from "./ecs/moves/TelegraphedPunch";
 import filmstrip from "./filmstrip";
 import { LevelScene } from "./game/LevelScene";
 import { GameScene, GameInterface } from "./types";
@@ -12,7 +11,8 @@ export default class Game implements GameInterface {
   app: PIXI.Application;
   scenes = new Array<GameScene>();
   isFontLoaded = false;
-  assets: Record<string, Texture[]> = {};
+  filmstrips: Record<string, Texture[]> = {};
+  images: Record<string, Texture> = {};
   tileSize = 128;
 
   constructor() {
@@ -57,17 +57,24 @@ export default class Game implements GameInterface {
     if (this.app.loader.progress < 100) return;
 
     const loadFilmstrip = (name: string, cellSize: AbstractVector) => {
-      const texture = (this.app.loader.resources[`${name}`] as any)
+      const texture = (this.app.loader.resources[name] as any)
         ?.texture as PIXI.Texture;
 
       return filmstrip(texture, cellSize.x, cellSize.y);
     };
 
     for (const asset of ALL_ASSETS) {
-      this.assets[asset.name] = loadFilmstrip(
-        asset.name,
-        asset.cellSize || new Vector(this.tileSize, this.tileSize)
-      );
+      if (asset.isFilmstrip) {
+        this.filmstrips[asset.name] = loadFilmstrip(
+          asset.name,
+          asset.cellSize || new Vector(this.tileSize, this.tileSize)
+        );
+      } else if (asset.url.endsWith(".png")) {
+        this.images[asset.name] = (this.app.loader.resources[asset.name] as any)
+          ?.texture as Texture;
+      } else {
+        console.warn("Unknown asset:", asset);
+      }
     }
 
     // this.pushScene(new MenuScene(this));

@@ -4,6 +4,7 @@ export interface Asset {
   name: string;
   url: string;
   cellSize?: AbstractVector;
+  isFilmstrip?: boolean;
 }
 
 export const SpriteIndices = {
@@ -53,7 +54,14 @@ export const EnvIndices = {
 };
 
 export const ALL_ASSETS: Asset[] = [
-  { name: "sprites", url: "sprites.png" },
-  { name: "env", url: "env.png" },
-  { name: "heart", url: "heart.png", cellSize: new Vector(21, 18) },
+  { name: "sprites", url: "sprites.png", isFilmstrip: true },
+  { name: "env", url: "env.png", isFilmstrip: true },
+  {
+    name: "heart",
+    url: "heart.png",
+    isFilmstrip: true,
+    cellSize: new Vector(21, 18),
+  },
+  { name: "stagecomplete", url: "stagecomplete.png" },
+  { name: "youlose", url: "youlose.png" },
 ];

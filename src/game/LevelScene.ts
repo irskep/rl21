@@ -106,7 +106,7 @@ export class LevelScene implements GameScene {
     this.arena.setTransform(undefined, undefined, 0.5, 0.5);
     this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
 
-    this.hoverSprite.texture = this.game.assets.env[EnvIndices.HOVER];
+    this.hoverSprite.texture = this.game.filmstrips.env[EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
 
@@ -141,7 +141,7 @@ export class LevelScene implements GameScene {
       for (let x = 0; x < this.map.size.x; x++) {
         const cellSprite = new Sprite();
         const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.assets.env[cell.index];
+        cellSprite.texture = this.game.filmstrips.env[cell.index];
         cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
         cellSprite.interactive = true;
         this.bindEvents(cell, cellSprite);
@@ -254,6 +254,18 @@ export class LevelScene implements GameScene {
           this.game.replaceScenes([new LevelScene(this.game)]);
         }
         break;
+      case CombatEventType.AllEnemiesDead:
+        const victorySprite = new Sprite(this.game.images["stagecomplete"]);
+        victorySprite.anchor.set(0.5, 0.5);
+        victorySprite.position.set(
+          this.hudContainer.width / 2,
+          this.hudContainer.height / 2
+        );
+        this.hudContainer.addChild(victorySprite);
+
+        setTimeout(() => {
+          this.game.replaceScenes([new LevelScene(this.game)]);
+        }, 2000);
     }
   }
 
@@ -370,7 +382,7 @@ export class LevelScene implements GameScene {
     for (let i = 0; i < Math.ceil(halfHP); i++) {
       let sprite: Sprite;
       if (i >= this.heartSprites.length) {
-        sprite = new Sprite(this.game.assets["heart"]![0]);
+        sprite = new Sprite(this.game.filmstrips["heart"]![0]);
         sprite.position.set(i * 21, 0);
         this.heartSprites.push(sprite);
         this.heartsContainer.addChild(sprite);
@@ -380,7 +392,9 @@ export class LevelScene implements GameScene {
       sprite.visible = true;
 
       if (i + 1 == Math.ceil(halfHP)) {
-        sprite.texture = this.game.assets["heart"]![halfHP % 1 === 0 ? 0 : 1];
+        sprite.texture = this.game.filmstrips["heart"]![
+          halfHP % 1 === 0 ? 0 : 1
+        ];
       }
     }
   }

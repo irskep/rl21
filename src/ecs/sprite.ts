@@ -103,7 +103,7 @@ export class SpriteSystem extends System {
       const spriteC = entity.getComponent(SpriteC);
       if (!spriteC.sprite) {
         spriteC.sprite = new Sprite(
-          this.game.assets.sprites[spriteC.spriteIndex]
+          this.game.filmstrips.sprites[spriteC.spriteIndex]
         );
         spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
@@ -118,7 +118,9 @@ export class SpriteSystem extends System {
 
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
-        spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
+        spriteC.sprite.texture = this.game.filmstrips.sprites[
+          spriteC.spriteIndex
+        ];
       }
 
       if (spriteC.needsLabelUpdate) {

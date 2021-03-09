@@ -31,6 +31,7 @@ export enum CombatEventType {
   Counter = "Counter",
   Stun = "Stun",
   Die = "Die",
+  AllEnemiesDead = "AllEnemiesDead",
 }
 
 export interface CombatEvent {
@@ -79,6 +80,17 @@ export class CombatSystem extends System {
       const combatC = e.getComponent(CombatC);
       if (combatC.hp > 0) continue;
       this.kill(e);
+    }
+    const remainingEntities = this.family.entities;
+    if (
+      remainingEntities.length === 1 &&
+      remainingEntities[0].getComponent(CombatC).isPlayer
+    ) {
+      this.events.emit({
+        type: CombatEventType.AllEnemiesDead,
+      });
+
+      return; // never say processing is finished, so LevelScene doesn't allow more events
     }
     if (this.onProcessingFinished) {
       this.onProcessingFinished();
