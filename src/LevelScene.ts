@@ -7,7 +7,6 @@ import {
   Text,
   ITextStyle,
   Graphics,
-  Texture,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "./assets";
@@ -20,7 +19,7 @@ import { Move, MoveCheckResult } from "./ecs/moves/_types";
 import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "./ecs/sprite";
-import { CombatEventType } from "./ecs/CombatS";
+import { CombatEvent, CombatEventType } from "./ecs/CombatS";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -83,17 +82,7 @@ export class LevelScene implements GameScene {
     this.game.app.stage.addChild(this.container);
 
     this.ecs.combatSystem.events.stream.onValue((event) => {
-      console.log(event);
-      switch (event.type) {
-        case CombatEventType.HPChanged:
-          if (event.subject === this.ecs.player) {
-            console.log(
-              "Time to update hearts to",
-              this.ecs.player.getComponent(CombatC).hp
-            );
-            this.updateHearts();
-          }
-      }
+      this.handleCombatEvent(event);
     });
 
     this.writeMessage("Atman enters the room.");
@@ -231,6 +220,22 @@ export class LevelScene implements GameScene {
     // Mousetrap.unbind(["enter", "space"]);
     this.game.app.ticker.remove(this.gameLoop);
     this.game.app.stage.removeChild(this.container);
+  }
+
+  handleCombatEvent(event: CombatEvent) {
+    console.log(event);
+    switch (event.type) {
+      case CombatEventType.HPChanged:
+        if (event.subject === this.ecs.player) {
+          this.updateHearts();
+        }
+        break;
+      case CombatEventType.Die:
+        if (event.subject === this.ecs.player) {
+          this.game.replaceScenes([new LevelScene(this.game)]);
+        }
+        break;
+    }
   }
 
   updateHoverCell(pos: Vector | null) {

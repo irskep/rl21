@@ -22,9 +22,9 @@ function makeEntity(): Entity {
 
 function makePlayer(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
-  if (e.id != 0) {
-    throw new Error("player should always be 0");
-  }
+  // if (e.id != 0) {
+  //   throw new Error("player should always be 0");
+  // }
 
   e.putComponent(SpriteC).build(
     "Atman",
