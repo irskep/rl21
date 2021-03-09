@@ -431,6 +431,8 @@ exports.default = void 0;
 
 var PIXI = _interopRequireWildcard(require("pixi.js"));
 
+var _vector2d = require("vector2d");
+
 var _webfontloader = _interopRequireDefault(require("webfontloader"));
 
 var _assets = require("./assets");
@@ -461,13 +463,13 @@ class Game {
       if (!this.isFontLoaded) return;
       if (this.app.loader.progress < 100) return;
 
-      const loadFilmstrip = name => {
+      const loadFilmstrip = (name, cellSize) => {
         const texture = this.app.loader.resources[`${name}`]?.texture;
-        return (0, _filmstrip.default)(texture, this.tileSize, this.tileSize);
+        return (0, _filmstrip.default)(texture, cellSize.x, cellSize.y);
       };
 
       for (const asset of _assets.ALL_ASSETS) {
-        this.assets[asset.name] = loadFilmstrip(asset.name);
+        this.assets[asset.name] = loadFilmstrip(asset.name, asset.cellSize || new _vector2d.Vector(this.tileSize, this.tileSize));
       } // this.pushScene(new MenuScene(this));
 
 
@@ -538,7 +540,7 @@ class Game {
 }
 
 exports.default = Game;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","./LevelScene":"6ccc40762d5c7f4175ed1b1bbc2cc794"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","./LevelScene":"6ccc40762d5c7f4175ed1b1bbc2cc794","vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
 /*!
  * pixi.js - v6.0.0
  * Compiled Tue, 02 Mar 2021 21:45:03 UTC
@@ -46421,6 +46423,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ALL_ASSETS = exports.EnvIndices = exports.SpriteIndices = void 0;
+
+var _vector2d = require("vector2d");
+
 const SpriteIndices = {
   STAND: 0,
   STUMBLING: 1,
@@ -46472,362 +46477,13 @@ const ALL_ASSETS = [{
 }, {
   name: "env",
   url: "env.png"
+}, {
+  name: "heart",
+  url: "heart.png",
+  cellSize: new _vector2d.Vector(21, 18)
 }];
 exports.ALL_ASSETS = ALL_ASSETS;
-},{}],"aa243c19245f4a17bb4ebcec9369275f":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = filmstrip;
-
-var PIXI = _interopRequireWildcard(require("pixi.js"));
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function frames(texture, coordinates, frameWidth, frameHeight) {
-  const baseTexture = new PIXI.Texture(texture.baseTexture);
-  const textures = coordinates.map(position => {
-    const x = position[0],
-          y = position[1];
-    const imageFrame = new PIXI.Rectangle(x, y, frameWidth, frameHeight);
-    const frameTexture = new PIXI.Texture(baseTexture.baseTexture);
-    frameTexture.frame = imageFrame;
-    return frameTexture;
-  });
-  return textures;
-}
-
-function filmstrip(texture, frameWidth, frameHeight, spacing = 0) {
-  //An array to store the x/y positions of the frames
-  const positions = []; //Find the width and height of the texture
-
-  const textureWidth = texture.width,
-        textureHeight = texture.height; //Find out how many columns and rows there are
-
-  const columns = textureWidth / frameWidth,
-        rows = textureHeight / frameHeight; //Find the total number of frames
-
-  const numberOfFrames = columns * rows;
-
-  for (let i = 0; i < numberOfFrames; i++) {
-    //Find the correct row and column for each frame
-    //and figure out its x and y position
-    let x = i % columns * frameWidth,
-        y = Math.floor(i / columns) * frameHeight; //Compensate for any optional spacing (padding) around the tiles if
-    //there is any. This bit of code accumlates the spacing offsets from the
-    //left side of the tileset and adds them to the current tile's position
-
-    if (spacing > 0) {
-      x += spacing + spacing * i % columns;
-      y += spacing + spacing * Math.floor(i / columns);
-    } //Add the x and y value of each frame to the `positions` array
-
-
-    positions.push([x, y]);
-  } //Return the frames
-
-
-  return frames(texture, positions, frameWidth, frameHeight);
-}
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"6ccc40762d5c7f4175ed1b1bbc2cc794":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.LevelScene = void 0;
-
-var _pixi = require("pixi.js");
-
-var _vector2d = require("vector2d");
-
-var _assets = require("./assets");
-
-var _tilemap = require("./tilemap");
-
-var _ecs = require("./ecs/ecs");
-
-var _CombatC = require("./ecs/CombatC");
-
-var _input = require("./input");
-
-var _sprite = require("./ecs/sprite");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class LevelScene {
-  /* pixi stuff */
-  // display
-  constructor(game) {
-    _defineProperty(this, "container", new _pixi.Container());
-
-    _defineProperty(this, "tilemapContainer", new _pixi.Container());
-
-    _defineProperty(this, "arena", new _pixi.Container());
-
-    _defineProperty(this, "overlayContainer", new _pixi.Container());
-
-    _defineProperty(this, "hudContainer", new _pixi.Container());
-
-    _defineProperty(this, "hoverSprite", new _pixi.Sprite());
-
-    _defineProperty(this, "dbgText", new _pixi.Text(""));
-
-    _defineProperty(this, "messageLog", new _pixi.Text(""));
-
-    _defineProperty(this, "messages", new Array());
-
-    _defineProperty(this, "mouseoverContainer", new _pixi.Container());
-
-    _defineProperty(this, "mouseoverBg", new _pixi.Graphics());
-
-    _defineProperty(this, "mouseoverText", new _pixi.Text(""));
-
-    _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
-
-    _defineProperty(this, "possibleMoves", []);
-
-    _defineProperty(this, "hoveredPos", null);
-
-    _defineProperty(this, "hoveredPosDuringUpdate", null);
-
-    _defineProperty(this, "hoveredEntity", null);
-
-    _defineProperty(this, "writeMessage", msg => {
-      this.messages.push(msg);
-
-      while (this.messages.length > 10) {
-        this.messages.shift();
-      }
-
-      this.messageLog.text = this.messages.join("\n");
-    });
-
-    _defineProperty(this, "gameLoop", dt => {
-      /* hi */
-    });
-
-    this.game = game;
-    this.container.interactive = true;
-  }
-
-  enter() {
-    console.log("enter", this); // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
-
-    this.game.app.ticker.add(this.gameLoop);
-
-    if (!this.container.children.length) {
-      this.addChildren();
-    }
-
-    this.game.app.stage.addChild(this.container);
-    this.writeMessage("Atman enters the room.");
-  }
-
-  addChildren() {
-    this.container.addChild(this.tilemapContainer);
-    this.container.addChild(this.arena);
-    this.container.addChild(this.overlayContainer);
-    this.container.addChild(this.hudContainer);
-    this.tilemapContainer.interactive = true;
-    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
-    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.hoverSprite.texture = this.game.assets.env[_assets.EnvIndices.HOVER];
-    this.hoverSprite.visible = false;
-    this.overlayContainer.addChild(this.hoverSprite);
-    const consoleStyle = {
-      fontSize: 18,
-      fontFamily: "Barlow Condensed",
-      fill: "white",
-      align: "left",
-      wordWrap: true,
-      wordWrapWidth: 320
-    };
-    this.dbgText.position.set(10, 10);
-    this.dbgText.style = new _pixi.TextStyle(consoleStyle);
-    this.hudContainer.addChild(this.dbgText);
-    this.messageLog.anchor.set(1, 0);
-    this.messageLog.position.set(this.game.app.screen.width - 10, 10);
-    this.messageLog.style = new _pixi.TextStyle({ ...consoleStyle,
-      align: "right",
-      wordWrapWidth: 400
-    });
-    this.hudContainer.addChild(this.messageLog);
-    this.mouseoverText.style = new _pixi.TextStyle(consoleStyle);
-    this.mouseoverContainer.addChild(this.mouseoverBg);
-    this.mouseoverContainer.addChild(this.mouseoverText);
-    this.mouseoverContainer.visible = false;
-    this.hudContainer.addChild(this.mouseoverContainer);
-
-    for (let y = 0; y < this.map.size.y; y++) {
-      for (let x = 0; x < this.map.size.x; x++) {
-        const cellSprite = new _pixi.Sprite();
-        const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.assets.env[cell.index];
-        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
-        cellSprite.interactive = true;
-        this.bindEvents(cell, cellSprite);
-        cell.sprite = cellSprite;
-        this.tilemapContainer.addChild(cellSprite);
-      }
-    }
-
-    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage);
-    this.ecs.combatSystem.tilemap = this.map;
-    this.ecs.engine.update(1);
-    this.updateDbgText();
-  }
-
-  bindEvents(cell, cellSprite) {
-    cellSprite.on("mouseover", e => {
-      if (this.ecs.combatSystem.isProcessing) {
-        this.hoveredPosDuringUpdate = cell.pos;
-        return;
-      }
-
-      this.updateHoverCell(cell.pos);
-    });
-    cellSprite.on("click", e => {
-      if (this.ecs.combatSystem.isProcessing) return;
-      const action = (0, _input.interpretEvent)(e);
-      if (!action) return;
-      this.handleClick(cell.pos, action);
-    });
-    cellSprite.on("rightclick", e => {
-      if (this.ecs.combatSystem.isProcessing) return;
-      const action = (0, _input.interpretEvent)(e);
-      if (!action) return;
-      this.handleClick(cell.pos, action);
-    });
-  }
-
-  exit() {
-    console.log("exit", this); // Mousetrap.unbind(["enter", "space"]);
-
-    this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
-  }
-
-  updateHoverCell(pos) {
-    this.hoveredPos = pos;
-    this.updatePossibleMoves();
-    this.updateDbgText();
-
-    if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
-      this.hoverSprite.visible = true;
-      this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
-    } else {
-      this.hoverSprite.visible = false;
-    }
-
-    if (pos) {
-      this.updateHoveredEntity(this.ecs.spriteSystem.findEntity(pos) || null);
-    } else {
-      this.updateHoveredEntity(null);
-    }
-  }
-
-  updateHoveredEntity(e) {
-    if (!e) {
-      this.mouseoverContainer.visible = false;
-      return;
-    }
-
-    const tilePos = e.getComponent(_sprite.SpriteC).pos;
-    const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
-    this.mouseoverContainer.position.set(pos.x, pos.y);
-    this.mouseoverContainer.visible = true;
-    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_CombatC.CombatC).hoverText}`;
-    this.mouseoverText.text = text;
-    const size = new _vector2d.Vector(this.mouseoverText.width, this.mouseoverText.height);
-    const gfx = this.mouseoverBg;
-    gfx.clear();
-    gfx.width = size.x;
-    gfx.height = size.y;
-    gfx.beginFill(0x000000);
-    gfx.drawRect(0, 0, size.x, size.y);
-    gfx.endFill();
-  }
-
-  updatePossibleMoves() {
-    if (!this.hoveredPos) {
-      this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, {
-        success: false
-      }]);
-      return;
-    }
-
-    this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, m.check({
-      ecs: this.ecs,
-      entity: this.ecs.player
-    }, this.hoveredPos)]);
-    this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
-      if (resultA.success == resultB.success) {
-        return moveA.name.localeCompare(moveB.name);
-      } else if (resultA.success) {
-        return -1;
-      } else {
-        return 1;
-      }
-    });
-  }
-
-  updateDbgText() {
-    const okMoves = this.possibleMoves.filter(x => x[1].success);
-    const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
-    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n` + okMoves.map(([move]) => `${(0, _input.getActionText)(move.action)}: ${move.name}`) // (${move.help})`)
-    .join("\n") + "\n\nOmitted:\n" + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("\n");
-  }
-
-  tick() {
-    this.ecs.combatSystem.onProcessingFinished = () => {
-      console.log("Finished with", this.hoveredPosDuringUpdate);
-      this.updateHoverCell(this.hoveredPosDuringUpdate);
-    };
-
-    this.ecs.engine.update(1);
-  }
-
-  handleClick(pos, action) {
-    this.hoveredPos = pos;
-    this.updatePossibleMoves();
-    console.log("Click", pos, action);
-    const actionMoves = this.possibleMoves.filter(([move, result]) => result.success && move.action == action);
-
-    if (actionMoves.length > 1) {
-      console.log(actionMoves);
-      throw new Error(`Conflicting moves: ${actionMoves}`);
-    }
-
-    this.hoveredPosDuringUpdate = this.hoveredPos;
-
-    if (actionMoves.length === 1) {
-      this.updateHoverCell(null);
-      this.ecs.combatSystem.reset(this.ecs.engine);
-      this.ecs.combatSystem.isProcessing = true;
-
-      const doNext = () => {
-        this.tick();
-      };
-
-      console.log("Player move:", actionMoves[0][0]);
-      const isAsync = actionMoves[0][0].apply({
-        ecs: this.ecs,
-        entity: this.ecs.player
-      }, pos, doNext);
-      if (!isAsync) doNext();
-    }
-  }
-
-}
-
-exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
 "use strict";
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -47296,7 +46952,436 @@ var Vector = /** @class */ (function (_super) {
 }(AbstractVector_1.AbstractVector));
 exports.Vector = Vector;
 //# sourceMappingURL=Vector.js.map
-},{"./AbstractVector":"771b1dad672d09dd772cdac388091fb8"}],"7a3b31d0aefed94afd5821fb64498963":[function(require,module,exports) {
+},{"./AbstractVector":"771b1dad672d09dd772cdac388091fb8"}],"aa243c19245f4a17bb4ebcec9369275f":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = filmstrip;
+
+var PIXI = _interopRequireWildcard(require("pixi.js"));
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function frames(texture, coordinates, frameWidth, frameHeight) {
+  const baseTexture = new PIXI.Texture(texture.baseTexture);
+  const textures = coordinates.map(position => {
+    const x = position[0],
+          y = position[1];
+    const imageFrame = new PIXI.Rectangle(x, y, frameWidth, frameHeight);
+    const frameTexture = new PIXI.Texture(baseTexture.baseTexture);
+    frameTexture.frame = imageFrame;
+    return frameTexture;
+  });
+  return textures;
+}
+
+function filmstrip(texture, frameWidth, frameHeight, spacing = 0) {
+  //An array to store the x/y positions of the frames
+  const positions = []; //Find the width and height of the texture
+
+  const textureWidth = texture.width,
+        textureHeight = texture.height; //Find out how many columns and rows there are
+
+  const columns = textureWidth / frameWidth,
+        rows = textureHeight / frameHeight; //Find the total number of frames
+
+  const numberOfFrames = columns * rows;
+
+  for (let i = 0; i < numberOfFrames; i++) {
+    //Find the correct row and column for each frame
+    //and figure out its x and y position
+    let x = i % columns * frameWidth,
+        y = Math.floor(i / columns) * frameHeight; //Compensate for any optional spacing (padding) around the tiles if
+    //there is any. This bit of code accumlates the spacing offsets from the
+    //left side of the tileset and adds them to the current tile's position
+
+    if (spacing > 0) {
+      x += spacing + spacing * i % columns;
+      y += spacing + spacing * Math.floor(i / columns);
+    } //Add the x and y value of each frame to the `positions` array
+
+
+    positions.push([x, y]);
+  } //Return the frames
+
+
+  return frames(texture, positions, frameWidth, frameHeight);
+}
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"6ccc40762d5c7f4175ed1b1bbc2cc794":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LevelScene = void 0;
+
+var _pixi = require("pixi.js");
+
+var _vector2d = require("vector2d");
+
+var _assets = require("./assets");
+
+var _tilemap = require("./tilemap");
+
+var _ecs = require("./ecs/ecs");
+
+var _CombatC = require("./ecs/CombatC");
+
+var _input = require("./input");
+
+var _sprite = require("./ecs/sprite");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class LevelScene {
+  /* pixi stuff */
+  // display
+  constructor(game) {
+    _defineProperty(this, "container", new _pixi.Container());
+
+    _defineProperty(this, "hudContainer", new _pixi.Container());
+
+    _defineProperty(this, "gameAreaContainer", new _pixi.Container());
+
+    _defineProperty(this, "tilemapContainer", new _pixi.Container());
+
+    _defineProperty(this, "arena", new _pixi.Container());
+
+    _defineProperty(this, "overlayContainer", new _pixi.Container());
+
+    _defineProperty(this, "hoverSprite", new _pixi.Sprite());
+
+    _defineProperty(this, "dbgText", new _pixi.Text(""));
+
+    _defineProperty(this, "inputHintText", new _pixi.Text(""));
+
+    _defineProperty(this, "messageLogBg", new _pixi.Graphics());
+
+    _defineProperty(this, "messageLog", new _pixi.Text(""));
+
+    _defineProperty(this, "messages", new Array());
+
+    _defineProperty(this, "mouseoverContainer", new _pixi.Container());
+
+    _defineProperty(this, "mouseoverBg", new _pixi.Graphics());
+
+    _defineProperty(this, "mouseoverText", new _pixi.Text(""));
+
+    _defineProperty(this, "heartsContainer", new _pixi.Container());
+
+    _defineProperty(this, "heartSprites", []);
+
+    _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
+
+    _defineProperty(this, "possibleMoves", []);
+
+    _defineProperty(this, "hoveredPos", null);
+
+    _defineProperty(this, "hoveredPosDuringUpdate", null);
+
+    _defineProperty(this, "hoveredEntity", null);
+
+    _defineProperty(this, "writeMessage", msg => {
+      this.messages.push(msg);
+
+      while (this.messages.length > 10) {
+        this.messages.shift();
+      }
+
+      this.messageLog.text = this.messages.join("\n");
+    });
+
+    _defineProperty(this, "gameLoop", dt => {
+      /* hi */
+    });
+
+    _defineProperty(this, "tick", () => {
+      this.ecs.combatSystem.onProcessingFinished = () => {
+        console.log("Finished with", this.hoveredPosDuringUpdate);
+        this.updateHoverCell(this.hoveredPosDuringUpdate);
+        this.updateHearts();
+      };
+
+      this.ecs.engine.update(1);
+    });
+
+    this.game = game;
+    this.container.interactive = true;
+  }
+
+  get screenSize() {
+    let width = this.game.app.screen.width;
+    let height = width * (3 / 4);
+
+    if (height > this.game.app.screen.height) {
+      height = this.game.app.screen.height;
+      width = height * (4 / 3);
+    }
+
+    return new _vector2d.Vector(width, height);
+  }
+
+  enter() {
+    console.log("enter", this); // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
+
+    this.game.app.ticker.add(this.gameLoop);
+
+    if (!this.container.children.length) {
+      this.addChildren();
+    }
+
+    this.game.app.stage.addChild(this.container);
+    this.writeMessage("Atman enters the room.");
+    console.log(this.screenSize);
+  }
+
+  addChildren() {
+    this.container.addChild(this.gameAreaContainer);
+    this.gameAreaContainer.addChild(this.tilemapContainer);
+    this.gameAreaContainer.addChild(this.arena);
+    this.gameAreaContainer.addChild(this.overlayContainer);
+    this.container.addChild(this.hudContainer);
+    this.tilemapContainer.interactive = true;
+    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
+    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.hoverSprite.texture = this.game.assets.env[_assets.EnvIndices.HOVER];
+    this.hoverSprite.visible = false;
+    this.overlayContainer.addChild(this.hoverSprite);
+    const consoleStyle = {
+      fontSize: 18,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "left",
+      wordWrap: true,
+      wordWrapWidth: 320
+    };
+    this.dbgText.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.dbgText);
+    this.inputHintText.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.inputHintText);
+    this.hudContainer.addChild(this.heartsContainer);
+    this.messageLog.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.messageLogBg);
+    this.messageLogBg.addChild(this.messageLog);
+    this.mouseoverText.style = new _pixi.TextStyle(consoleStyle);
+    this.mouseoverContainer.addChild(this.mouseoverBg);
+    this.mouseoverContainer.addChild(this.mouseoverText);
+    this.mouseoverContainer.visible = false;
+    this.hudContainer.addChild(this.mouseoverContainer);
+
+    for (let y = 0; y < this.map.size.y; y++) {
+      for (let x = 0; x < this.map.size.x; x++) {
+        const cellSprite = new _pixi.Sprite();
+        const cell = this.map.contents[y][x];
+        cellSprite.texture = this.game.assets.env[cell.index];
+        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+        cellSprite.interactive = true;
+        this.bindEvents(cell, cellSprite);
+        cell.sprite = cellSprite;
+        this.tilemapContainer.addChild(cellSprite);
+      }
+    }
+
+    this.layoutScreenElements();
+    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage);
+    this.ecs.combatSystem.tilemap = this.map;
+    this.ecs.engine.update(1);
+    this.updateHUDText();
+    this.updateHearts();
+  }
+
+  layoutScreenElements() {
+    /* set up whole-screen layout */
+    const gameAreaMask = new _pixi.Graphics();
+    gameAreaMask.beginFill(0xffffff);
+    gameAreaMask.drawRect(0, 0, this.screenSize.x - 320, this.screenSize.y - 60);
+    gameAreaMask.endFill();
+    this.gameAreaContainer.mask = gameAreaMask;
+    this.gameAreaContainer.position.set(0, 30);
+    this.dbgText.position.set(10, 10);
+    this.inputHintText.position.set(10, this.gameAreaContainer.position.y + this.gameAreaContainer.height);
+    this.inputHintText.style.wordWrapWidth = this.screenSize.x;
+    this.messageLogBg.position.set(this.gameAreaContainer.width, 0);
+    this.messageLog.position.set(10, 10);
+    this.messageLogBg.beginFill(0x333366);
+    this.messageLogBg.drawRect(0, 0, this.screenSize.x - this.gameAreaContainer.width, this.screenSize.y - 60);
+    this.messageLogBg.endFill();
+    this.messageLog.style.wordWrapWidth = this.screenSize.x - this.gameAreaContainer.width - 10;
+    this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
+  }
+
+  bindEvents(cell, cellSprite) {
+    cellSprite.on("mouseover", e => {
+      if (this.ecs.combatSystem.isProcessing) {
+        this.hoveredPosDuringUpdate = cell.pos;
+        return;
+      }
+
+      this.updateHoverCell(cell.pos);
+    });
+    cellSprite.on("click", e => {
+      if (this.ecs.combatSystem.isProcessing) return;
+      const action = (0, _input.interpretEvent)(e);
+      if (!action) return;
+      this.handleClick(cell.pos, action);
+    });
+    cellSprite.on("rightclick", e => {
+      if (this.ecs.combatSystem.isProcessing) return;
+      const action = (0, _input.interpretEvent)(e);
+      if (!action) return;
+      this.handleClick(cell.pos, action);
+    });
+  }
+
+  exit() {
+    console.log("exit", this); // Mousetrap.unbind(["enter", "space"]);
+
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+  }
+
+  updateHoverCell(pos) {
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
+    this.updateHUDText();
+
+    if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
+      this.hoverSprite.visible = true;
+      this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
+    } else {
+      this.hoverSprite.visible = false;
+    }
+
+    if (pos) {
+      this.updateHoveredEntity(this.ecs.spriteSystem.findEntity(pos) || null);
+    } else {
+      this.updateHoveredEntity(null);
+    }
+  }
+
+  updateHoveredEntity(e) {
+    if (!e) {
+      this.mouseoverContainer.visible = false;
+      return;
+    }
+
+    const tilePos = e.getComponent(_sprite.SpriteC).pos;
+    const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
+    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.visible = true;
+    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_CombatC.CombatC).hoverText}`;
+    this.mouseoverText.text = text;
+    this.mouseoverText.position.set(4, 4);
+    const size = new _vector2d.Vector(this.mouseoverText.width + 8, this.mouseoverText.height + 8);
+    const gfx = this.mouseoverBg;
+    gfx.clear();
+    gfx.width = size.x;
+    gfx.height = size.y;
+    gfx.lineStyle({
+      width: 1,
+      color: 0xffffff
+    });
+    gfx.beginFill(0x000000);
+    gfx.drawRect(0, 0, size.x, size.y - 2);
+    gfx.endFill();
+  }
+
+  updatePossibleMoves() {
+    if (!this.hoveredPos) {
+      this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, {
+        success: false
+      }]);
+      return;
+    }
+
+    this.possibleMoves = this.ecs.player.getComponent(_CombatC.CombatC).moves.map(m => [m, m.check({
+      ecs: this.ecs,
+      entity: this.ecs.player
+    }, this.hoveredPos)]);
+    this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
+      if (resultA.success == resultB.success) {
+        return moveA.name.localeCompare(moveB.name);
+      } else if (resultA.success) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+  }
+
+  updateHUDText() {
+    const okMoves = this.possibleMoves.filter(x => x[1].success);
+    const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
+    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
+    let firstLine = okMoves.map(([move]) => `${move.name} (${(0, _input.getActionText)(move.action)})`) // (${move.help})`)
+    .join("; ");
+
+    if (okMoves.length === 0) {
+      firstLine = "No moves available at selected position";
+    }
+
+    const secondLine = "Omitted: " + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("; ");
+    this.inputHintText.text = firstLine + "\n\n" + secondLine;
+  }
+
+  updateHearts() {
+    const combatC = this.ecs.player.getComponent(_CombatC.CombatC);
+    const halfHP = combatC.hp / 2;
+
+    for (let i = 0; i < Math.ceil(halfHP); i++) {
+      console.log("sprite", i);
+      let sprite;
+
+      if (i >= this.heartSprites.length) {
+        sprite = new _pixi.Sprite(this.game.assets["heart"][0]);
+        sprite.position.set(i * 21, 0);
+        this.heartSprites.push(sprite);
+        this.heartsContainer.addChild(sprite);
+      } else {
+        sprite = this.heartSprites[i];
+      }
+
+      if (i + 1 == Math.ceil(halfHP)) {
+        sprite.texture = this.game.assets["heart"][halfHP % 1 === 0 ? 0 : 1];
+      }
+    }
+  }
+
+  handleClick(pos, action) {
+    this.hoveredPos = pos;
+    this.updatePossibleMoves();
+    console.log("Click", pos, action);
+    const actionMoves = this.possibleMoves.filter(([move, result]) => result.success && move.action == action);
+
+    if (actionMoves.length > 1) {
+      console.log(actionMoves);
+      throw new Error(`Conflicting moves: ${actionMoves}`);
+    }
+
+    this.hoveredPosDuringUpdate = this.hoveredPos;
+
+    if (actionMoves.length === 1) {
+      this.updateHoverCell(null);
+      this.ecs.combatSystem.reset(this.ecs.engine);
+      this.ecs.combatSystem.isProcessing = true;
+      console.log("Player move:", actionMoves[0][0]);
+      const isAsync = actionMoves[0][0].apply({
+        ecs: this.ecs,
+        entity: this.ecs.player
+      }, pos, this.tick);
+      if (!isAsync) this.tick();
+    }
+  }
+
+}
+
+exports.LevelScene = LevelScene;
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008"}],"7a3b31d0aefed94afd5821fb64498963":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48478,6 +48563,8 @@ class CombatC {
     _defineProperty(this, "isPlayer", false);
 
     _defineProperty(this, "recoveryTimer", 0);
+
+    _defineProperty(this, "hp", 10);
 
     _defineProperty(this, "superpunchTarget", null);
   }
