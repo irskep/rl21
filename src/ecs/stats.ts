@@ -1,0 +1,8 @@
+export const STATS = {
+  PUNCH_DAMAGE: 1,
+  SUPERPUNCH_DAMAGE: 2,
+  COUNTER_DAMAGE: 2,
+
+  LOW_HP: 4,
+  HIGH_HP: 8,
+};

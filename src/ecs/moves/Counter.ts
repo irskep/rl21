@@ -6,6 +6,8 @@ import { CombatC } from "../CombatC";
 import { ensureTargetIsEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
+import { CombatEventType } from "../CombatS";
+import { STATS } from "../stats";
 
 export class Counter implements Move {
   action = Action.Y;
@@ -58,6 +60,12 @@ export class Counter implements Move {
 
     ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
 
+    ctx.ecs.combatSystem.events.emit({
+      type: CombatEventType.Counter,
+      subject: ctx.entity,
+      object: enemy,
+    });
+    ctx.ecs.combatSystem.changeHP(enemy, -STATS.COUNTER_DAMAGE);
     ctx.ecs.writeMessage(
       `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch!`
     );

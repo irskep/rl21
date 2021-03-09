@@ -20,6 +20,7 @@ import { Move, MoveCheckResult } from "./ecs/moves/_types";
 import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "./ecs/sprite";
+import { CombatEventType } from "./ecs/CombatS";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -80,8 +81,22 @@ export class LevelScene implements GameScene {
     }
 
     this.game.app.stage.addChild(this.container);
+
+    this.ecs.combatSystem.events.stream.onValue((event) => {
+      console.log(event);
+      switch (event.type) {
+        case CombatEventType.HPChanged:
+          if (event.subject === this.ecs.player) {
+            console.log(
+              "Time to update hearts to",
+              this.ecs.player.getComponent(CombatC).hp
+            );
+            this.updateHearts();
+          }
+      }
+    });
+
     this.writeMessage("Atman enters the room.");
-    console.log(this.screenSize);
   }
 
   addChildren() {
@@ -325,8 +340,10 @@ export class LevelScene implements GameScene {
   updateHearts() {
     const combatC = this.ecs.player.getComponent(CombatC);
     const halfHP = combatC.hp / 2;
+    for (const sprite of this.heartSprites) {
+      sprite.visible = false;
+    }
     for (let i = 0; i < Math.ceil(halfHP); i++) {
-      console.log("sprite", i);
       let sprite: Sprite;
       if (i >= this.heartSprites.length) {
         sprite = new Sprite(this.game.assets["heart"]![0]);
@@ -336,6 +353,7 @@ export class LevelScene implements GameScene {
       } else {
         sprite = this.heartSprites[i];
       }
+      sprite.visible = true;
 
       if (i + 1 == Math.ceil(halfHP)) {
         sprite.texture = this.game.assets["heart"]![halfHP % 1 === 0 ? 0 : 1];
@@ -367,7 +385,6 @@ export class LevelScene implements GameScene {
   handleClick(pos: Vector, action: Action) {
     this.hoveredPos = pos;
     this.updatePossibleMoves();
-    console.log("Click", pos, action);
     const actionMoves = this.possibleMoves.filter(
       ([move, result]) => result.success && move.action == action
     );

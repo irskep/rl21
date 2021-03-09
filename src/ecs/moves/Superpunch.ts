@@ -10,6 +10,8 @@ import {
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 import { isAdjacent } from "../../tilemap";
+import { STATS } from "../stats";
+import { CombatEventType } from "../CombatS";
 
 export class SuperpunchPrepare implements Move {
   name = "Superpunch Prepare";
@@ -92,6 +94,12 @@ export class SuperpunchFollowthroughHit implements Move {
 
     combatC.setState(CombatState.SuperpunchFollowthrough, spriteC);
     enemyCombatC.setState(CombatState.Stunned, enemySpriteC);
+    ctx.ecs.combatSystem.events.emit({
+      type: CombatEventType.Punch,
+      subject: ctx.entity,
+      object: enemy,
+    });
+    ctx.ecs.combatSystem.changeHP(enemy, -STATS.SUPERPUNCH_DAMAGE);
     ctx.ecs.writeMessage(
       `${spriteC.flavorName} lands a massive hit on ${enemySpriteC.flavorName}!`
     );

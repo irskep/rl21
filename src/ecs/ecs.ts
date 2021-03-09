@@ -12,6 +12,7 @@ import { CombatC } from "./CombatC";
 import { CombatTrait } from "./CombatTrait";
 import { Tilemap } from "../tilemap";
 import getHenchmanName from "../prose/henchmanName";
+import { STATS } from "./stats";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -32,7 +33,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     SpriteIndices.BM_STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
-  e.putComponent(CombatC).build(BM_MOVES, []);
+  e.putComponent(CombatC).build(10, BM_MOVES, []);
   e.getComponent(CombatC).isPlayer = true;
 
   return e;
@@ -48,7 +49,7 @@ function makeThug(pos: Vector, orientation: number): Entity {
   );
   e.getComponent(SpriteC).orientation = orientation;
   e.getComponent(SpriteC).tint = 0x8888ff;
-  e.putComponent(CombatC).build(HENCHMAN_MOVES, []);
+  e.putComponent(CombatC).build(STATS.LOW_HP, HENCHMAN_MOVES, []);
   return e;
 }
 
@@ -65,6 +66,8 @@ function makeArmoredThug(pos: Vector, orientation: number): Entity {
 function makeTitanThug(pos: Vector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).moves = TITAN_MOVES;
+  e.getComponent(CombatC).hp = STATS.HIGH_HP;
+  e.getComponent(CombatC).hpMax = STATS.HIGH_HP;
   e.getComponent(SpriteC).tint = 0xff6666;
   e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Titan Thug`;
   e.getComponent(SpriteC).flavorDesc = "A henchman of immense strength.";

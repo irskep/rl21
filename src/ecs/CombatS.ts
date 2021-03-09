@@ -17,6 +17,27 @@ import UnreachableCaseError from "../UnreachableCaseError";
 import { CombatC } from "./CombatC";
 import { CombatTrait } from "./CombatTrait";
 import { CombatState } from "./CombatState";
+import KefirBus from "../KefirBus";
+import { STATS } from "./stats";
+
+/**
+ * These are visual events that can occur.
+ */
+export enum CombatEventType {
+  HPChanged = "HPChanged",
+  BlockedPunch = "BlockedPunch",
+  Punch = "Punch",
+  Superpunch = "Superpunch",
+  Counter = "Counter",
+  Stun = "Stun",
+  Die = "Die",
+}
+
+export interface CombatEvent {
+  type: CombatEventType;
+  subject?: Entity;
+  object?: Entity;
+}
 
 export class CombatSystem extends System {
   family!: Family;
@@ -30,6 +51,8 @@ export class CombatSystem extends System {
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
   onProcessingFinished: (() => void) | null = null;
+
+  events = new KefirBus<CombatEvent, void>("CombatEvents");
 
   constructor(game: GameInterface) {
     super();
@@ -50,12 +73,43 @@ export class CombatSystem extends System {
     this.processNextEntity();
   }
 
+  private cleanupProcessingAndNotify() {
+    for (let e of new Array<Entity>().concat(this.family.entities)) {
+      const combatC = e.getComponent(CombatC);
+      if (combatC.hp > 0) continue;
+      this.kill(e);
+    }
+    if (this.onProcessingFinished) {
+      this.onProcessingFinished();
+    }
+  }
+
+  private kill(e: Entity) {
+    const combatC = e.getComponent(CombatC);
+    const spriteC = e.getComponent(SpriteC);
+    spriteC.teardown();
+    this.ecs.writeMessage(
+      `${spriteC.flavorName} has had enough and collapses to the floor.`
+    );
+    this.engines[0].removeEntity(e);
+    this.events.emit({
+      type: CombatEventType.Die,
+      subject: e,
+    });
+  }
+
+  changeHP(entity: Entity, amount: number) {
+    entity.getComponent(CombatC).hp += amount;
+    this.events.emit({
+      type: CombatEventType.HPChanged,
+      subject: entity,
+    });
+  }
+
   processNextEntity = (): void => {
     if (this.entitiesToProcess.length < 1) {
       this.isProcessing = false;
-      if (this.onProcessingFinished) {
-        this.onProcessingFinished();
-      }
+      this.cleanupProcessingAndNotify();
       return;
     }
 
@@ -122,18 +176,36 @@ export class CombatSystem extends System {
         case CombatState.Prone:
           // don't change state; enemy remains stunned
           defenderCombatC.needsToMove = false;
+          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
+          this.events.emit({
+            type: CombatEventType.Punch,
+            subject: attacker,
+            object: defender,
+          });
           ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
         case CombatState.SuperpunchTelegraph:
+          this.events.emit({
+            type: CombatEventType.Punch,
+            subject: attacker,
+            object: defender,
+          });
+          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
           ecs.writeMessage(
             `${attackerName} lands a punch on ${defenderName}, but they are unfazed.`
           );
           break;
         default:
+          this.events.emit({
+            type: CombatEventType.Punch,
+            subject: attacker,
+            object: defender,
+          });
           defenderCombatC.setState(
             CombatState.Punched,
             defender.getComponent(SpriteC)
           );
+          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
           ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
           break;
       }
@@ -154,6 +226,11 @@ export class CombatSystem extends System {
       case CombatState.SuperpunchTelegraph:
       case CombatState.SuperpunchFollowthrough:
         if (defenderCombatC.hasTrait(CombatTrait.Armored)) {
+          this.events.emit({
+            type: CombatEventType.Punch,
+            subject: attacker,
+            object: defender,
+          });
           ecs.writeMessage(
             `${attackerName} tries to punch ${defenderName}, but armor blocks the punch.`
           );
@@ -178,6 +255,11 @@ export class CombatSystem extends System {
       case CombatState.Prone:
       case CombatState.Punched:
       case CombatState.Stunned:
+        this.events.emit({
+          type: CombatEventType.Stun,
+          subject: attacker,
+          object: defender,
+        });
         defenderCombatC.becomeStunned(
           this.STUN_TIMER,
           defender.getComponent(SpriteC)

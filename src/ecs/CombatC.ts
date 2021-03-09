@@ -16,26 +16,33 @@ export class CombatC implements Component {
   moves: Move[] = [];
   isPlayer = false;
   recoveryTimer = 0;
+  hpMax = 10;
   hp = 10;
 
   superpunchTarget: Entity | null = null;
 
   static tag = "CombatC";
 
-  build(moves: Move[], traits: CombatTrait[]): CombatC {
+  build(hp: number, moves: Move[], traits: CombatTrait[]): CombatC {
+    this.hp = hp;
+    this.hpMax = hp;
     this.moves = moves;
     this.traits = traits;
     return this;
   }
 
   get hoverText(): string {
+    const hpText = `HP: ${this.hp}/${this.hpMax}`;
+    const traitsText = this.traits.join("\n");
+    let text = hpText + "\n\n";
     if (this.recoveryTimer) {
-      return `${this.state} for ${
-        this.recoveryTimer
-      } turns\n\n${this.traits.join("\n")}`;
+      text += `${this.state} for ${this.recoveryTimer} turns`;
     } else {
-      return `${this.state}\n\n${this.traits.join("\n")}`;
+      text += this.state;
     }
+    text += "\n\n";
+    text += traitsText;
+    return text;
   }
 
   hasTrait(trait: CombatTrait) {

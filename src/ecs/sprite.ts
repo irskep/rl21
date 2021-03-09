@@ -67,6 +67,11 @@ export class SpriteC implements Component {
       }
     }
   }
+
+  teardown() {
+    if (!this.sprite) return;
+    this.sprite.parent.removeChild(this.sprite);
+  }
 }
 
 export class SpriteSystem extends System {
