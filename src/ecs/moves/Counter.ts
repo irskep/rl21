@@ -8,6 +8,7 @@ import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 import { CombatEventType } from "../CombatS";
 import { STATS } from "../stats";
+import { CombatTrait } from "../CombatTrait";
 
 export class Counter implements Move {
   action = Action.Y;
@@ -58,25 +59,44 @@ export class Counter implements Move {
     spriteC.pos = enemySpriteC.pos;
     enemySpriteC.pos = playerPos;
 
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    ctx.ecs.spriteSystem.cowboyUpdate();
 
     ctx.ecs.combatSystem.events.emit({
       type: CombatEventType.Counter,
       subject: ctx.entity,
       object: enemy,
     });
-    ctx.ecs.combatSystem.changeHP(enemy, -STATS.COUNTER_DAMAGE);
-    ctx.ecs.writeMessage(
-      `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch!`
-    );
 
-    setTimeout(() => {
-      enemyCombatC.becomeProne(2, enemySpriteC);
+    if (enemyCombatC.hasTrait(CombatTrait.Armored)) {
       ctx.ecs.writeMessage(
-        `${enemySpriteC.flavorName} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
+        `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch, but ${enemySpriteC.flavorName} stays up!`
       );
-      doNext();
-    }, 500);
-    return true;
+      combatC.becomeStunned(1, spriteC);
+      ctx.ecs.spriteSystem.cowboyUpdate();
+      ctx.ecs.writeMessage(
+        `${spriteC.flavorName} will take 1 turn to recover from the counter.`
+      );
+      return false;
+    } else {
+      ctx.ecs.combatSystem.changeHP(enemy, -STATS.COUNTER_DAMAGE);
+      ctx.ecs.writeMessage(
+        `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch!`
+      );
+
+      setTimeout(() => {
+        enemyCombatC.becomeProne(2, enemySpriteC);
+        ctx.ecs.writeMessage(
+          `${enemySpriteC.flavorName} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
+        );
+
+        combatC.becomeStunned(1, spriteC);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} will take 1 turn to recover from the counter.`
+        );
+        doNext();
+      }, 500);
+      return true;
+    }
   }
 }
