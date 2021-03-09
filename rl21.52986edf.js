@@ -439,7 +439,7 @@ var _assets = require("./assets");
 
 var _filmstrip = _interopRequireDefault(require("./filmstrip"));
 
-var _LevelScene = require("./LevelScene");
+var _LevelScene = require("./game/LevelScene");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -489,6 +489,7 @@ class Game {
       // height: window.innerHeight,
 
     });
+    this.app.ticker.autoStart = true;
     this.app.loader.baseUrl = `//${location.host}/${pathname}`;
 
     _webfontloader.default.load({
@@ -540,7 +541,7 @@ class Game {
 }
 
 exports.default = Game;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","./LevelScene":"6ccc40762d5c7f4175ed1b1bbc2cc794","vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
 /*!
  * pixi.js - v6.0.0
  * Compiled Tue, 02 Mar 2021 21:45:03 UTC
@@ -47011,7 +47012,7 @@ function filmstrip(texture, frameWidth, frameHeight, spacing = 0) {
 
   return frames(texture, positions, frameWidth, frameHeight);
 }
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"6ccc40762d5c7f4175ed1b1bbc2cc794":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"84dd184ecea3d468eeaab1eb358565eb":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47023,19 +47024,21 @@ var _pixi = require("pixi.js");
 
 var _vector2d = require("vector2d");
 
-var _assets = require("./assets");
+var _assets = require("../assets");
 
 var _tilemap = require("./tilemap");
 
-var _ecs = require("./ecs/ecs");
+var _ecs = require("../ecs/ecs");
 
-var _CombatC = require("./ecs/CombatC");
+var _CombatC = require("../ecs/CombatC");
 
 var _input = require("./input");
 
-var _sprite = require("./ecs/sprite");
+var _sprite = require("../ecs/sprite");
 
-var _CombatS = require("./ecs/CombatS");
+var _CombatS = require("../ecs/CombatS");
+
+var _AnimationHandler = require("./AnimationHandler");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -47081,6 +47084,8 @@ class LevelScene {
 
     _defineProperty(this, "possibleMoves", []);
 
+    _defineProperty(this, "animationHandler", new _AnimationHandler.AnimationHandler());
+
     _defineProperty(this, "hoveredPos", null);
 
     _defineProperty(this, "hoveredPosDuringUpdate", null);
@@ -47098,7 +47103,7 @@ class LevelScene {
     });
 
     _defineProperty(this, "gameLoop", dt => {
-      /* hi */
+      this.animationHandler.tick(dt);
     });
 
     _defineProperty(this, "tick", () => {
@@ -47258,6 +47263,15 @@ class LevelScene {
           this.updateHearts();
         }
 
+        const text = new _pixi.Text(`${event.value}`, {
+          fontSize: 48,
+          fontFamily: "Barlow Condensed",
+          fill: "#ff6666"
+        });
+        const sourceSprite = event.subject.getComponent(_sprite.SpriteC);
+        text.position.set(sourceSprite.sprite.position.x, sourceSprite.sprite.position.y);
+        sourceSprite.sprite.parent.addChild(text);
+        this.animationHandler.add((0, _AnimationHandler.makeDriftAndFadeAnimation)(text, 100, new _vector2d.Vector(-1.5, -1.5)));
         break;
 
       case _CombatS.CombatEventType.Die:
@@ -47409,7 +47423,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./assets":"be73c6663579275afb4521336d5df627","./tilemap":"7a3b31d0aefed94afd5821fb64498963","./ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"7a6fba9761d9655e6215ca003429e87d","./ecs/sprite":"488445ffc318f5d280c0d86556dce008","./ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"7a3b31d0aefed94afd5821fb64498963":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47578,7 +47592,7 @@ function makeECS(game, container, tilemap, writeMessage) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./stats":"f5de88ee31cebd904f144c7f51872c1a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./stats":"f5de88ee31cebd904f144c7f51872c1a"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -48317,9 +48331,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Walk = void 0;
 
-var _input = require("../../input");
+var _input = require("../../game/input");
 
-var _tilemap = require("../../tilemap");
+var _tilemap = require("../../game/tilemap");
 
 var _CombatState = require("../CombatState");
 
@@ -48404,7 +48418,7 @@ class Walk {
 }
 
 exports.Walk = Walk;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"7a6fba9761d9655e6215ca003429e87d":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"60d50d152119e01a0f05aa9be6432259":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48691,7 +48705,7 @@ exports.ensureStandingAndTargetIsAdjacentEnemy = ensureStandingAndTargetIsAdjace
 
 var _assets = require("../../assets");
 
-var _tilemap = require("../../tilemap");
+var _tilemap = require("../../game/tilemap");
 
 var _CombatState = require("../CombatState");
 
@@ -48784,7 +48798,7 @@ function ensureStandingAndTargetIsAdjacentEnemy(ctx, target) {
     success: true
   };
 }
-},{"../../assets":"be73c6663579275afb4521336d5df627","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
+},{"../../assets":"be73c6663579275afb4521336d5df627","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48792,7 +48806,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Wait = void 0;
 
-var _input = require("../../input");
+var _input = require("../../game/input");
 
 var _CombatState = require("../CombatState");
 
@@ -48854,7 +48868,7 @@ class Wait {
 }
 
 exports.Wait = Wait;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49012,7 +49026,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FastPunch = void 0;
 
-var _input = require("../../input");
+var _input = require("../../game/input");
 
 var _CombatState = require("../CombatState");
 
@@ -49087,7 +49101,7 @@ class FastPunch {
 }
 
 exports.FastPunch = FastPunch;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49095,9 +49109,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Counter = void 0;
 
-var _input = require("../../input");
+var _input = require("../../game/input");
 
-var _tilemap = require("../../tilemap");
+var _tilemap = require("../../game/tilemap");
 
 var _CombatState = require("../CombatState");
 
@@ -49197,7 +49211,7 @@ class Counter {
 }
 
 exports.Counter = Counter;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","../stats":"f5de88ee31cebd904f144c7f51872c1a"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","../stats":"f5de88ee31cebd904f144c7f51872c1a"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49353,7 +49367,8 @@ class CombatSystem extends _ecs.System {
     entity.getComponent(_CombatC.CombatC).hp += amount;
     this.events.emit({
       type: CombatEventType.HPChanged,
-      subject: entity
+      subject: entity,
+      value: amount
     });
   }
 
@@ -49498,7 +49513,7 @@ class CombatSystem extends _ecs.System {
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53562,7 +53577,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Stun = void 0;
 
-var _input = require("../../input");
+var _input = require("../../game/input");
 
 var _CombatState = require("../CombatState");
 
@@ -53616,7 +53631,7 @@ class Stun {
 }
 
 exports.Stun = Stun;
-},{"../../input":"7a6fba9761d9655e6215ca003429e87d","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53634,7 +53649,7 @@ var _helpers = require("./_helpers");
 
 var _sprite = require("../sprite");
 
-var _tilemap = require("../../tilemap");
+var _tilemap = require("../../game/tilemap");
 
 var _stats = require("../stats");
 
@@ -53810,7 +53825,7 @@ class SuperpunchFollowthroughMiss {
 }
 
 exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../tilemap":"7a3b31d0aefed94afd5821fb64498963","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53818,7 +53833,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = getHenchmanName;
 
-var _RNG = _interopRequireDefault(require("../RNG"));
+var _RNG = _interopRequireDefault(require("../game/RNG"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -53829,7 +53844,7 @@ function getHenchmanName() {
   const rng = new _RNG.default(`${Math.random()}`);
   return `${rng.choice(adjs)} ${rng.choice(names)}`;
 }
-},{"../RNG":"930b9d1127b4b9643f68937ef97d4a53"}],"930b9d1127b4b9643f68937ef97d4a53":[function(require,module,exports) {
+},{"../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"e2e767bdcbb3fbc301711f9c0ddedc0e":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -55001,6 +55016,61 @@ Math // math: package containing random, pow, and seedrandom
 );
 },{"crypto":"d0c8cb413b8a918e0130e85e831bf0d4"}],"d0c8cb413b8a918e0130e85e831bf0d4":[function(require,module,exports) {
 "use strict";
+},{}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeDriftAndFadeAnimation = makeDriftAndFadeAnimation;
+exports.AnimationHandler = void 0;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class AnimationHandler {
+  constructor() {
+    _defineProperty(this, "animations", new Array());
+  }
+
+  tick(dtMs) {
+    const dt = dtMs;
+    const nextAnimations = new Array();
+
+    for (let animation of this.animations) {
+      animation.timePassed = (animation.timePassed || 0) + dt; // console.log(animation.timePassed);
+
+      animation.apply(dt, animation.timePassed);
+
+      if (animation.timePassed >= animation.duration) {
+        animation.finish();
+      } else {
+        nextAnimations.push(animation);
+      }
+    }
+
+    this.animations = nextAnimations;
+  }
+
+  add(a) {
+    this.animations.push(a);
+  }
+
+}
+
+exports.AnimationHandler = AnimationHandler;
+
+function makeDriftAndFadeAnimation(obj, duration, velocity) {
+  return {
+    duration,
+    apply: (dt, timePassed) => {
+      obj.position.set(obj.position.x + dt * velocity.x, obj.position.y + dt * velocity.y);
+      obj.alpha = 1 - timePassed / duration;
+    },
+    finish: () => {
+      obj.parent.removeChild(obj);
+    }
+  };
+}
 },{}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
