@@ -122,8 +122,14 @@ export class CombatSystem extends System {
     });
   }
 
+  private needsGroupEnd = false;
   processNextEntity = (): void => {
     this.resolveConflicts();
+
+    if (this.needsGroupEnd) {
+      console.groupEnd();
+    }
+    this.needsGroupEnd = false;
 
     if (this.entitiesToProcess.length < 1) {
       this.isProcessing = false;
@@ -139,6 +145,9 @@ export class CombatSystem extends System {
     combatC.needsToMove = false;
 
     const spriteC = entity.getComponent(SpriteC);
+
+    console.group(spriteC.flavorName);
+    this.needsGroupEnd = true;
 
     const moveContext = { entity, ecs: this.ecs, tilemap: this.tilemap };
     const availableMoves: [Move, AbstractVector][] = [];
@@ -168,6 +177,9 @@ export class CombatSystem extends System {
     // a while loop instead of recursion.
     if (!isAsync) {
       SpriteSystem.default.cowboyUpdate();
+      // Add a delay between processing this entity and the next one, unless
+      // there are no more, in which case process immediately (which ends the
+      // loop)
       if (this.entitiesToProcess.length > 0) {
         setTimeout(this.processNextEntity, 300);
       } else {

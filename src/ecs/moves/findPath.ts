@@ -24,7 +24,6 @@ export function findPath(
   };
   const astar = new AStar(dest.x, dest.y, isFree, { topology: 8 });
   astar.compute(src.x, src.y, (x, y) => results.push(new Vector(x, y)));
-  console.log(src, dest, results);
   // omit first and last elements in path
   return results.slice(1, results.length - 1);
 }

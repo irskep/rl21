@@ -431,8 +431,12 @@ export class LevelScene implements GameScene {
   };
 
   tick = () => {
+    console.groupEnd(); // player move
     this.ecs.combatSystem.onProcessingFinished = () => {
-      console.log("Finished with", this.hoveredPosDuringUpdate);
+      console.log(
+        "Finished processing action on " +
+          this.hoveredPosDuringUpdate?.toString()
+      );
       this.updateHoverCell(this.hoveredPosDuringUpdate);
       this.updateHearts();
     };
@@ -455,7 +459,8 @@ export class LevelScene implements GameScene {
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;
 
-      console.log("Player move:", actionMoves[0][0]);
+      console.group("Player move");
+      console.log("Apply", actionMoves[0][0]);
       const isAsync = actionMoves[0][0].apply(
         { ecs: this.ecs, entity: this.ecs.player },
         pos,
