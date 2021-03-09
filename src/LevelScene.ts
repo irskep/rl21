@@ -152,9 +152,13 @@ export class LevelScene implements GameScene {
     );
     gameAreaMask.endFill();
     this.gameAreaContainer.mask = gameAreaMask;
+    this.gameAreaContainer.position.set(0, 30);
 
     this.dbgText.position.set(10, 10);
-    this.inputHintText.position.set(10, this.gameAreaContainer.height);
+    this.inputHintText.position.set(
+      10,
+      this.gameAreaContainer.position.y + this.gameAreaContainer.height
+    );
     this.inputHintText.style.wordWrapWidth = this.screenSize.x;
     this.messageLog.position.set(this.gameAreaContainer.width + 10, 10);
     this.messageLog.style.wordWrapWidth =
@@ -232,10 +236,11 @@ export class LevelScene implements GameScene {
       e.getComponent(CombatC).hoverText
     }`;
     this.mouseoverText.text = text;
+    this.mouseoverText.position.set(4, 4);
 
     const size = new Vector(
-      this.mouseoverText.width,
-      this.mouseoverText.height
+      this.mouseoverText.width + 8,
+      this.mouseoverText.height + 8
     );
 
     const gfx = this.mouseoverBg;
@@ -243,8 +248,9 @@ export class LevelScene implements GameScene {
     gfx.clear();
     gfx.width = size.x;
     gfx.height = size.y;
+    gfx.lineStyle({ width: 1, color: 0xffffff });
     gfx.beginFill(0x000000);
-    gfx.drawRect(0, 0, size.x, size.y);
+    gfx.drawRect(0, 0, size.x, size.y - 2);
     gfx.endFill();
   }
 
