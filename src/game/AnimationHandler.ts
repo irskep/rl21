@@ -11,8 +11,11 @@ export interface Animation {
 export class AnimationHandler {
   private animations = new Array<Animation>();
 
+  lastT = performance.now();
   tick(dtMs: number) {
-    const dt = dtMs;
+    const now = performance.now();
+    const dt = (now - this.lastT) / 1000;
+    this.lastT = now;
     const nextAnimations = new Array<Animation>();
     for (let animation of this.animations) {
       animation.timePassed = (animation.timePassed || 0) + dt;

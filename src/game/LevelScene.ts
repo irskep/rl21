@@ -246,7 +246,7 @@ export class LevelScene implements GameScene {
         );
         sourceSprite.sprite!.parent.addChild(text);
         this.animationHandler.add(
-          makeDriftAndFadeAnimation(text, 100, new Vector(-1.5, -1.5))
+          makeDriftAndFadeAnimation(text, 3, new Vector(-100, -100))
         );
         break;
       case CombatEventType.Die:

@@ -45,6 +45,8 @@ export class Walk implements Move {
     c.turnToward(target);
     c.pos = target;
 
+    ctx.entity.getComponent(CombatC).setState(CombatState.Standing, c);
+
     return false;
   }
 
