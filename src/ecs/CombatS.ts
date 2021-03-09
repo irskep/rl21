@@ -7,7 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../assets";
-import { Tilemap } from "../game/tilemap";
+import { manhattanDistance, Tilemap } from "../game/tilemap";
 import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
@@ -19,6 +19,7 @@ import { CombatTrait } from "./CombatTrait";
 import { CombatState } from "./CombatState";
 import KefirBus from "../KefirBus";
 import { STATS } from "./stats";
+import RNG from "../game/RNG";
 
 /**
  * These are visual events that can occur.
@@ -92,6 +93,7 @@ export class CombatSystem extends System {
 
       return; // never say processing is finished, so LevelScene doesn't allow more events
     }
+
     if (this.onProcessingFinished) {
       this.onProcessingFinished();
     }
@@ -121,6 +123,8 @@ export class CombatSystem extends System {
   }
 
   processNextEntity = (): void => {
+    this.resolveConflicts();
+
     if (this.entitiesToProcess.length < 1) {
       this.isProcessing = false;
       this.cleanupProcessingAndNotify();
@@ -175,6 +179,47 @@ export class CombatSystem extends System {
   reset(engine: Engine) {
     for (let entity of this.family.entities) {
       entity.getComponent(CombatC).needsToMove = true;
+    }
+  }
+
+  private resolveConflicts() {
+    const occupants: Record<string, Entity> = {};
+    for (const e of this.family.entities) {
+      const pos = e.getComponent(SpriteC).pos;
+      const occupant = occupants[pos.toString()];
+      if (occupant) {
+        console.log("Conflict between", e, "and", occupant);
+        this.resolveConflict(e, occupant, pos);
+      } else {
+        occupants[pos.toString()] = e;
+      }
+    }
+  }
+
+  private resolveConflict(e: Entity, occupant: Entity, pos: AbstractVector) {
+    const freeFloorCells = this.tilemap.getCells((cell) => {
+      return (
+        cell.index === EnvIndices.FLOOR &&
+        !SpriteSystem.default.findEntity(cell.pos)
+      );
+    });
+    new RNG(`${Math.random()}`).shuffle(freeFloorCells);
+
+    const spriteC = e.getComponent(SpriteC);
+    freeFloorCells.sort((a, b) => {
+      return (
+        manhattanDistance(a.pos.clone().subtract(spriteC.pos)) -
+        manhattanDistance(b.pos.clone().subtract(spriteC.pos))
+      );
+    });
+    if (freeFloorCells.length > 0) {
+      spriteC.pos = freeFloorCells[0].pos;
+      const occupantName = occupant.getComponent(SpriteC).flavorName;
+      this.ecs.writeMessage(
+        `${spriteC.flavorName} mysteriously moves due to a bug in the game that caused him to collide with ${occupantName}.`
+      );
+      SpriteSystem.default.cowboyUpdate();
+      return freeFloorCells[0];
     }
   }
 

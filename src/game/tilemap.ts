@@ -34,6 +34,25 @@ export class Tilemap {
       return null;
     return this.contents[pos.y][pos.x];
   }
+
+  getCells(predicate: (cell: Cell) => boolean): Cell[] {
+    const cells = new Array<Cell>();
+
+    for (let y = 0; y < this.size.y; y++) {
+      for (let x = 0; x < this.size.x; x++) {
+        const cell = this.contents[y][x];
+        if (predicate(cell)) {
+          cells.push(cell);
+        }
+      }
+    }
+
+    return cells;
+  }
+}
+
+export function manhattanDistance(v: AbstractVector): number {
+  return Math.abs(v.x) + Math.abs(v.y);
 }
 
 export function isAdjacent(a: AbstractVector, b: AbstractVector): boolean {
