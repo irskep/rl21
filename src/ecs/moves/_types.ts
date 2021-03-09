@@ -1,6 +1,6 @@
 import { Entity } from "@nova-engine/ecs";
 import { AbstractVector } from "vector2d";
-import { Action } from "../../input";
+import { Action } from "../../game/input";
 import { ECS } from "../ecsTypes";
 
 export interface MoveContext {

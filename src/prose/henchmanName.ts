@@ -1,4 +1,4 @@
-import RNG from "../RNG";
+import RNG from "../game/RNG";
 
 const adjs: string[] = [
   "Sleepy",

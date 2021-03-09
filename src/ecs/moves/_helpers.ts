@@ -1,6 +1,6 @@
 import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../../assets";
-import { isAdjacent } from "../../tilemap";
+import { isAdjacent } from "../../game/tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { SpriteC } from "../sprite";

@@ -7,7 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../assets";
-import { Tilemap } from "../tilemap";
+import { Tilemap } from "../game/tilemap";
 import { GameInterface } from "../types";
 import { getNeighbors } from "./direction";
 import { ECS } from "./ecsTypes";
@@ -37,6 +37,7 @@ export interface CombatEvent {
   type: CombatEventType;
   subject?: Entity;
   object?: Entity;
+  value?: number;
 }
 
 export class CombatSystem extends System {
@@ -103,6 +104,7 @@ export class CombatSystem extends System {
     this.events.emit({
       type: CombatEventType.HPChanged,
       subject: entity,
+      value: amount,
     });
   }
 

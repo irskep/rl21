@@ -9,7 +9,7 @@ import {
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
-import { isAdjacent } from "../../tilemap";
+import { isAdjacent } from "../../game/tilemap";
 import { STATS } from "../stats";
 import { CombatEventType } from "../CombatS";
 

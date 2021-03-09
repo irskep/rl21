@@ -9,17 +9,21 @@ import {
   Graphics,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
-import { EnvIndices } from "./assets";
+import { EnvIndices } from "../assets";
 import { Cell, Tilemap } from "./tilemap";
-import { makeECS } from "./ecs/ecs";
-import { CombatC } from "./ecs/CombatC";
-import { ECS } from "./ecs/ecsTypes";
-import { GameScene, GameInterface } from "./types";
-import { Move, MoveCheckResult } from "./ecs/moves/_types";
+import { makeECS } from "../ecs/ecs";
+import { CombatC } from "../ecs/CombatC";
+import { ECS } from "../ecs/ecsTypes";
+import { GameScene, GameInterface } from "../types";
+import { Move, MoveCheckResult } from "../ecs/moves/_types";
 import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
-import { SpriteC } from "./ecs/sprite";
-import { CombatEvent, CombatEventType } from "./ecs/CombatS";
+import { SpriteC } from "../ecs/sprite";
+import { CombatEvent, CombatEventType } from "../ecs/CombatS";
+import {
+  AnimationHandler,
+  makeDriftAndFadeAnimation,
+} from "./AnimationHandler";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -50,6 +54,7 @@ export class LevelScene implements GameScene {
   ecs!: ECS;
   map = new Tilemap(new Vector(10, 10));
   possibleMoves: [Move, MoveCheckResult][] = [];
+  animationHandler = new AnimationHandler();
 
   // display
   hoveredPos: Vector | null = null;
@@ -229,6 +234,20 @@ export class LevelScene implements GameScene {
         if (event.subject === this.ecs.player) {
           this.updateHearts();
         }
+        const text = new Text(`${event.value}`, {
+          fontSize: 48,
+          fontFamily: "Barlow Condensed",
+          fill: "#ff6666",
+        });
+        const sourceSprite = event.subject!.getComponent(SpriteC);
+        text.position.set(
+          sourceSprite.sprite!.position.x,
+          sourceSprite.sprite!.position.y
+        );
+        sourceSprite.sprite!.parent.addChild(text);
+        this.animationHandler.add(
+          makeDriftAndFadeAnimation(text, 100, new Vector(-1.5, -1.5))
+        );
         break;
       case CombatEventType.Die:
         if (event.subject === this.ecs.player) {
@@ -375,7 +394,7 @@ export class LevelScene implements GameScene {
   };
 
   gameLoop = (dt: number) => {
-    /* hi */
+    this.animationHandler.tick(dt);
   };
 
   tick = () => {

@@ -3,8 +3,9 @@ import { Texture } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
+import { TelegraphedPunchFollowthroughMiss } from "./ecs/moves/TelegraphedPunch";
 import filmstrip from "./filmstrip";
-import { LevelScene } from "./LevelScene";
+import { LevelScene } from "./game/LevelScene";
 import { GameScene, GameInterface } from "./types";
 
 export default class Game implements GameInterface {
@@ -27,6 +28,7 @@ export default class Game implements GameInterface {
       // width: window.innerWidth,
       // height: window.innerHeight,
     });
+    this.app.ticker.autoStart = true;
     this.app.loader.baseUrl = `//${location.host}/${pathname}`;
 
     webfontloader.load({

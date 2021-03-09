@@ -1,5 +1,5 @@
 import { Engine, Entity } from "@nova-engine/ecs";
-import { Tilemap } from "../tilemap";
+import { Tilemap } from "../game/tilemap";
 import { CombatSystem } from "./CombatS";
 import { SpriteSystem } from "./sprite";
 

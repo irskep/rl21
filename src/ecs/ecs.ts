@@ -10,7 +10,7 @@ import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./CombatS";
 import { CombatC } from "./CombatC";
 import { CombatTrait } from "./CombatTrait";
-import { Tilemap } from "../tilemap";
+import { Tilemap } from "../game/tilemap";
 import getHenchmanName from "../prose/henchmanName";
 import { STATS } from "./stats";
 

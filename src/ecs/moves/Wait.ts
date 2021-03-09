@@ -1,5 +1,5 @@
 import { AbstractVector } from "vector2d";
-import { Action } from "../../input";
+import { Action } from "../../game/input";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { MoveContext, MoveCheckResult, Move } from "./_types";

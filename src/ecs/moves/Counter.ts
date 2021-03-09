@@ -1,6 +1,6 @@
 import { AbstractVector, Vector } from "vector2d";
-import { Action } from "../../input";
-import { isAdjacent } from "../../tilemap";
+import { Action } from "../../game/input";
+import { isAdjacent } from "../../game/tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { ensureTargetIsEnemy } from "./_helpers";

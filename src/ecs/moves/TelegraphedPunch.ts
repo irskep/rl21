@@ -1,5 +1,5 @@
 import { AbstractVector, Vector } from "vector2d";
-import { isAdjacent } from "../../tilemap";
+import { isAdjacent } from "../../game/tilemap";
 import { CombatState } from "../CombatState";
 import { CombatC } from "../CombatC";
 import { getDirectionVector } from "../direction";
