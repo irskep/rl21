@@ -439,7 +439,7 @@ var _assets = require("./assets");
 
 var _filmstrip = _interopRequireDefault(require("./filmstrip"));
 
-var _LevelScene = require("./game/LevelScene");
+var _MenuScene = require("./MenuScene");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -455,7 +455,9 @@ class Game {
 
     _defineProperty(this, "isFontLoaded", false);
 
-    _defineProperty(this, "assets", {});
+    _defineProperty(this, "filmstrips", {});
+
+    _defineProperty(this, "images", {});
 
     _defineProperty(this, "tileSize", 128);
 
@@ -464,16 +466,21 @@ class Game {
       if (this.app.loader.progress < 100) return;
 
       const loadFilmstrip = (name, cellSize) => {
-        const texture = this.app.loader.resources[`${name}`]?.texture;
+        const texture = this.app.loader.resources[name]?.texture;
         return (0, _filmstrip.default)(texture, cellSize.x, cellSize.y);
       };
 
       for (const asset of _assets.ALL_ASSETS) {
-        this.assets[asset.name] = loadFilmstrip(asset.name, asset.cellSize || new _vector2d.Vector(this.tileSize, this.tileSize));
-      } // this.pushScene(new MenuScene(this));
+        if (asset.isFilmstrip) {
+          this.filmstrips[asset.name] = loadFilmstrip(asset.name, asset.cellSize || new _vector2d.Vector(this.tileSize, this.tileSize));
+        } else if (asset.url.endsWith(".png")) {
+          this.images[asset.name] = this.app.loader.resources[asset.name]?.texture;
+        } else {
+          console.warn("Unknown asset:", asset);
+        }
+      }
 
-
-      this.pushScene(new _LevelScene.LevelScene(this));
+      this.pushScene(new _MenuScene.MenuScene(this)); // this.pushScene(new LevelScene(this, 1));
     });
 
     let pathname = location.pathname;
@@ -541,7 +548,7 @@ class Game {
 }
 
 exports.default = Game;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
 /*!
  * pixi.js - v6.0.0
  * Compiled Tue, 02 Mar 2021 21:45:03 UTC
@@ -46474,14 +46481,23 @@ const EnvIndices = {
 exports.EnvIndices = EnvIndices;
 const ALL_ASSETS = [{
   name: "sprites",
-  url: "sprites.png"
+  url: "sprites.png",
+  isFilmstrip: true
 }, {
   name: "env",
-  url: "env.png"
+  url: "env.png",
+  isFilmstrip: true
 }, {
   name: "heart",
   url: "heart.png",
+  isFilmstrip: true,
   cellSize: new _vector2d.Vector(21, 18)
+}, {
+  name: "stagecomplete",
+  url: "stagecomplete.png"
+}, {
+  name: "youlose",
+  url: "youlose.png"
 }];
 exports.ALL_ASSETS = ALL_ASSETS;
 },{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"202cb5f40ee75eccf8beb54e83abb47c":[function(require,module,exports) {
@@ -47012,7 +47028,1186 @@ function filmstrip(texture, frameWidth, frameHeight, spacing = 0) {
 
   return frames(texture, positions, frameWidth, frameHeight);
 }
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"84dd184ecea3d468eeaab1eb358565eb":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"3d2e89863f09a0b02a84cdeaa16aee37":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MenuScene = void 0;
+
+var _mousetrap = _interopRequireDefault(require("mousetrap"));
+
+var PIXI = _interopRequireWildcard(require("pixi.js"));
+
+var _LevelScene = require("./game/LevelScene");
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class MenuScene {
+  constructor(game) {
+    _defineProperty(this, "container", new PIXI.Container());
+
+    _defineProperty(this, "gameLoop", dt => {
+      /* hi */
+    });
+
+    _defineProperty(this, "handleTouchStart", () => {
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 1)]);
+    });
+
+    _defineProperty(this, "handleKeyPress", () => {
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 1)]);
+    });
+
+    this.game = game;
+    this.container.interactive = true;
+  }
+
+  enter() {
+    console.log("enter", this);
+
+    _mousetrap.default.bind(["enter", "space"], this.handleKeyPress);
+
+    this.game.app.ticker.add(this.gameLoop);
+
+    if (!this.container.children.length) {
+      const title = new PIXI.Text("vigil@nte");
+      title.style = new PIXI.TextStyle({
+        fontSize: this.game.app.screen.width / 10,
+        fontFamily: "Barlow Condensed",
+        fill: "white",
+        align: "center"
+      });
+      title.anchor.x = 0.5;
+      title.anchor.y = 0.5;
+      title.position.set(this.game.app.screen.width / 2, this.game.app.screen.height / 4);
+      this.container.addChild(title);
+      const instructions = new PIXI.Text("Click here to start");
+      instructions.style = new PIXI.TextStyle({
+        fontSize: this.game.app.screen.width / 40,
+        fontFamily: "Barlow Condensed",
+        fill: "white",
+        align: "center"
+      });
+      instructions.anchor.x = 0.5;
+      instructions.anchor.y = 0.5;
+      instructions.position.set(this.game.app.screen.width / 2, this.game.app.screen.height * 0.66);
+      this.container.addChild(instructions);
+      instructions.interactive = true;
+      title.interactive = true;
+      instructions.on("click", this.handleTouchStart);
+    }
+
+    this.game.app.stage.addChild(this.container);
+  }
+
+  exit() {
+    console.log("exit", this);
+
+    _mousetrap.default.unbind(["enter", "space"]);
+
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+  }
+
+}
+
+exports.MenuScene = MenuScene;
+},{"mousetrap":"4c5780164a035c90cc9be975eec0ed87","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"4c5780164a035c90cc9be975eec0ed87":[function(require,module,exports) {
+var define;
+
+/*global define:false */
+
+/**
+ * Copyright 2012-2017 Craig Campbell
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Mousetrap is a simple keyboard shortcut library for Javascript with
+ * no external dependencies
+ *
+ * @version 1.6.5
+ * @url craig.is/killing/mice
+ */
+(function (window, document, undefined) {
+  // Check if mousetrap is used inside browser, if not, return
+  if (!window) {
+    return;
+  }
+  /**
+   * mapping of special keycodes to their corresponding keys
+   *
+   * everything in this dictionary cannot use keypress events
+   * so it has to be here to map to the correct keycodes for
+   * keyup/keydown events
+   *
+   * @type {Object}
+   */
+
+
+  var _MAP = {
+    8: 'backspace',
+    9: 'tab',
+    13: 'enter',
+    16: 'shift',
+    17: 'ctrl',
+    18: 'alt',
+    20: 'capslock',
+    27: 'esc',
+    32: 'space',
+    33: 'pageup',
+    34: 'pagedown',
+    35: 'end',
+    36: 'home',
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down',
+    45: 'ins',
+    46: 'del',
+    91: 'meta',
+    93: 'meta',
+    224: 'meta'
+  };
+  /**
+   * mapping for special characters so they can support
+   *
+   * this dictionary is only used incase you want to bind a
+   * keyup or keydown event to one of these keys
+   *
+   * @type {Object}
+   */
+
+  var _KEYCODE_MAP = {
+    106: '*',
+    107: '+',
+    109: '-',
+    110: '.',
+    111: '/',
+    186: ';',
+    187: '=',
+    188: ',',
+    189: '-',
+    190: '.',
+    191: '/',
+    192: '`',
+    219: '[',
+    220: '\\',
+    221: ']',
+    222: '\''
+  };
+  /**
+   * this is a mapping of keys that require shift on a US keypad
+   * back to the non shift equivelents
+   *
+   * this is so you can use keyup events with these keys
+   *
+   * note that this will only work reliably on US keyboards
+   *
+   * @type {Object}
+   */
+
+  var _SHIFT_MAP = {
+    '~': '`',
+    '!': '1',
+    '@': '2',
+    '#': '3',
+    '$': '4',
+    '%': '5',
+    '^': '6',
+    '&': '7',
+    '*': '8',
+    '(': '9',
+    ')': '0',
+    '_': '-',
+    '+': '=',
+    ':': ';',
+    '\"': '\'',
+    '<': ',',
+    '>': '.',
+    '?': '/',
+    '|': '\\'
+  };
+  /**
+   * this is a list of special strings you can use to map
+   * to modifier keys when you specify your keyboard shortcuts
+   *
+   * @type {Object}
+   */
+
+  var _SPECIAL_ALIASES = {
+    'option': 'alt',
+    'command': 'meta',
+    'return': 'enter',
+    'escape': 'esc',
+    'plus': '+',
+    'mod': /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'meta' : 'ctrl'
+  };
+  /**
+   * variable to store the flipped version of _MAP from above
+   * needed to check if we should use keypress or not when no action
+   * is specified
+   *
+   * @type {Object|undefined}
+   */
+
+  var _REVERSE_MAP;
+  /**
+   * loop through the f keys, f1 to f19 and add them to the map
+   * programatically
+   */
+
+
+  for (var i = 1; i < 20; ++i) {
+    _MAP[111 + i] = 'f' + i;
+  }
+  /**
+   * loop through to map numbers on the numeric keypad
+   */
+
+
+  for (i = 0; i <= 9; ++i) {
+    // This needs to use a string cause otherwise since 0 is falsey
+    // mousetrap will never fire for numpad 0 pressed as part of a keydown
+    // event.
+    //
+    // @see https://github.com/ccampbell/mousetrap/pull/258
+    _MAP[i + 96] = i.toString();
+  }
+  /**
+   * cross browser add event method
+   *
+   * @param {Element|HTMLDocument} object
+   * @param {string} type
+   * @param {Function} callback
+   * @returns void
+   */
+
+
+  function _addEvent(object, type, callback) {
+    if (object.addEventListener) {
+      object.addEventListener(type, callback, false);
+      return;
+    }
+
+    object.attachEvent('on' + type, callback);
+  }
+  /**
+   * takes the event and returns the key character
+   *
+   * @param {Event} e
+   * @return {string}
+   */
+
+
+  function _characterFromEvent(e) {
+    // for keypress events we should return the character as is
+    if (e.type == 'keypress') {
+      var character = String.fromCharCode(e.which); // if the shift key is not pressed then it is safe to assume
+      // that we want the character to be lowercase.  this means if
+      // you accidentally have caps lock on then your key bindings
+      // will continue to work
+      //
+      // the only side effect that might not be desired is if you
+      // bind something like 'A' cause you want to trigger an
+      // event when capital A is pressed caps lock will no longer
+      // trigger the event.  shift+a will though.
+
+      if (!e.shiftKey) {
+        character = character.toLowerCase();
+      }
+
+      return character;
+    } // for non keypress events the special maps are needed
+
+
+    if (_MAP[e.which]) {
+      return _MAP[e.which];
+    }
+
+    if (_KEYCODE_MAP[e.which]) {
+      return _KEYCODE_MAP[e.which];
+    } // if it is not in the special map
+    // with keydown and keyup events the character seems to always
+    // come in as an uppercase character whether you are pressing shift
+    // or not.  we should make sure it is always lowercase for comparisons
+
+
+    return String.fromCharCode(e.which).toLowerCase();
+  }
+  /**
+   * checks if two arrays are equal
+   *
+   * @param {Array} modifiers1
+   * @param {Array} modifiers2
+   * @returns {boolean}
+   */
+
+
+  function _modifiersMatch(modifiers1, modifiers2) {
+    return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+  }
+  /**
+   * takes a key event and figures out what the modifiers are
+   *
+   * @param {Event} e
+   * @returns {Array}
+   */
+
+
+  function _eventModifiers(e) {
+    var modifiers = [];
+
+    if (e.shiftKey) {
+      modifiers.push('shift');
+    }
+
+    if (e.altKey) {
+      modifiers.push('alt');
+    }
+
+    if (e.ctrlKey) {
+      modifiers.push('ctrl');
+    }
+
+    if (e.metaKey) {
+      modifiers.push('meta');
+    }
+
+    return modifiers;
+  }
+  /**
+   * prevents default for this event
+   *
+   * @param {Event} e
+   * @returns void
+   */
+
+
+  function _preventDefault(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+      return;
+    }
+
+    e.returnValue = false;
+  }
+  /**
+   * stops propogation for this event
+   *
+   * @param {Event} e
+   * @returns void
+   */
+
+
+  function _stopPropagation(e) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+      return;
+    }
+
+    e.cancelBubble = true;
+  }
+  /**
+   * determines if the keycode specified is a modifier key or not
+   *
+   * @param {string} key
+   * @returns {boolean}
+   */
+
+
+  function _isModifier(key) {
+    return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
+  }
+  /**
+   * reverses the map lookup so that we can look for specific keys
+   * to see what can and can't use keypress
+   *
+   * @return {Object}
+   */
+
+
+  function _getReverseMap() {
+    if (!_REVERSE_MAP) {
+      _REVERSE_MAP = {};
+
+      for (var key in _MAP) {
+        // pull out the numeric keypad from here cause keypress should
+        // be able to detect the keys from the character
+        if (key > 95 && key < 112) {
+          continue;
+        }
+
+        if (_MAP.hasOwnProperty(key)) {
+          _REVERSE_MAP[_MAP[key]] = key;
+        }
+      }
+    }
+
+    return _REVERSE_MAP;
+  }
+  /**
+   * picks the best action based on the key combination
+   *
+   * @param {string} key - character for key
+   * @param {Array} modifiers
+   * @param {string=} action passed in
+   */
+
+
+  function _pickBestAction(key, modifiers, action) {
+    // if no action was picked in we should try to pick the one
+    // that we think would work best for this key
+    if (!action) {
+      action = _getReverseMap()[key] ? 'keydown' : 'keypress';
+    } // modifier keys don't work as expected with keypress,
+    // switch to keydown
+
+
+    if (action == 'keypress' && modifiers.length) {
+      action = 'keydown';
+    }
+
+    return action;
+  }
+  /**
+   * Converts from a string key combination to an array
+   *
+   * @param  {string} combination like "command+shift+l"
+   * @return {Array}
+   */
+
+
+  function _keysFromString(combination) {
+    if (combination === '+') {
+      return ['+'];
+    }
+
+    combination = combination.replace(/\+{2}/g, '+plus');
+    return combination.split('+');
+  }
+  /**
+   * Gets info for a specific key combination
+   *
+   * @param  {string} combination key combination ("command+s" or "a" or "*")
+   * @param  {string=} action
+   * @returns {Object}
+   */
+
+
+  function _getKeyInfo(combination, action) {
+    var keys;
+    var key;
+    var i;
+    var modifiers = []; // take the keys from this pattern and figure out what the actual
+    // pattern is all about
+
+    keys = _keysFromString(combination);
+
+    for (i = 0; i < keys.length; ++i) {
+      key = keys[i]; // normalize key names
+
+      if (_SPECIAL_ALIASES[key]) {
+        key = _SPECIAL_ALIASES[key];
+      } // if this is not a keypress event then we should
+      // be smart about using shift keys
+      // this will only work for US keyboards however
+
+
+      if (action && action != 'keypress' && _SHIFT_MAP[key]) {
+        key = _SHIFT_MAP[key];
+        modifiers.push('shift');
+      } // if this key is a modifier then add it to the list of modifiers
+
+
+      if (_isModifier(key)) {
+        modifiers.push(key);
+      }
+    } // depending on what the key combination is
+    // we will try to pick the best event for it
+
+
+    action = _pickBestAction(key, modifiers, action);
+    return {
+      key: key,
+      modifiers: modifiers,
+      action: action
+    };
+  }
+
+  function _belongsTo(element, ancestor) {
+    if (element === null || element === document) {
+      return false;
+    }
+
+    if (element === ancestor) {
+      return true;
+    }
+
+    return _belongsTo(element.parentNode, ancestor);
+  }
+
+  function Mousetrap(targetElement) {
+    var self = this;
+    targetElement = targetElement || document;
+
+    if (!(self instanceof Mousetrap)) {
+      return new Mousetrap(targetElement);
+    }
+    /**
+     * element to attach key events to
+     *
+     * @type {Element}
+     */
+
+
+    self.target = targetElement;
+    /**
+     * a list of all the callbacks setup via Mousetrap.bind()
+     *
+     * @type {Object}
+     */
+
+    self._callbacks = {};
+    /**
+     * direct map of string combinations to callbacks used for trigger()
+     *
+     * @type {Object}
+     */
+
+    self._directMap = {};
+    /**
+     * keeps track of what level each sequence is at since multiple
+     * sequences can start out with the same sequence
+     *
+     * @type {Object}
+     */
+
+    var _sequenceLevels = {};
+    /**
+     * variable to store the setTimeout call
+     *
+     * @type {null|number}
+     */
+
+    var _resetTimer;
+    /**
+     * temporary state where we will ignore the next keyup
+     *
+     * @type {boolean|string}
+     */
+
+
+    var _ignoreNextKeyup = false;
+    /**
+     * temporary state where we will ignore the next keypress
+     *
+     * @type {boolean}
+     */
+
+    var _ignoreNextKeypress = false;
+    /**
+     * are we currently inside of a sequence?
+     * type of action ("keyup" or "keydown" or "keypress") or false
+     *
+     * @type {boolean|string}
+     */
+
+    var _nextExpectedAction = false;
+    /**
+     * resets all sequence counters except for the ones passed in
+     *
+     * @param {Object} doNotReset
+     * @returns void
+     */
+
+    function _resetSequences(doNotReset) {
+      doNotReset = doNotReset || {};
+      var activeSequences = false,
+          key;
+
+      for (key in _sequenceLevels) {
+        if (doNotReset[key]) {
+          activeSequences = true;
+          continue;
+        }
+
+        _sequenceLevels[key] = 0;
+      }
+
+      if (!activeSequences) {
+        _nextExpectedAction = false;
+      }
+    }
+    /**
+     * finds all callbacks that match based on the keycode, modifiers,
+     * and action
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {Event|Object} e
+     * @param {string=} sequenceName - name of the sequence we are looking for
+     * @param {string=} combination
+     * @param {number=} level
+     * @returns {Array}
+     */
+
+
+    function _getMatches(character, modifiers, e, sequenceName, combination, level) {
+      var i;
+      var callback;
+      var matches = [];
+      var action = e.type; // if there are no events related to this keycode
+
+      if (!self._callbacks[character]) {
+        return [];
+      } // if a modifier key is coming up on its own we should allow it
+
+
+      if (action == 'keyup' && _isModifier(character)) {
+        modifiers = [character];
+      } // loop through all callbacks for the key that was pressed
+      // and see if any of them match
+
+
+      for (i = 0; i < self._callbacks[character].length; ++i) {
+        callback = self._callbacks[character][i]; // if a sequence name is not specified, but this is a sequence at
+        // the wrong level then move onto the next match
+
+        if (!sequenceName && callback.seq && _sequenceLevels[callback.seq] != callback.level) {
+          continue;
+        } // if the action we are looking for doesn't match the action we got
+        // then we should keep going
+
+
+        if (action != callback.action) {
+          continue;
+        } // if this is a keypress event and the meta key and control key
+        // are not pressed that means that we need to only look at the
+        // character, otherwise check the modifiers as well
+        //
+        // chrome will not fire a keypress if meta or control is down
+        // safari will fire a keypress if meta or meta+shift is down
+        // firefox will fire a keypress if meta or control is down
+
+
+        if (action == 'keypress' && !e.metaKey && !e.ctrlKey || _modifiersMatch(modifiers, callback.modifiers)) {
+          // when you bind a combination or sequence a second time it
+          // should overwrite the first one.  if a sequenceName or
+          // combination is specified in this call it does just that
+          //
+          // @todo make deleting its own method?
+          var deleteCombo = !sequenceName && callback.combo == combination;
+          var deleteSequence = sequenceName && callback.seq == sequenceName && callback.level == level;
+
+          if (deleteCombo || deleteSequence) {
+            self._callbacks[character].splice(i, 1);
+          }
+
+          matches.push(callback);
+        }
+      }
+
+      return matches;
+    }
+    /**
+     * actually calls the callback function
+     *
+     * if your callback function returns false this will use the jquery
+     * convention - prevent default and stop propogation on the event
+     *
+     * @param {Function} callback
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    function _fireCallback(callback, e, combo, sequence) {
+      // if this event should not happen stop here
+      if (self.stopCallback(e, e.target || e.srcElement, combo, sequence)) {
+        return;
+      }
+
+      if (callback(e, combo) === false) {
+        _preventDefault(e);
+
+        _stopPropagation(e);
+      }
+    }
+    /**
+     * handles a character key event
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    self._handleKey = function (character, modifiers, e) {
+      var callbacks = _getMatches(character, modifiers, e);
+
+      var i;
+      var doNotReset = {};
+      var maxLevel = 0;
+      var processedSequenceCallback = false; // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
+
+      for (i = 0; i < callbacks.length; ++i) {
+        if (callbacks[i].seq) {
+          maxLevel = Math.max(maxLevel, callbacks[i].level);
+        }
+      } // loop through matching callbacks for this key event
+
+
+      for (i = 0; i < callbacks.length; ++i) {
+        // fire for all sequence callbacks
+        // this is because if for example you have multiple sequences
+        // bound such as "g i" and "g t" they both need to fire the
+        // callback for matching g cause otherwise you can only ever
+        // match the first one
+        if (callbacks[i].seq) {
+          // only fire callbacks for the maxLevel to prevent
+          // subsequences from also firing
+          //
+          // for example 'a option b' should not cause 'option b' to fire
+          // even though 'option b' is part of the other sequence
+          //
+          // any sequences that do not match here will be discarded
+          // below by the _resetSequences call
+          if (callbacks[i].level != maxLevel) {
+            continue;
+          }
+
+          processedSequenceCallback = true; // keep a list of which sequences were matches for later
+
+          doNotReset[callbacks[i].seq] = 1;
+
+          _fireCallback(callbacks[i].callback, e, callbacks[i].combo, callbacks[i].seq);
+
+          continue;
+        } // if there were no sequence matches but we are still here
+        // that means this is a regular match so we should fire that
+
+
+        if (!processedSequenceCallback) {
+          _fireCallback(callbacks[i].callback, e, callbacks[i].combo);
+        }
+      } // if the key you pressed matches the type of sequence without
+      // being a modifier (ie "keyup" or "keypress") then we should
+      // reset all sequences that were not matched by this event
+      //
+      // this is so, for example, if you have the sequence "h a t" and you
+      // type "h e a r t" it does not match.  in this case the "e" will
+      // cause the sequence to reset
+      //
+      // modifier keys are ignored because you can have a sequence
+      // that contains modifiers such as "enter ctrl+space" and in most
+      // cases the modifier key will be pressed before the next key
+      //
+      // also if you have a sequence such as "ctrl+b a" then pressing the
+      // "b" key will trigger a "keypress" and a "keydown"
+      //
+      // the "keydown" is expected when there is a modifier, but the
+      // "keypress" ends up matching the _nextExpectedAction since it occurs
+      // after and that causes the sequence to reset
+      //
+      // we ignore keypresses in a sequence that directly follow a keydown
+      // for the same character
+
+
+      var ignoreThisKeypress = e.type == 'keypress' && _ignoreNextKeypress;
+
+      if (e.type == _nextExpectedAction && !_isModifier(character) && !ignoreThisKeypress) {
+        _resetSequences(doNotReset);
+      }
+
+      _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
+    };
+    /**
+     * handles a keydown event
+     *
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    function _handleKeyEvent(e) {
+      // normalize e.which for key events
+      // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
+      if (typeof e.which !== 'number') {
+        e.which = e.keyCode;
+      }
+
+      var character = _characterFromEvent(e); // no character found then stop
+
+
+      if (!character) {
+        return;
+      } // need to use === for the character check because the character can be 0
+
+
+      if (e.type == 'keyup' && _ignoreNextKeyup === character) {
+        _ignoreNextKeyup = false;
+        return;
+      }
+
+      self.handleKey(character, _eventModifiers(e), e);
+    }
+    /**
+     * called to set a 1 second timeout on the specified sequence
+     *
+     * this is so after each key press in the sequence you have 1 second
+     * to press the next key before you have to start over
+     *
+     * @returns void
+     */
+
+
+    function _resetSequenceTimer() {
+      clearTimeout(_resetTimer);
+      _resetTimer = setTimeout(_resetSequences, 1000);
+    }
+    /**
+     * binds a key sequence to an event
+     *
+     * @param {string} combo - combo specified in bind call
+     * @param {Array} keys
+     * @param {Function} callback
+     * @param {string=} action
+     * @returns void
+     */
+
+
+    function _bindSequence(combo, keys, callback, action) {
+      // start off by adding a sequence level record for this combination
+      // and setting the level to 0
+      _sequenceLevels[combo] = 0;
+      /**
+       * callback to increase the sequence level for this sequence and reset
+       * all other sequences that were active
+       *
+       * @param {string} nextAction
+       * @returns {Function}
+       */
+
+      function _increaseSequence(nextAction) {
+        return function () {
+          _nextExpectedAction = nextAction;
+          ++_sequenceLevels[combo];
+
+          _resetSequenceTimer();
+        };
+      }
+      /**
+       * wraps the specified callback inside of another function in order
+       * to reset all sequence counters as soon as this sequence is done
+       *
+       * @param {Event} e
+       * @returns void
+       */
+
+
+      function _callbackAndReset(e) {
+        _fireCallback(callback, e, combo); // we should ignore the next key up if the action is key down
+        // or keypress.  this is so if you finish a sequence and
+        // release the key the final key will not trigger a keyup
+
+
+        if (action !== 'keyup') {
+          _ignoreNextKeyup = _characterFromEvent(e);
+        } // weird race condition if a sequence ends with the key
+        // another sequence begins with
+
+
+        setTimeout(_resetSequences, 10);
+      } // loop through keys one at a time and bind the appropriate callback
+      // function.  for any key leading up to the final one it should
+      // increase the sequence. after the final, it should reset all sequences
+      //
+      // if an action is specified in the original bind call then that will
+      // be used throughout.  otherwise we will pass the action that the
+      // next key in the sequence should match.  this allows a sequence
+      // to mix and match keypress and keydown events depending on which
+      // ones are better suited to the key provided
+
+
+      for (var i = 0; i < keys.length; ++i) {
+        var isFinal = i + 1 === keys.length;
+        var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || _getKeyInfo(keys[i + 1]).action);
+
+        _bindSingle(keys[i], wrappedCallback, action, combo, i);
+      }
+    }
+    /**
+     * binds a single keyboard combination
+     *
+     * @param {string} combination
+     * @param {Function} callback
+     * @param {string=} action
+     * @param {string=} sequenceName - name of sequence if part of sequence
+     * @param {number=} level - what part of the sequence the command is
+     * @returns void
+     */
+
+
+    function _bindSingle(combination, callback, action, sequenceName, level) {
+      // store a direct mapped reference for use with Mousetrap.trigger
+      self._directMap[combination + ':' + action] = callback; // make sure multiple spaces in a row become a single space
+
+      combination = combination.replace(/\s+/g, ' ');
+      var sequence = combination.split(' ');
+      var info; // if this pattern is a sequence of keys then run through this method
+      // to reprocess each pattern one key at a time
+
+      if (sequence.length > 1) {
+        _bindSequence(combination, sequence, callback, action);
+
+        return;
+      }
+
+      info = _getKeyInfo(combination, action); // make sure to initialize array if this is the first time
+      // a callback is added for this key
+
+      self._callbacks[info.key] = self._callbacks[info.key] || []; // remove an existing match if there is one
+
+      _getMatches(info.key, info.modifiers, {
+        type: info.action
+      }, sequenceName, combination, level); // add this call back to the array
+      // if it is a sequence put it at the beginning
+      // if not put it at the end
+      //
+      // this is important because the way these are processed expects
+      // the sequence ones to come first
+
+
+      self._callbacks[info.key][sequenceName ? 'unshift' : 'push']({
+        callback: callback,
+        modifiers: info.modifiers,
+        action: info.action,
+        seq: sequenceName,
+        level: level,
+        combo: combination
+      });
+    }
+    /**
+     * binds multiple combinations to the same callback
+     *
+     * @param {Array} combinations
+     * @param {Function} callback
+     * @param {string|undefined} action
+     * @returns void
+     */
+
+
+    self._bindMultiple = function (combinations, callback, action) {
+      for (var i = 0; i < combinations.length; ++i) {
+        _bindSingle(combinations[i], callback, action);
+      }
+    }; // start!
+
+
+    _addEvent(targetElement, 'keypress', _handleKeyEvent);
+
+    _addEvent(targetElement, 'keydown', _handleKeyEvent);
+
+    _addEvent(targetElement, 'keyup', _handleKeyEvent);
+  }
+  /**
+   * binds an event to mousetrap
+   *
+   * can be a single key, a combination of keys separated with +,
+   * an array of keys, or a sequence of keys separated by spaces
+   *
+   * be sure to list the modifier keys first to make sure that the
+   * correct key ends up getting bound (the last key in the pattern)
+   *
+   * @param {string|Array} keys
+   * @param {Function} callback
+   * @param {string=} action - 'keypress', 'keydown', or 'keyup'
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.bind = function (keys, callback, action) {
+    var self = this;
+    keys = keys instanceof Array ? keys : [keys];
+
+    self._bindMultiple.call(self, keys, callback, action);
+
+    return self;
+  };
+  /**
+   * unbinds an event to mousetrap
+   *
+   * the unbinding sets the callback function of the specified key combo
+   * to an empty function and deletes the corresponding key in the
+   * _directMap dict.
+   *
+   * TODO: actually remove this from the _callbacks dictionary instead
+   * of binding an empty function
+   *
+   * the keycombo+action has to be exactly the same as
+   * it was defined in the bind method
+   *
+   * @param {string|Array} keys
+   * @param {string} action
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.unbind = function (keys, action) {
+    var self = this;
+    return self.bind.call(self, keys, function () {}, action);
+  };
+  /**
+   * triggers an event that has already been bound
+   *
+   * @param {string} keys
+   * @param {string=} action
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.trigger = function (keys, action) {
+    var self = this;
+
+    if (self._directMap[keys + ':' + action]) {
+      self._directMap[keys + ':' + action]({}, keys);
+    }
+
+    return self;
+  };
+  /**
+   * resets the library back to its initial state.  this is useful
+   * if you want to clear out the current keyboard shortcuts and bind
+   * new ones - for example if you switch to another page
+   *
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.reset = function () {
+    var self = this;
+    self._callbacks = {};
+    self._directMap = {};
+    return self;
+  };
+  /**
+   * should we stop this event before firing off callbacks
+   *
+   * @param {Event} e
+   * @param {Element} element
+   * @return {boolean}
+   */
+
+
+  Mousetrap.prototype.stopCallback = function (e, element) {
+    var self = this; // if the element has the class "mousetrap" then no need to stop
+
+    if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+      return false;
+    }
+
+    if (_belongsTo(element, self.target)) {
+      return false;
+    } // Events originating from a shadow DOM are re-targetted and `e.target` is the shadow host,
+    // not the initial event target in the shadow tree. Note that not all events cross the
+    // shadow boundary.
+    // For shadow trees with `mode: 'open'`, the initial event target is the first element in
+    // the event’s composed path. For shadow trees with `mode: 'closed'`, the initial event
+    // target cannot be obtained.
+
+
+    if ('composedPath' in e && typeof e.composedPath === 'function') {
+      // For open shadow trees, update `element` so that the following check works.
+      var initialEventTarget = e.composedPath()[0];
+
+      if (initialEventTarget !== e.target) {
+        element = initialEventTarget;
+      }
+    } // stop for input, select, and textarea
+
+
+    return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
+  };
+  /**
+   * exposes _handleKey publicly so it can be overwritten by extensions
+   */
+
+
+  Mousetrap.prototype.handleKey = function () {
+    var self = this;
+    return self._handleKey.apply(self, arguments);
+  };
+  /**
+   * allow custom key mappings
+   */
+
+
+  Mousetrap.addKeycodes = function (object) {
+    for (var key in object) {
+      if (object.hasOwnProperty(key)) {
+        _MAP[key] = object[key];
+      }
+    }
+
+    _REVERSE_MAP = null;
+  };
+  /**
+   * Init the global mousetrap functions
+   *
+   * This method is needed to allow the global mousetrap functions to work
+   * now that mousetrap is a constructor function.
+   */
+
+
+  Mousetrap.init = function () {
+    var documentMousetrap = Mousetrap(document);
+
+    for (var method in documentMousetrap) {
+      if (method.charAt(0) !== '_') {
+        Mousetrap[method] = function (method) {
+          return function () {
+            return documentMousetrap[method].apply(documentMousetrap, arguments);
+          };
+        }(method);
+      }
+    }
+  };
+
+  Mousetrap.init(); // expose mousetrap to the global object
+
+  window.Mousetrap = Mousetrap; // expose as a common js module
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Mousetrap;
+  } // expose mousetrap as an AMD module
+
+
+  if (typeof define === 'function' && define.amd) {
+    define(function () {
+      return Mousetrap;
+    });
+  }
+})(typeof window !== 'undefined' ? window : null, typeof window !== 'undefined' ? document : null);
+},{}],"84dd184ecea3d468eeaab1eb358565eb":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47040,12 +48235,14 @@ var _CombatS = require("../ecs/CombatS");
 
 var _AnimationHandler = require("./AnimationHandler");
 
+var _MenuScene = require("../MenuScene");
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class LevelScene {
   /* pixi stuff */
   // display
-  constructor(game) {
+  constructor(game, n) {
     _defineProperty(this, "container", new _pixi.Container());
 
     _defineProperty(this, "hudContainer", new _pixi.Container());
@@ -47117,6 +48314,7 @@ class LevelScene {
     });
 
     this.game = game;
+    this.n = n;
     this.container.interactive = true;
   }
 
@@ -47158,7 +48356,7 @@ class LevelScene {
     this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
     this.arena.setTransform(undefined, undefined, 0.5, 0.5);
     this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.hoverSprite.texture = this.game.assets.env[_assets.EnvIndices.HOVER];
+    this.hoverSprite.texture = this.game.filmstrips.env[_assets.EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
     const consoleStyle = {
@@ -47187,7 +48385,7 @@ class LevelScene {
       for (let x = 0; x < this.map.size.x; x++) {
         const cellSprite = new _pixi.Sprite();
         const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.assets.env[cell.index];
+        cellSprite.texture = this.game.filmstrips.env[cell.index];
         cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
         cellSprite.interactive = true;
         this.bindEvents(cell, cellSprite);
@@ -47197,7 +48395,7 @@ class LevelScene {
     }
 
     this.layoutScreenElements();
-    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage);
+    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage, this.n);
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateHUDText();
@@ -47271,15 +48469,30 @@ class LevelScene {
         const sourceSprite = event.subject.getComponent(_sprite.SpriteC);
         text.position.set(sourceSprite.sprite.position.x, sourceSprite.sprite.position.y);
         sourceSprite.sprite.parent.addChild(text);
-        this.animationHandler.add((0, _AnimationHandler.makeDriftAndFadeAnimation)(text, 100, new _vector2d.Vector(-1.5, -1.5)));
+        this.animationHandler.add((0, _AnimationHandler.makeDriftAndFadeAnimation)(text, 3, new _vector2d.Vector(-100, -100)));
         break;
 
       case _CombatS.CombatEventType.Die:
         if (event.subject === this.ecs.player) {
-          this.game.replaceScenes([new LevelScene(this.game)]);
+          const victorySprite = new _pixi.Sprite(this.game.images["youlose"]);
+          victorySprite.anchor.set(0.5, 0.5);
+          victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
+          this.hudContainer.addChild(victorySprite);
+          setTimeout(() => {
+            this.game.replaceScenes([new _MenuScene.MenuScene(this.game)]);
+          }, 2000);
         }
 
         break;
+
+      case _CombatS.CombatEventType.AllEnemiesDead:
+        const victorySprite = new _pixi.Sprite(this.game.images["stagecomplete"]);
+        victorySprite.anchor.set(0.5, 0.5);
+        victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
+        this.hudContainer.addChild(victorySprite);
+        setTimeout(() => {
+          this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
+        }, 2000);
     }
   }
 
@@ -47379,7 +48592,7 @@ class LevelScene {
       let sprite;
 
       if (i >= this.heartSprites.length) {
-        sprite = new _pixi.Sprite(this.game.assets["heart"][0]);
+        sprite = new _pixi.Sprite(this.game.filmstrips["heart"][0]);
         sprite.position.set(i * 21, 0);
         this.heartSprites.push(sprite);
         this.heartsContainer.addChild(sprite);
@@ -47390,7 +48603,7 @@ class LevelScene {
       sprite.visible = true;
 
       if (i + 1 == Math.ceil(halfHP)) {
-        sprite.texture = this.game.assets["heart"][halfHP % 1 === 0 ? 0 : 1];
+        sprite.texture = this.game.filmstrips["heart"][halfHP % 1 === 0 ? 0 : 1];
       }
     }
   }
@@ -47423,12 +48636,13 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.manhattanDistance = manhattanDistance;
 exports.isAdjacent = isAdjacent;
 exports.neighbors = neighbors;
 exports.Tilemap = exports.Cell = void 0;
@@ -47470,9 +48684,29 @@ class Tilemap {
     return this.contents[pos.y][pos.x];
   }
 
+  getCells(predicate) {
+    const cells = new Array();
+
+    for (let y = 0; y < this.size.y; y++) {
+      for (let x = 0; x < this.size.x; x++) {
+        const cell = this.contents[y][x];
+
+        if (predicate(cell)) {
+          cells.push(cell);
+        }
+      }
+    }
+
+    return cells;
+  }
+
 }
 
 exports.Tilemap = Tilemap;
+
+function manhattanDistance(v) {
+  return Math.abs(v.x) + Math.abs(v.y);
+}
 
 function isAdjacent(a, b) {
   if (a.equals(b)) return false;
@@ -47570,7 +48804,7 @@ function makeTitanThug(pos, orientation) {
   return e;
 }
 
-function makeECS(game, container, tilemap, writeMessage) {
+function makeECS(game, container, tilemap, writeMessage, n) {
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
   const combatSystem = new _CombatS.CombatSystem(game);
@@ -48185,7 +49419,7 @@ class SpriteSystem extends _ecs.System {
       const spriteC = entity.getComponent(SpriteC);
 
       if (!spriteC.sprite) {
-        spriteC.sprite = new _pixi.Sprite(this.game.assets.sprites[spriteC.spriteIndex]);
+        spriteC.sprite = new _pixi.Sprite(this.game.filmstrips.sprites[spriteC.spriteIndex]);
         spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
@@ -48196,7 +49430,7 @@ class SpriteSystem extends _ecs.System {
 
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
-        spriteC.sprite.texture = this.game.assets.sprites[spriteC.spriteIndex];
+        spriteC.sprite.texture = this.game.filmstrips.sprites[spriteC.spriteIndex];
       }
 
       if (spriteC.needsLabelUpdate) {
@@ -48408,6 +49642,7 @@ class Walk {
     const c = ctx.entity.getComponent(_sprite.SpriteC);
     c.turnToward(target);
     c.pos = target;
+    ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.Standing, c);
     return false;
   }
 
@@ -49223,6 +50458,8 @@ var _ecs = require("@nova-engine/ecs");
 
 var _assets = require("../assets");
 
+var _tilemap = require("../game/tilemap");
+
 var _direction = require("./direction");
 
 var _sprite = require("./sprite");
@@ -49238,6 +50475,8 @@ var _CombatState = require("./CombatState");
 var _KefirBus = _interopRequireDefault(require("../KefirBus"));
 
 var _stats = require("./stats");
+
+var _RNG = _interopRequireDefault(require("../game/RNG"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -49257,6 +50496,7 @@ exports.CombatEventType = CombatEventType;
   CombatEventType["Counter"] = "Counter";
   CombatEventType["Stun"] = "Stun";
   CombatEventType["Die"] = "Die";
+  CombatEventType["AllEnemiesDead"] = "AllEnemiesDead";
 })(CombatEventType || (exports.CombatEventType = CombatEventType = {}));
 
 class CombatSystem extends _ecs.System {
@@ -49275,6 +50515,8 @@ class CombatSystem extends _ecs.System {
     _defineProperty(this, "events", new _KefirBus.default("CombatEvents"));
 
     _defineProperty(this, "processNextEntity", () => {
+      this.resolveConflicts();
+
       if (this.entitiesToProcess.length < 1) {
         this.isProcessing = false;
         this.cleanupProcessingAndNotify();
@@ -49346,6 +50588,15 @@ class CombatSystem extends _ecs.System {
       this.kill(e);
     }
 
+    const remainingEntities = this.family.entities;
+
+    if (remainingEntities.length === 1 && remainingEntities[0].getComponent(_CombatC.CombatC).isPlayer) {
+      this.events.emit({
+        type: CombatEventType.AllEnemiesDead
+      });
+      return; // never say processing is finished, so LevelScene doesn't allow more events
+    }
+
     if (this.onProcessingFinished) {
       this.onProcessingFinished();
     }
@@ -49375,6 +50626,43 @@ class CombatSystem extends _ecs.System {
   reset(engine) {
     for (let entity of this.family.entities) {
       entity.getComponent(_CombatC.CombatC).needsToMove = true;
+    }
+  }
+
+  resolveConflicts() {
+    const occupants = {};
+
+    for (const e of this.family.entities) {
+      const pos = e.getComponent(_sprite.SpriteC).pos;
+      const occupant = occupants[pos.toString()];
+
+      if (occupant) {
+        console.log("Conflict between", e, "and", occupant);
+        this.resolveConflict(e, occupant, pos);
+      } else {
+        occupants[pos.toString()] = e;
+      }
+    }
+  }
+
+  resolveConflict(e, occupant, pos) {
+    const freeFloorCells = this.tilemap.getCells(cell => {
+      return cell.index === _assets.EnvIndices.FLOOR && !_sprite.SpriteSystem.default.findEntity(cell.pos);
+    });
+    new _RNG.default(`${Math.random()}`).shuffle(freeFloorCells);
+    const spriteC = e.getComponent(_sprite.SpriteC);
+    freeFloorCells.sort((a, b) => {
+      return (0, _tilemap.manhattanDistance)(a.pos.clone().subtract(spriteC.pos)) - (0, _tilemap.manhattanDistance)(b.pos.clone().subtract(spriteC.pos));
+    });
+
+    if (freeFloorCells.length > 0) {
+      spriteC.pos = freeFloorCells[0].pos;
+      const occupantName = occupant.getComponent(_sprite.SpriteC).flavorName;
+      this.ecs.writeMessage(`${spriteC.flavorName} mysteriously moves due to a bug in the game that caused him to collide with ${occupantName}.`);
+
+      _sprite.SpriteSystem.default.cowboyUpdate();
+
+      return freeFloorCells[0];
     }
   }
 
@@ -49513,7 +50801,7 @@ class CombatSystem extends _ecs.System {
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53569,282 +54857,7 @@ const STATS = {
   HIGH_HP: 8
 };
 exports.STATS = STATS;
-},{}],"2d5a54111a7878180d9a627ddc8d0b53":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Stun = void 0;
-
-var _input = require("../../game/input");
-
-var _CombatState = require("../CombatState");
-
-var _CombatC = require("../CombatC");
-
-var _helpers = require("./_helpers");
-
-var _sprite = require("../sprite");
-
-var _assets = require("../../assets");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class Stun {
-  constructor() {
-    _defineProperty(this, "action", _input.Action.B);
-
-    _defineProperty(this, "name", "Stun");
-
-    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
-  }
-
-  check(ctx, target) {
-    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
-    if (!checkResult.success) return checkResult;
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 150;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    spriteC.turnToward(target);
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-    combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_BEFORE);
-    ctx.ecs.spriteSystem.cowboyUpdate();
-    setTimeout(() => {
-      // apply stun to enemy
-      const enemy = ctx.ecs.spriteSystem.findEntity(target);
-      ctx.ecs.combatSystem.applyStun(ctx.entity, enemy, ctx.ecs);
-      combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_AFTER);
-      doNext();
-    }, 300);
-    return true;
-  }
-
-}
-
-exports.Stun = Stun;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SuperpunchFollowthroughMiss = exports.SuperpunchFollowthroughHit = exports.SuperpunchPrepare = void 0;
-
-var _CombatState = require("../CombatState");
-
-var _CombatC = require("../CombatC");
-
-var _direction = require("../direction");
-
-var _helpers = require("./_helpers");
-
-var _sprite = require("../sprite");
-
-var _tilemap = require("../../game/tilemap");
-
-var _stats = require("../stats");
-
-var _CombatS = require("../CombatS");
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class SuperpunchPrepare {
-  constructor() {
-    _defineProperty(this, "name", "Superpunch Prepare");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
-    if (!checkResult.success) return checkResult;
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 101;
-  }
-
-  apply(ctx, target) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-    spriteC.turnToward(target);
-    combatC.setState(_CombatState.CombatState.SuperpunchTelegraph, spriteC);
-    combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
-    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a heavy unblockable punch.`);
-    return false;
-  }
-
-}
-
-exports.SuperpunchPrepare = SuperpunchPrepare;
-
-class SuperpunchFollowthroughHit {
-  constructor() {
-    _defineProperty(this, "name", "Superpunch Followthrough (hit)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-
-    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    const enemy = combatC.superpunchTarget;
-
-    if (!enemy) {
-      return {
-        success: false,
-        message: "No target"
-      };
-    }
-
-    if ((0, _tilemap.isAdjacent)(enemy.getComponent(_sprite.SpriteC).pos, spriteC.pos)) {
-      return {
-        success: true
-      };
-    } else {
-      return {
-        success: false,
-        message: "Enemy is not within superpunching distance"
-      };
-    }
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx, target, doNext) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-    const enemy = combatC.superpunchTarget;
-    if (!enemy) return false;
-    const enemySpriteC = enemy.getComponent(_sprite.SpriteC);
-    const enemyCombatC = enemy.getComponent(_CombatC.CombatC);
-    const enemyPos = enemySpriteC.pos.clone(); // If possible to push enemy (not against a wall), do it
-
-    const didPush = ctx.ecs.combatSystem.push(ctx.entity, enemy, ctx.ecs, 1);
-
-    if (didPush) {
-      spriteC.pos = enemyPos;
-    }
-
-    spriteC.orientation = (0, _direction.getOrientation)(enemySpriteC.pos.clone().subtract(spriteC.pos));
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-    combatC.setState(_CombatState.CombatState.SuperpunchFollowthrough, spriteC);
-    enemyCombatC.setState(_CombatState.CombatState.Stunned, enemySpriteC);
-    ctx.ecs.combatSystem.events.emit({
-      type: _CombatS.CombatEventType.Punch,
-      subject: ctx.entity,
-      object: enemy
-    });
-    ctx.ecs.combatSystem.changeHP(enemy, -_stats.STATS.SUPERPUNCH_DAMAGE);
-    ctx.ecs.writeMessage(`${spriteC.flavorName} lands a massive hit on ${enemySpriteC.flavorName}!`);
-    ctx.ecs.spriteSystem.cowboyUpdate();
-    setTimeout(() => {
-      combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
-      doNext();
-    });
-    return true;
-  }
-
-}
-
-exports.SuperpunchFollowthroughHit = SuperpunchFollowthroughHit;
-
-class SuperpunchFollowthroughMiss {
-  constructor() {
-    _defineProperty(this, "name", "Superpunch Followthrough (miss)");
-
-    _defineProperty(this, "help", "?");
-  }
-
-  check(ctx, target) {
-    if (new SuperpunchFollowthroughHit().check(ctx, target).success) {
-      return {
-        success: false,
-        message: "Superpunch should hit"
-      };
-    }
-
-    if (!(0, _tilemap.isAdjacent)(target, ctx.entity.getComponent(_sprite.SpriteC).pos)) {
-      return {
-        success: false,
-        message: "Not adjacent"
-      };
-    }
-
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
-
-    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
-      return {
-        success: false,
-        message: "Not in the right state"
-      };
-    }
-
-    return {
-      success: true
-    };
-  }
-
-  computeValue(ctx, target) {
-    return 100;
-  }
-
-  apply(ctx) {
-    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
-    const combatC = ctx.entity.getComponent(_CombatC.CombatC); // stumble forward
-
-    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
-
-    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
-    return false;
-  }
-
-}
-
-exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = getHenchmanName;
-
-var _RNG = _interopRequireDefault(require("../game/RNG"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’", "Killer", "Scumbag"];
-const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv", "Pete", "Stu", "Jeff", "Judd", "Dave", "Mike", "Mikey"];
-
-function getHenchmanName() {
-  const rng = new _RNG.default(`${Math.random()}`);
-  return `${rng.choice(adjs)} ${rng.choice(names)}`;
-}
-},{"../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"e2e767bdcbb3fbc301711f9c0ddedc0e":[function(require,module,exports) {
+},{}],"e2e767bdcbb3fbc301711f9c0ddedc0e":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -55016,7 +56029,292 @@ Math // math: package containing random, pow, and seedrandom
 );
 },{"crypto":"d0c8cb413b8a918e0130e85e831bf0d4"}],"d0c8cb413b8a918e0130e85e831bf0d4":[function(require,module,exports) {
 "use strict";
-},{}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
+},{}],"2d5a54111a7878180d9a627ddc8d0b53":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Stun = void 0;
+
+var _input = require("../../game/input");
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _assets = require("../../assets");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class Stun {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.B);
+
+    _defineProperty(this, "name", "Stun");
+
+    _defineProperty(this, "help", "If an enemy is about to strike, counter their move");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 150;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_BEFORE);
+    ctx.ecs.spriteSystem.cowboyUpdate();
+    setTimeout(() => {
+      // apply stun to enemy
+      const enemy = ctx.ecs.spriteSystem.findEntity(target);
+      ctx.ecs.combatSystem.applyStun(ctx.entity, enemy, ctx.ecs);
+      combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_STUN_AFTER);
+      doNext();
+    }, 300);
+    return true;
+  }
+
+}
+
+exports.Stun = Stun;
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SuperpunchFollowthroughMiss = exports.SuperpunchFollowthroughHit = exports.SuperpunchPrepare = void 0;
+
+var _CombatState = require("../CombatState");
+
+var _CombatC = require("../CombatC");
+
+var _direction = require("../direction");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _tilemap = require("../../game/tilemap");
+
+var _stats = require("../stats");
+
+var _CombatS = require("../CombatS");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class SuperpunchPrepare {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Prepare");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 101;
+  }
+
+  apply(ctx, target) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    spriteC.turnToward(target);
+    combatC.setState(_CombatState.CombatState.SuperpunchTelegraph, spriteC);
+    combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} winds up for a heavy unblockable punch.`);
+    return false;
+  }
+
+}
+
+exports.SuperpunchPrepare = SuperpunchPrepare;
+
+class SuperpunchFollowthroughHit {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Followthrough (hit)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    const enemy = combatC.superpunchTarget;
+
+    if (!enemy) {
+      return {
+        success: false,
+        message: "No target"
+      };
+    }
+
+    if ((0, _tilemap.isAdjacent)(enemy.getComponent(_sprite.SpriteC).pos, spriteC.pos)) {
+      return {
+        success: true
+      };
+    }
+
+    const alternativeEnemy = ctx.ecs.spriteSystem.findEntity(spriteC.pos.clone().add((0, _direction.getDirectionVector)(spriteC.orientation)));
+
+    if (alternativeEnemy) {
+      // change punch target to whoever is in front of the punch, no matter what team they're on
+      combatC.superpunchTarget = alternativeEnemy;
+      return {
+        success: true
+      };
+    } else {
+      return {
+        success: false,
+        message: "Enemy is not within superpunching distance"
+      };
+    }
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const enemy = combatC.superpunchTarget;
+    if (!enemy) return false;
+    const enemySpriteC = enemy.getComponent(_sprite.SpriteC);
+    const enemyCombatC = enemy.getComponent(_CombatC.CombatC);
+    const enemyPos = enemySpriteC.pos.clone(); // If possible to push enemy (not against a wall), do it
+
+    const didPush = ctx.ecs.combatSystem.push(ctx.entity, enemy, ctx.ecs, 1);
+
+    if (didPush) {
+      spriteC.pos = enemyPos;
+    }
+
+    spriteC.orientation = (0, _direction.getOrientation)(enemySpriteC.pos.clone().subtract(spriteC.pos));
+    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    combatC.setState(_CombatState.CombatState.SuperpunchFollowthrough, spriteC);
+    enemyCombatC.setState(_CombatState.CombatState.Stunned, enemySpriteC);
+    ctx.ecs.combatSystem.events.emit({
+      type: _CombatS.CombatEventType.Punch,
+      subject: ctx.entity,
+      object: enemy
+    });
+    ctx.ecs.combatSystem.changeHP(enemy, -_stats.STATS.SUPERPUNCH_DAMAGE);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} lands a massive hit on ${enemySpriteC.flavorName}!`);
+    ctx.ecs.spriteSystem.cowboyUpdate();
+    setTimeout(() => {
+      combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+      doNext();
+    });
+    return true;
+  }
+
+}
+
+exports.SuperpunchFollowthroughHit = SuperpunchFollowthroughHit;
+
+class SuperpunchFollowthroughMiss {
+  constructor() {
+    _defineProperty(this, "name", "Superpunch Followthrough (miss)");
+
+    _defineProperty(this, "help", "?");
+  }
+
+  check(ctx, target) {
+    if (new SuperpunchFollowthroughHit().check(ctx, target).success) {
+      return {
+        success: false,
+        message: "Superpunch should hit"
+      };
+    }
+
+    if (!(0, _tilemap.isAdjacent)(target, ctx.entity.getComponent(_sprite.SpriteC).pos)) {
+      return {
+        success: false,
+        message: "Not adjacent"
+      };
+    }
+
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+
+    if (combatC.state != _CombatState.CombatState.SuperpunchTelegraph) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 100;
+  }
+
+  apply(ctx) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC); // stumble forward
+
+    combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
+
+    spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
+    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
+    return false;
+  }
+
+}
+
+exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"9eb4fc62c76a2fd6f764f9b4b50ee68a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = getHenchmanName;
+
+var _RNG = _interopRequireDefault(require("../game/RNG"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const adjs = ["Sleepy", "Snotty", "Sleazy", "Bent", "Twisted", "Tough", "Little", "Big", "Fraidy", "Boogie", "Sneezin’", "Flatulent", "Lazy", "Cheatin’", "Belchin’", "Wind-up", "Yammerin’", "Killer", "Scumbag"];
+const names = ["Joe", "Sam", "Marcus", "Alf", "Fred", "Ted", "Bill", "Will", "Biff", "Samuel", "Jim", "James", "Steve", "Marv", "Pete", "Stu", "Jeff", "Judd", "Dave", "Mike", "Mikey"];
+
+function getHenchmanName() {
+  const rng = new _RNG.default(`${Math.random()}`);
+  return `${rng.choice(adjs)} ${rng.choice(names)}`;
+}
+},{"../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -55030,10 +56328,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 class AnimationHandler {
   constructor() {
     _defineProperty(this, "animations", new Array());
+
+    _defineProperty(this, "lastT", performance.now());
   }
 
   tick(dtMs) {
-    const dt = dtMs;
+    const now = performance.now();
+    const dt = (now - this.lastT) / 1000;
+    this.lastT = now;
     const nextAnimations = new Array();
 
     for (let animation of this.animations) {
