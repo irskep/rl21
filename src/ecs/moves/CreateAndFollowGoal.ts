@@ -6,6 +6,7 @@ import { SpriteC } from "../sprite";
 import { GoalType } from "../Goal";
 import { findPath } from "./findPath";
 import { PlannedWalk } from "./PlannedWalk";
+import { isAdjacent } from "../../game/tilemap";
 
 export class CreateAndFollowGoal implements Move {
   name = "CreateAndFollowGoal";
@@ -17,7 +18,11 @@ export class CreateAndFollowGoal implements Move {
     if (combatC.goal) {
       if (
         combatC.goal.type === GoalType.HuntPlayer &&
-        combatC.goal.path.length < 1
+        (combatC.goal.path.length < 1 ||
+          !isAdjacent(
+            combatC.goal.path[combatC.goal.path.length - 1],
+            ctx.ecs.player.getComponent(SpriteC).pos
+          ))
       ) {
         console.log("Nullifying goal on", ctx.entity);
         combatC.goal = null;

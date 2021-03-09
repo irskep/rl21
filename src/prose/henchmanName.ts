@@ -20,6 +20,7 @@ const adjs: string[] = [
   "Yammerin’",
   "Killer",
   "Scumbag",
+  "Bad",
 ];
 
 const names: string[] = [

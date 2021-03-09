@@ -1,10 +1,10 @@
 import { Engine, Entity } from "@nova-engine/ecs";
 import { Container } from "pixi.js";
-import { SpriteIndices } from "../assets";
+import { EnvIndices, SpriteIndices } from "../assets";
 import getID from "../getID";
 import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./CombatS";
@@ -13,6 +13,8 @@ import { CombatTrait } from "./CombatTrait";
 import { Tilemap } from "../game/tilemap";
 import getHenchmanName from "../prose/henchmanName";
 import { STATS } from "./stats";
+import RNG from "../game/RNG";
+import { DIFFICULTIES } from "./difficulties";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -81,6 +83,7 @@ export function makeECS(
   writeMessage: (msg: string) => void,
   n: number
 ): ECS {
+  const rng = new RNG(`${Math.random()}`);
   const engine = new Engine();
 
   const spriteSystem = new SpriteSystem(game, container);
@@ -89,27 +92,52 @@ export function makeECS(
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
 
-  const player = makePlayer(
-    new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 2),
-    0
-  );
+  const skipSize = 5;
+  let availableCells = new Array<Vector>();
+  for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
+    for (let skipY = 0; skipY + skipSize <= tilemap.size.y; skipY += skipSize) {
+      const areaCells = new Array<Vector>();
+      for (let x = skipX; x < skipX + skipSize; x++) {
+        for (let y = skipY; y < skipY + skipSize; y++) {
+          const cellPos = new Vector(x, y);
+          if (tilemap.getCell(cellPos)?.index === EnvIndices.FLOOR) {
+            areaCells.push(cellPos);
+          }
+        }
+      }
+      rng.shuffle(areaCells);
+      for (let i = 0; i < 4; i++) {
+        const wallPos = areaCells.shift()!;
+        const cell = tilemap.getCell(wallPos)!;
+        cell.index = EnvIndices.WALL;
+      }
+
+      availableCells = availableCells.concat(areaCells);
+    }
+  }
+  rng.shuffle(availableCells);
+
+  const player = makePlayer(availableCells.shift()!, 0);
   engine.addEntity(player);
 
-  engine.addEntity(
-    makeThug(new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2)
-  );
-  // engine.addEntity(
-  //   makeArmoredThug(
-  //     new Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5),
-  //     2
-  //   )
-  // );
-  // engine.addEntity(
-  //   makeTitanThug(
-  //     new Vector(Math.floor(tilemap.size.x / 2 - 2), tilemap.size.y - 5),
-  //     2
-  //   )
-  // );
+  const difficulty = DIFFICULTIES[n];
+  const orientations = [0, 0.5, 1, 1, 5, 2, 2.5, 3, 3.5];
+
+  for (let i = 0; i < difficulty.numThugs; i++) {
+    engine.addEntity(
+      makeThug(availableCells.shift()!, rng.choice(orientations))
+    );
+  }
+  for (let i = 0; i < difficulty.numArmoredThugs; i++) {
+    engine.addEntity(
+      makeArmoredThug(availableCells.shift()!, rng.choice(orientations))
+    );
+  }
+  for (let i = 0; i < difficulty.numTitanThugs; i++) {
+    engine.addEntity(
+      makeTitanThug(availableCells.shift()!, rng.choice(orientations))
+    );
+  }
 
   const ecs = {
     engine: engine,

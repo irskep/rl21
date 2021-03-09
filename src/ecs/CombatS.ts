@@ -181,7 +181,7 @@ export class CombatSystem extends System {
       // there are no more, in which case process immediately (which ends the
       // loop)
       if (this.entitiesToProcess.length > 0) {
-        setTimeout(this.processNextEntity, 300);
+        setTimeout(this.processNextEntity, 200);
       } else {
         this.processNextEntity();
       }

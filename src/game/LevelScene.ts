@@ -143,10 +143,10 @@ export class LevelScene implements GameScene {
         const cellSprite = new Sprite();
         const cell = this.map.contents[y][x];
         cellSprite.texture = this.game.filmstrips.env[cell.index];
+        cell.sprite = cellSprite;
         cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
         cellSprite.interactive = true;
         this.bindEvents(cell, cellSprite);
-        cell.sprite = cellSprite;
         this.tilemapContainer.addChild(cellSprite);
       }
     }
@@ -161,6 +161,7 @@ export class LevelScene implements GameScene {
       this.n
     );
     this.ecs.combatSystem.tilemap = this.map;
+    this.updateTileSprites();
     this.ecs.engine.update(1);
     this.updateHUDText();
     this.updateHearts();
@@ -193,7 +194,7 @@ export class LevelScene implements GameScene {
       0,
       0,
       this.screenSize.x - this.gameAreaContainer.width,
-      this.screenSize.y - 60
+      this.gameAreaContainer.height + this.gameAreaContainer.position.y
     );
     this.messageLogBg.endFill();
 
@@ -229,13 +230,21 @@ export class LevelScene implements GameScene {
 
   exit() {
     console.log("exit", this);
-    // Mousetrap.unbind(["enter", "space"]);
     this.game.app.ticker.remove(this.gameLoop);
     this.game.app.stage.removeChild(this.container);
   }
 
+  updateTileSprites() {
+    for (let y = 0; y < this.map.size.y; y++) {
+      for (let x = 0; x < this.map.size.x; x++) {
+        const cell = this.map.contents[y][x];
+        cell.sprite!.texture = this.game.filmstrips.env[cell.index];
+      }
+    }
+  }
+
   handleCombatEvent(event: CombatEvent) {
-    console.log(event);
+    console.log("Combat event:", event);
     switch (event.type) {
       case CombatEventType.HPChanged:
         if (event.subject === this.ecs.player) {
@@ -311,7 +320,7 @@ export class LevelScene implements GameScene {
   }
 
   updateHoveredEntity(e: Entity | null) {
-    if (!e) {
+    if (!e || e === this.ecs.player) {
       this.mouseoverContainer.visible = false;
       return;
     }
