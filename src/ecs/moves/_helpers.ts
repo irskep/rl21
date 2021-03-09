@@ -13,7 +13,7 @@ export function ensureTargetClear(
   const cell = ctx.ecs.tilemap.getCell(target);
   if (!cell || cell.index !== EnvIndices.FLOOR)
     return { success: false, message: "Target is not floor" };
-  if (ctx.ecs.spriteSystem.findEntity(target) !== null)
+  if (ctx.ecs.spriteSystem.findCombatEntity(target) !== null)
     return { success: false, message: "Target is occupied" };
   return { success: true };
 }
@@ -25,7 +25,7 @@ export function ensureTargetIsEnemy(
   const cell = ctx.ecs.tilemap.getCell(target);
   if (!cell || cell.index !== EnvIndices.FLOOR)
     return { success: false, message: "Target is not floor" };
-  const targetEntity = ctx.ecs.spriteSystem.findEntity(target);
+  const targetEntity = ctx.ecs.spriteSystem.findCombatEntity(target);
   if (!targetEntity) {
     return { success: false, message: "Target does not contain an entity" };
   }
@@ -42,7 +42,7 @@ export function ensureTargetExists(
   const cell = ctx.ecs.tilemap.getCell(target);
   if (!cell || cell.index !== EnvIndices.FLOOR)
     return { success: false, message: "Target is not floor" };
-  const targetEntity = ctx.ecs.spriteSystem.findEntity(target);
+  const targetEntity = ctx.ecs.spriteSystem.findCombatEntity(target);
   if (!targetEntity) {
     return { success: false, message: "Target does not contain an entity" };
   }

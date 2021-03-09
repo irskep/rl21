@@ -36,7 +36,7 @@ export class Stun implements Move {
 
     setTimeout(() => {
       // apply stun to enemy
-      const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+      const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
       ctx.ecs.combatSystem.applyStun(ctx.entity, enemy, ctx.ecs);
 
       combatC.setState(

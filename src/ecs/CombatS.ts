@@ -200,7 +200,7 @@ export class CombatSystem extends System {
     const freeFloorCells = this.tilemap.getCells((cell) => {
       return (
         cell.index === EnvIndices.FLOOR &&
-        !SpriteSystem.default.findEntity(cell.pos)
+        !SpriteSystem.default.findCombatEntity(cell.pos)
       );
     });
     new RNG(`${Math.random()}`).shuffle(freeFloorCells);

@@ -98,18 +98,18 @@ export function makeECS(
   engine.addEntity(
     makeThug(new Vector(Math.floor(tilemap.size.x / 2), tilemap.size.y - 5), 2)
   );
-  engine.addEntity(
-    makeArmoredThug(
-      new Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5),
-      2
-    )
-  );
-  engine.addEntity(
-    makeTitanThug(
-      new Vector(Math.floor(tilemap.size.x / 2 - 2), tilemap.size.y - 5),
-      2
-    )
-  );
+  // engine.addEntity(
+  //   makeArmoredThug(
+  //     new Vector(Math.floor(tilemap.size.x / 2 + 2), tilemap.size.y - 5),
+  //     2
+  //   )
+  // );
+  // engine.addEntity(
+  //   makeTitanThug(
+  //     new Vector(Math.floor(tilemap.size.x / 2 - 2), tilemap.size.y - 5),
+  //     2
+  //   )
+  // );
 
   const ecs = {
     engine: engine,

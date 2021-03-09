@@ -75,7 +75,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
 
     combatC.setState(CombatState.PunchFollowthrough, spriteC);
 
-    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
     const enemySpriteC = enemy.getComponent(SpriteC);
     // face attacker
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;

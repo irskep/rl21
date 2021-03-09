@@ -302,7 +302,9 @@ export class LevelScene implements GameScene {
     }
 
     if (pos) {
-      this.updateHoveredEntity(this.ecs.spriteSystem.findEntity(pos) || null);
+      this.updateHoveredEntity(
+        this.ecs.spriteSystem.findCombatEntity(pos) || null
+      );
     } else {
       this.updateHoveredEntity(null);
     }

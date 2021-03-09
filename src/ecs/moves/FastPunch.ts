@@ -16,7 +16,7 @@ export class FastPunch implements Move {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
 
-    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
     const enemyState = enemy.getComponent(CombatC).state;
     switch (enemyState) {
       case CombatState.Prone:
@@ -44,7 +44,7 @@ export class FastPunch implements Move {
       const combatC = ctx.entity.getComponent(CombatC);
       combatC.setState(CombatState.PunchFollowthrough, spriteC);
 
-      const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+      const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
       const enemySpriteC = enemy.getComponent(SpriteC);
       // face attacker
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;

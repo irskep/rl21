@@ -7,6 +7,7 @@ import {
   stateToHenchmanSpriteIndex,
 } from "./CombatState";
 import { CombatTrait } from "./CombatTrait";
+import { Goal } from "./Goal";
 
 export class CombatC implements Component {
   state = CombatState.Standing;
@@ -18,6 +19,7 @@ export class CombatC implements Component {
   recoveryTimer = 0;
   hpMax = 10;
   hp = 10;
+  goal: Goal | null = null;
 
   superpunchTarget: Entity | null = null;
 

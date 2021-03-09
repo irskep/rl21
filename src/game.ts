@@ -78,8 +78,8 @@ export default class Game implements GameInterface {
       }
     }
 
-    this.pushScene(new MenuScene(this));
-    // this.pushScene(new LevelScene(this, 1));
+    // this.pushScene(new MenuScene(this));
+    this.pushScene(new LevelScene(this, 1));
   };
 
   teardown() {

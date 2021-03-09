@@ -14,6 +14,7 @@ import {
   SuperpunchFollowthroughMiss,
   SuperpunchPrepare,
 } from "./Superpunch";
+import { CreateAndFollowGoal } from "./CreateAndFollowGoal";
 
 export const BM_MOVES: Move[] = [
   new Wait(),
@@ -24,6 +25,7 @@ export const BM_MOVES: Move[] = [
 ];
 
 export const HENCHMAN_MOVES: Move[] = [
+  new CreateAndFollowGoal(),
   new TelegraphedPunchPrepare(),
   new TelegraphedPunchFollowthroughHit(),
   new TelegraphedPunchFollowthroughMiss(),
@@ -31,6 +33,7 @@ export const HENCHMAN_MOVES: Move[] = [
 ];
 
 export const TITAN_MOVES: Move[] = [
+  new CreateAndFollowGoal(),
   new SuperpunchPrepare(),
   new SuperpunchFollowthroughHit(),
   new SuperpunchFollowthroughMiss(),

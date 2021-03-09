@@ -27,7 +27,7 @@ export class Counter implements Move {
       return { success: false, message: "Not adjacent" };
     }
 
-    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
     const enemyState = enemy.getComponent(CombatC).state;
     switch (enemyState) {
       case CombatState.PunchTelegraph:
@@ -47,7 +47,7 @@ export class Counter implements Move {
     spriteC.turnToward(target);
 
     // swap positions, prone the enemy
-    const enemy = ctx.ecs.spriteSystem.findEntity(target)!;
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
     const enemyCombatC = enemy.getComponent(CombatC);
     const enemySpriteC = enemy.getComponent(SpriteC);
 

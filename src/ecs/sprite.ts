@@ -9,6 +9,7 @@ import {
 import { Container, Sprite, Text } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { GameInterface } from "../types";
+import { CombatC } from "./CombatC";
 import { DIRECTIONS } from "./direction";
 
 export class SpriteC implements Component {
@@ -145,10 +146,12 @@ export class SpriteSystem extends System {
 
   /* helpers */
 
-  findEntity(pos: AbstractVector): Entity | null {
+  findCombatEntity(pos: AbstractVector): Entity | null {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
-      if (spriteC.pos.equals(pos)) return entity;
+      if (spriteC.pos.equals(pos) && entity.getComponent(CombatC)) {
+        return entity;
+      }
     }
     return null;
   }

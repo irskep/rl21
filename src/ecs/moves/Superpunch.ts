@@ -33,7 +33,7 @@ export class SuperpunchPrepare implements Move {
     const combatC = ctx.entity.getComponent(CombatC);
     spriteC.turnToward(target);
     combatC.setState(CombatState.SuperpunchTelegraph, spriteC);
-    combatC.superpunchTarget = ctx.ecs.spriteSystem.findEntity(target);
+    combatC.superpunchTarget = ctx.ecs.spriteSystem.findCombatEntity(target);
     ctx.ecs.writeMessage(
       `${spriteC.flavorName} winds up for a heavy unblockable punch.`
     );
@@ -62,7 +62,7 @@ export class SuperpunchFollowthroughHit implements Move {
       return { success: true };
     }
 
-    const alternativeEnemy = ctx.ecs.spriteSystem.findEntity(
+    const alternativeEnemy = ctx.ecs.spriteSystem.findCombatEntity(
       spriteC.pos.clone().add(getDirectionVector(spriteC.orientation))
     );
     if (alternativeEnemy) {
