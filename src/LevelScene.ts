@@ -18,7 +18,7 @@ import { GameScene, GameInterface } from "./types";
 import { Move, MoveCheckResult } from "./ecs/moves/_types";
 import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
-import { SpriteC, SpriteSystem } from "./ecs/sprite";
+import { SpriteC } from "./ecs/sprite";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -33,6 +33,7 @@ export class LevelScene implements GameScene {
   hoverSprite = new Sprite();
   dbgText = new Text("");
   inputHintText = new Text("");
+  messageLogBg = new Graphics();
   messageLog = new Text("");
   messages = new Array<string>();
 
@@ -76,6 +77,7 @@ export class LevelScene implements GameScene {
 
     this.game.app.stage.addChild(this.container);
     this.writeMessage("Atman enters the room.");
+    console.log(this.screenSize);
   }
 
   addChildren() {
@@ -111,7 +113,8 @@ export class LevelScene implements GameScene {
     this.hudContainer.addChild(this.inputHintText);
 
     this.messageLog.style = new TextStyle(consoleStyle);
-    this.hudContainer.addChild(this.messageLog);
+    this.hudContainer.addChild(this.messageLogBg);
+    this.messageLogBg.addChild(this.messageLog);
 
     this.mouseoverText.style = new TextStyle(consoleStyle);
     this.mouseoverContainer.addChild(this.mouseoverBg);
@@ -160,7 +163,17 @@ export class LevelScene implements GameScene {
       this.gameAreaContainer.position.y + this.gameAreaContainer.height
     );
     this.inputHintText.style.wordWrapWidth = this.screenSize.x;
-    this.messageLog.position.set(this.gameAreaContainer.width + 10, 10);
+    this.messageLogBg.position.set(this.gameAreaContainer.width, 0);
+    this.messageLog.position.set(10, 10);
+    this.messageLogBg.beginFill(0x333366);
+    this.messageLogBg.drawRect(
+      0,
+      0,
+      this.screenSize.x - this.gameAreaContainer.width,
+      this.screenSize.y - 60
+    );
+    this.messageLogBg.endFill();
+
     this.messageLog.style.wordWrapWidth =
       this.screenSize.x - this.gameAreaContainer.width - 10;
   }
