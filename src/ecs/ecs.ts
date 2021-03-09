@@ -78,7 +78,8 @@ export function makeECS(
   game: GameInterface,
   container: Container,
   tilemap: Tilemap,
-  writeMessage: (msg: string) => void
+  writeMessage: (msg: string) => void,
+  n: number
 ): ECS {
   const engine = new Engine();
 

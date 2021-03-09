@@ -5,6 +5,7 @@ import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
 import filmstrip from "./filmstrip";
 import { LevelScene } from "./game/LevelScene";
+import { MenuScene } from "./MenuScene";
 import { GameScene, GameInterface } from "./types";
 
 export default class Game implements GameInterface {
@@ -77,8 +78,8 @@ export default class Game implements GameInterface {
       }
     }
 
-    // this.pushScene(new MenuScene(this));
-    this.pushScene(new LevelScene(this));
+    this.pushScene(new MenuScene(this));
+    // this.pushScene(new LevelScene(this, 1));
   };
 
   teardown() {

@@ -24,6 +24,7 @@ import {
   AnimationHandler,
   makeDriftAndFadeAnimation,
 } from "./AnimationHandler";
+import { MenuScene } from "../MenuScene";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -61,7 +62,7 @@ export class LevelScene implements GameScene {
   hoveredPosDuringUpdate: Vector | null = null;
   hoveredEntity: Entity | null = null;
 
-  constructor(private game: GameInterface) {
+  constructor(private game: GameInterface, public n: number) {
     this.container.interactive = true;
   }
 
@@ -152,7 +153,13 @@ export class LevelScene implements GameScene {
 
     this.layoutScreenElements();
 
-    this.ecs = makeECS(this.game, this.arena, this.map, this.writeMessage);
+    this.ecs = makeECS(
+      this.game,
+      this.arena,
+      this.map,
+      this.writeMessage,
+      this.n
+    );
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateHUDText();
@@ -251,7 +258,17 @@ export class LevelScene implements GameScene {
         break;
       case CombatEventType.Die:
         if (event.subject === this.ecs.player) {
-          this.game.replaceScenes([new LevelScene(this.game)]);
+          const victorySprite = new Sprite(this.game.images["youlose"]);
+          victorySprite.anchor.set(0.5, 0.5);
+          victorySprite.position.set(
+            this.hudContainer.width / 2,
+            this.hudContainer.height / 2
+          );
+          this.hudContainer.addChild(victorySprite);
+
+          setTimeout(() => {
+            this.game.replaceScenes([new MenuScene(this.game)]);
+          }, 2000);
         }
         break;
       case CombatEventType.AllEnemiesDead:
@@ -264,7 +281,7 @@ export class LevelScene implements GameScene {
         this.hudContainer.addChild(victorySprite);
 
         setTimeout(() => {
-          this.game.replaceScenes([new LevelScene(this.game)]);
+          this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
         }, 2000);
     }
   }

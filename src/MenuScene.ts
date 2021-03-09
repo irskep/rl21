@@ -1,5 +1,6 @@
 import Mousetrap from "mousetrap";
 import * as PIXI from "pixi.js";
+import { LevelScene } from "./game/LevelScene";
 import { GameScene, GameInterface } from "./types";
 export class MenuScene implements GameScene {
   container = new PIXI.Container();
@@ -29,7 +30,7 @@ export class MenuScene implements GameScene {
       );
       this.container.addChild(title);
 
-      const instructions = new PIXI.Text("Press space to start");
+      const instructions = new PIXI.Text("Click here to start");
       instructions.style = new PIXI.TextStyle({
         fontSize: this.game.app.screen.width / 40,
         fontFamily: "Barlow Condensed",
@@ -46,7 +47,7 @@ export class MenuScene implements GameScene {
 
       instructions.interactive = true;
       title.interactive = true;
-      (title as any).on("click", this.handleTouchStart);
+      (instructions as any).on("click", this.handleTouchStart);
     }
 
     this.game.app.stage.addChild(this.container);
@@ -64,10 +65,10 @@ export class MenuScene implements GameScene {
   };
 
   handleTouchStart = () => {
-    // this.game.pushScene(new SongScene(this.app, this.game, true));
+    this.game.replaceScenes([new LevelScene(this.game, 1)]);
   };
 
   handleKeyPress = () => {
-    // this.game.pushScene(new SongScene(this.app, this.game, false));
+    this.game.replaceScenes([new LevelScene(this.game, 1)]);
   };
 }
