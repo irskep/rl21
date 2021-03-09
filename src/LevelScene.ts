@@ -8,7 +8,7 @@ import {
   ITextStyle,
   Graphics,
 } from "pixi.js";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "./assets";
 import { Cell, Tilemap } from "./tilemap";
 import { makeECS } from "./ecs/ecs";
@@ -18,19 +18,21 @@ import { GameScene, GameInterface } from "./types";
 import { Move, MoveCheckResult } from "./ecs/moves/_types";
 import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
-import { SpriteC } from "./ecs/sprite";
+import { SpriteC, SpriteSystem } from "./ecs/sprite";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
   container = new Container();
 
+  hudContainer = new Container();
+  gameAreaContainer = new Container();
   tilemapContainer = new Container();
   arena = new Container();
   overlayContainer = new Container();
-  hudContainer = new Container();
 
   hoverSprite = new Sprite();
   dbgText = new Text("");
+  inputHintText = new Text("");
   messageLog = new Text("");
   messages = new Array<string>();
 
@@ -53,6 +55,16 @@ export class LevelScene implements GameScene {
     this.container.interactive = true;
   }
 
+  get screenSize(): AbstractVector {
+    let width = this.game.app.screen.width;
+    let height = width * (3 / 4);
+    if (height > this.game.app.screen.height) {
+      height = this.game.app.screen.height;
+      width = height * (4 / 3);
+    }
+    return new Vector(width, height);
+  }
+
   enter() {
     console.log("enter", this);
     // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
@@ -67,9 +79,10 @@ export class LevelScene implements GameScene {
   }
 
   addChildren() {
-    this.container.addChild(this.tilemapContainer);
-    this.container.addChild(this.arena);
-    this.container.addChild(this.overlayContainer);
+    this.container.addChild(this.gameAreaContainer);
+    this.gameAreaContainer.addChild(this.tilemapContainer);
+    this.gameAreaContainer.addChild(this.arena);
+    this.gameAreaContainer.addChild(this.overlayContainer);
     this.container.addChild(this.hudContainer);
 
     this.tilemapContainer.interactive = true;
@@ -91,17 +104,13 @@ export class LevelScene implements GameScene {
       wordWrapWidth: 320,
     };
 
-    this.dbgText.position.set(10, 10);
     this.dbgText.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.dbgText);
 
-    this.messageLog.anchor.set(1, 0);
-    this.messageLog.position.set(this.game.app.screen.width - 10, 10);
-    this.messageLog.style = new TextStyle({
-      ...consoleStyle,
-      align: "right",
-      wordWrapWidth: 400,
-    });
+    this.inputHintText.style = new TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.inputHintText);
+
+    this.messageLog.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.messageLog);
 
     this.mouseoverText.style = new TextStyle(consoleStyle);
@@ -123,10 +132,33 @@ export class LevelScene implements GameScene {
       }
     }
 
+    this.layoutScreenElements();
+
     this.ecs = makeECS(this.game, this.arena, this.map, this.writeMessage);
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
-    this.updateDbgText();
+    this.updateHUDText();
+  }
+
+  private layoutScreenElements() {
+    /* set up whole-screen layout */
+    const gameAreaMask = new Graphics();
+    gameAreaMask.beginFill(0xffffff);
+    gameAreaMask.drawRect(
+      0,
+      0,
+      this.screenSize.x - 320,
+      this.screenSize.y - 60
+    );
+    gameAreaMask.endFill();
+    this.gameAreaContainer.mask = gameAreaMask;
+
+    this.dbgText.position.set(10, 10);
+    this.inputHintText.position.set(10, this.gameAreaContainer.height);
+    this.inputHintText.style.wordWrapWidth = this.screenSize.x;
+    this.messageLog.position.set(this.gameAreaContainer.width + 10, 10);
+    this.messageLog.style.wordWrapWidth =
+      this.screenSize.x - this.gameAreaContainer.width - 10;
   }
 
   bindEvents(cell: Cell, cellSprite: Sprite) {
@@ -163,7 +195,7 @@ export class LevelScene implements GameScene {
   updateHoverCell(pos: Vector | null) {
     this.hoveredPos = pos;
     this.updatePossibleMoves();
-    this.updateDbgText();
+    this.updateHUDText();
 
     if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
       this.hoverSprite.visible = true;
@@ -242,18 +274,18 @@ export class LevelScene implements GameScene {
     });
   }
 
-  updateDbgText() {
+  updateHUDText() {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
     const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
-    this.dbgText.text =
-      `${this.hoveredPos || "(no selection)"}\n` +
+    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
+    this.inputHintText.text =
       okMoves
-        .map(([move]) => `${getActionText(move.action!)}: ${move.name}`) // (${move.help})`)
-        .join("\n") +
-      "\n\nOmitted:\n" +
+        .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
+        .join("; ") +
+      "\n\nOmitted: " +
       notOkMoves
         .map(([move, result]) => `${move.name} (${result.message || "?"})`)
-        .join("\n");
+        .join("; ");
   }
 
   writeMessage = (msg: string) => {
