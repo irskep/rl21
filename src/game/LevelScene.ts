@@ -25,6 +25,7 @@ import {
   makeDriftAndFadeAnimation,
 } from "./AnimationHandler";
 import { MenuScene } from "../MenuScene";
+import { DIFFICULTIES } from "../ecs/difficulties";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -74,6 +75,14 @@ export class LevelScene implements GameScene {
       width = height * (4 / 3);
     }
     return new Vector(width, height);
+  }
+
+  goToNextScene() {
+    if (this.n < DIFFICULTIES.length - 2) {
+      this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
+    } else {
+      this.game.replaceScenes([new MenuScene(this.game)]);
+    }
   }
 
   enter() {
@@ -290,7 +299,7 @@ export class LevelScene implements GameScene {
         this.hudContainer.addChild(victorySprite);
 
         setTimeout(() => {
-          this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
+          this.goToNextScene();
         }, 2000);
     }
   }
