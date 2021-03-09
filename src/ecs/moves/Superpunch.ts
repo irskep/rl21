@@ -60,6 +60,15 @@ export class SuperpunchFollowthroughHit implements Move {
 
     if (isAdjacent(enemy.getComponent(SpriteC).pos, spriteC.pos)) {
       return { success: true };
+    }
+
+    const alternativeEnemy = ctx.ecs.spriteSystem.findEntity(
+      spriteC.pos.clone().add(getDirectionVector(spriteC.orientation))
+    );
+    if (alternativeEnemy) {
+      // change punch target to whoever is in front of the punch, no matter what team they're on
+      combatC.superpunchTarget = alternativeEnemy;
+      return { success: true };
     } else {
       return {
         success: false,
