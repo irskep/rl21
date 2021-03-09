@@ -16,6 +16,7 @@ export class CombatC implements Component {
   moves: Move[] = [];
   isPlayer = false;
   recoveryTimer = 0;
+  hp = 10;
 
   superpunchTarget: Entity | null = null;
 

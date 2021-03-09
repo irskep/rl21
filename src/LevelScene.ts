@@ -7,6 +7,7 @@ import {
   Text,
   ITextStyle,
   Graphics,
+  Texture,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "./assets";
@@ -40,6 +41,9 @@ export class LevelScene implements GameScene {
   mouseoverContainer = new Container();
   mouseoverBg = new Graphics();
   mouseoverText = new Text("");
+
+  heartsContainer = new Container();
+  heartSprites: Sprite[] = [];
 
   /* state management */
 
@@ -112,6 +116,8 @@ export class LevelScene implements GameScene {
     this.inputHintText.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.inputHintText);
 
+    this.hudContainer.addChild(this.heartsContainer);
+
     this.messageLog.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.messageLogBg);
     this.messageLogBg.addChild(this.messageLog);
@@ -141,6 +147,7 @@ export class LevelScene implements GameScene {
     this.ecs.combatSystem.tilemap = this.map;
     this.ecs.engine.update(1);
     this.updateHUDText();
+    this.updateHearts();
   }
 
   private layoutScreenElements() {
@@ -176,6 +183,8 @@ export class LevelScene implements GameScene {
 
     this.messageLog.style.wordWrapWidth =
       this.screenSize.x - this.gameAreaContainer.width - 10;
+
+    this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
   }
 
   bindEvents(cell: Cell, cellSprite: Sprite) {
@@ -297,14 +306,41 @@ export class LevelScene implements GameScene {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
     const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
     this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
-    this.inputHintText.text =
-      okMoves
-        .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
-        .join("; ") +
-      "\n\nOmitted: " +
+    let firstLine = okMoves
+      .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
+      .join("; ");
+    if (okMoves.length === 0) {
+      firstLine = "No moves available at selected position";
+    }
+
+    const secondLine =
+      "Omitted: " +
       notOkMoves
         .map(([move, result]) => `${move.name} (${result.message || "?"})`)
         .join("; ");
+
+    this.inputHintText.text = firstLine + "\n\n" + secondLine;
+  }
+
+  updateHearts() {
+    const combatC = this.ecs.player.getComponent(CombatC);
+    const halfHP = combatC.hp / 2;
+    for (let i = 0; i < Math.ceil(halfHP); i++) {
+      console.log("sprite", i);
+      let sprite: Sprite;
+      if (i >= this.heartSprites.length) {
+        sprite = new Sprite(this.game.assets["heart"]![0]);
+        sprite.position.set(i * 21, 0);
+        this.heartSprites.push(sprite);
+        this.heartsContainer.addChild(sprite);
+      } else {
+        sprite = this.heartSprites[i];
+      }
+
+      if (i + 1 == Math.ceil(halfHP)) {
+        sprite.texture = this.game.assets["heart"]![halfHP % 1 === 0 ? 0 : 1];
+      }
+    }
   }
 
   writeMessage = (msg: string) => {
@@ -319,13 +355,14 @@ export class LevelScene implements GameScene {
     /* hi */
   };
 
-  tick() {
+  tick = () => {
     this.ecs.combatSystem.onProcessingFinished = () => {
       console.log("Finished with", this.hoveredPosDuringUpdate);
       this.updateHoverCell(this.hoveredPosDuringUpdate);
+      this.updateHearts();
     };
     this.ecs.engine.update(1);
-  }
+  };
 
   handleClick(pos: Vector, action: Action) {
     this.hoveredPos = pos;
@@ -343,17 +380,14 @@ export class LevelScene implements GameScene {
       this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;
-      const doNext = () => {
-        this.tick();
-      };
 
       console.log("Player move:", actionMoves[0][0]);
       const isAsync = actionMoves[0][0].apply(
         { ecs: this.ecs, entity: this.ecs.player },
         pos,
-        doNext
+        this.tick
       );
-      if (!isAsync) doNext();
+      if (!isAsync) this.tick();
     }
   }
 }

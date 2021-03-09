@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import { Texture } from "pixi.js";
+import { AbstractVector, Vector } from "vector2d";
 import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
 import filmstrip from "./filmstrip";
@@ -53,14 +54,18 @@ export default class Game implements GameInterface {
     if (!this.isFontLoaded) return;
     if (this.app.loader.progress < 100) return;
 
-    const loadFilmstrip = (name: string) => {
+    const loadFilmstrip = (name: string, cellSize: AbstractVector) => {
       const texture = (this.app.loader.resources[`${name}`] as any)
         ?.texture as PIXI.Texture;
-      return filmstrip(texture, this.tileSize, this.tileSize);
+
+      return filmstrip(texture, cellSize.x, cellSize.y);
     };
 
     for (const asset of ALL_ASSETS) {
-      this.assets[asset.name] = loadFilmstrip(asset.name);
+      this.assets[asset.name] = loadFilmstrip(
+        asset.name,
+        asset.cellSize || new Vector(this.tileSize, this.tileSize)
+      );
     }
 
     // this.pushScene(new MenuScene(this));

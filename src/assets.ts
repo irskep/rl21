@@ -1,6 +1,9 @@
+import { AbstractVector, Vector } from "vector2d";
+
 export interface Asset {
   name: string;
   url: string;
+  cellSize?: AbstractVector;
 }
 
 export const SpriteIndices = {
@@ -52,4 +55,5 @@ export const EnvIndices = {
 export const ALL_ASSETS: Asset[] = [
   { name: "sprites", url: "sprites.png" },
   { name: "env", url: "env.png" },
+  { name: "heart", url: "heart.png", cellSize: new Vector(21, 18) },
 ];
