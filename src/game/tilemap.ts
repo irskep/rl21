@@ -1,5 +1,6 @@
 import { Sprite } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
+import { EnvIndices } from "../assets";
 
 export class Cell {
   sprite: Sprite | null = null;
@@ -21,12 +22,19 @@ export class Tilemap {
     for (let y = 0; y < size.y; y++) {
       this.contents[y] = new Array(size.x);
       for (let x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(
-          new Vector(x, y),
-          x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0
-        );
+        const pos = new Vector(x, y);
+        this.contents[y][x] = new Cell(pos, this.getDefaultIndex(pos));
       }
     }
+  }
+
+  getDefaultIndex(pos: Vector) {
+    return pos.x === 0 ||
+      pos.y === 0 ||
+      pos.x === this.size.x - 1 ||
+      pos.y === this.size.y - 1
+      ? EnvIndices.WALL
+      : EnvIndices.FLOOR;
   }
 
   getCell(pos: AbstractVector): Cell | null {

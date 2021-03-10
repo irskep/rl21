@@ -15,6 +15,7 @@ import getHenchmanName from "../prose/henchmanName";
 import { STATS } from "./stats";
 import RNG from "../game/RNG";
 import { DIFFICULTIES } from "./difficulties";
+import { getNeighbors } from "./direction";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -84,6 +85,7 @@ export function makeECS(
   n: number
 ): ECS {
   const rng = new RNG(`${Math.random()}`);
+  console.log("Map RNG seed:", rng.seed);
   const engine = new Engine();
 
   const spriteSystem = new SpriteSystem(game, container);
@@ -94,25 +96,55 @@ export function makeECS(
 
   const skipSize = 5;
   let availableCells = new Array<Vector>();
-  for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
-    for (let skipY = 0; skipY + skipSize <= tilemap.size.y; skipY += skipSize) {
-      const areaCells = new Array<Vector>();
-      for (let x = skipX; x < skipX + skipSize; x++) {
-        for (let y = skipY; y < skipY + skipSize; y++) {
-          const cellPos = new Vector(x, y);
-          if (tilemap.getCell(cellPos)?.index === EnvIndices.FLOOR) {
-            areaCells.push(cellPos);
+
+  let needsUpdate = true;
+  while (needsUpdate) {
+    for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
+      for (
+        let skipY = 0;
+        skipY + skipSize <= tilemap.size.y;
+        skipY += skipSize
+      ) {
+        const areaCells = new Array<Vector>();
+        for (let x = skipX; x < skipX + skipSize; x++) {
+          for (let y = skipY; y < skipY + skipSize; y++) {
+            const cellPos = new Vector(x, y);
+            if (tilemap.getCell(cellPos)?.index === EnvIndices.FLOOR) {
+              areaCells.push(cellPos);
+            }
           }
         }
-      }
-      rng.shuffle(areaCells);
-      for (let i = 0; i < 4; i++) {
-        const wallPos = areaCells.shift()!;
-        const cell = tilemap.getCell(wallPos)!;
-        cell.index = EnvIndices.WALL;
-      }
+        rng.shuffle(areaCells);
+        for (let i = 0; i < 4; i++) {
+          const wallPos = areaCells.shift()!;
+          const cell = tilemap.getCell(wallPos)!;
+          cell.index = EnvIndices.WALL;
+        }
 
-      availableCells = availableCells.concat(areaCells);
+        availableCells = availableCells.concat(areaCells);
+      }
+    }
+
+    needsUpdate = false;
+    for (const pos of availableCells) {
+      let hasOpening = false;
+      for (const adjacentPos of getNeighbors(pos)) {
+        if (tilemap.getCell(adjacentPos)?.index === EnvIndices.FLOOR) {
+          hasOpening = true;
+          break;
+        }
+      }
+      if (!hasOpening) {
+        needsUpdate = true;
+        for (let y = 0; y < tilemap.size.y; y++) {
+          for (let x = 0; x < tilemap.size.x; x++) {
+            const cell = tilemap.getCell(new Vector(x, y))!;
+            cell.index = tilemap.getDefaultIndex(cell.pos);
+          }
+        }
+        console.warn("Regenerating map due to enclosed space");
+        break;
+      }
     }
   }
   rng.shuffle(availableCells);

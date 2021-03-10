@@ -2,8 +2,10 @@ import seedrandom from "seedrandom";
 
 export default class RNG {
   getRandom: () => number;
+  seed: string;
 
   constructor(seed: string) {
+    this.seed = seed;
     this.getRandom = seedrandom(seed);
   }
 
