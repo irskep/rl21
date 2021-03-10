@@ -439,9 +439,11 @@ var _assets = require("./assets");
 
 var _filmstrip = _interopRequireDefault(require("./filmstrip"));
 
-var _LevelScene = require("./game/LevelScene");
+var _RNG = _interopRequireDefault(require("./game/RNG"));
 
 var _MenuScene = require("./MenuScene");
+
+var _UpgradeScene = require("./UpgradeScene");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -483,7 +485,8 @@ class Game {
       }
 
       if (window.location.hash === "#skipmenu") {
-        this.pushScene(new _LevelScene.LevelScene(this, 0));
+        // this.pushScene(new LevelScene(this, 0));
+        this.pushScene(new _UpgradeScene.UpgradeScene(this, 0, [], new _RNG.default(`${Date.now()}`)));
       } else {
         this.pushScene(new _MenuScene.MenuScene(this));
       }
@@ -554,7 +557,7 @@ class Game {
 }
 
 exports.default = Game;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb","./MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","./UpgradeScene":"c0960333d972f732087ce2f7ba56a88b","./game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
 /*!
  * pixi.js - v6.0.0
  * Compiled Tue, 02 Mar 2021 21:45:03 UTC
@@ -47034,7 +47037,1186 @@ function filmstrip(texture, frameWidth, frameHeight, spacing = 0) {
 
   return frames(texture, positions, frameWidth, frameHeight);
 }
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"84dd184ecea3d468eeaab1eb358565eb":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c"}],"3d2e89863f09a0b02a84cdeaa16aee37":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MenuScene = void 0;
+
+var _mousetrap = _interopRequireDefault(require("mousetrap"));
+
+var PIXI = _interopRequireWildcard(require("pixi.js"));
+
+var _LevelScene = require("./game/LevelScene");
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class MenuScene {
+  constructor(game) {
+    _defineProperty(this, "container", new PIXI.Container());
+
+    _defineProperty(this, "gameLoop", dt => {
+      /* hi */
+    });
+
+    _defineProperty(this, "handleTouchStart", () => {
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
+    });
+
+    _defineProperty(this, "handleKeyPress", () => {
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
+    });
+
+    this.game = game;
+    this.container.interactive = true;
+  }
+
+  enter() {
+    console.log("enter", this);
+
+    _mousetrap.default.bind(["enter", "space"], this.handleKeyPress);
+
+    this.game.app.ticker.add(this.gameLoop);
+
+    if (!this.container.children.length) {
+      const title = new PIXI.Text("vigil@nte");
+      title.style = new PIXI.TextStyle({
+        fontSize: this.game.app.screen.width / 10,
+        fontFamily: "Barlow Condensed",
+        fill: "white",
+        align: "center"
+      });
+      title.anchor.x = 0.5;
+      title.anchor.y = 0.5;
+      title.position.set(this.game.app.screen.width / 2, this.game.app.screen.height / 4);
+      this.container.addChild(title);
+      const instructions = new PIXI.Text("Click here to start");
+      instructions.style = new PIXI.TextStyle({
+        fontSize: this.game.app.screen.width / 40,
+        fontFamily: "Barlow Condensed",
+        fill: "white",
+        align: "center"
+      });
+      instructions.anchor.x = 0.5;
+      instructions.anchor.y = 0.5;
+      instructions.position.set(this.game.app.screen.width / 2, this.game.app.screen.height * 0.66);
+      this.container.addChild(instructions);
+      instructions.interactive = true;
+      title.interactive = true;
+      instructions.on("click", this.handleTouchStart);
+    }
+
+    this.game.app.stage.addChild(this.container);
+  }
+
+  exit() {
+    console.log("exit", this);
+
+    _mousetrap.default.unbind(["enter", "space"]);
+
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+  }
+
+}
+
+exports.MenuScene = MenuScene;
+},{"mousetrap":"4c5780164a035c90cc9be975eec0ed87","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"4c5780164a035c90cc9be975eec0ed87":[function(require,module,exports) {
+var define;
+
+/*global define:false */
+
+/**
+ * Copyright 2012-2017 Craig Campbell
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Mousetrap is a simple keyboard shortcut library for Javascript with
+ * no external dependencies
+ *
+ * @version 1.6.5
+ * @url craig.is/killing/mice
+ */
+(function (window, document, undefined) {
+  // Check if mousetrap is used inside browser, if not, return
+  if (!window) {
+    return;
+  }
+  /**
+   * mapping of special keycodes to their corresponding keys
+   *
+   * everything in this dictionary cannot use keypress events
+   * so it has to be here to map to the correct keycodes for
+   * keyup/keydown events
+   *
+   * @type {Object}
+   */
+
+
+  var _MAP = {
+    8: 'backspace',
+    9: 'tab',
+    13: 'enter',
+    16: 'shift',
+    17: 'ctrl',
+    18: 'alt',
+    20: 'capslock',
+    27: 'esc',
+    32: 'space',
+    33: 'pageup',
+    34: 'pagedown',
+    35: 'end',
+    36: 'home',
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down',
+    45: 'ins',
+    46: 'del',
+    91: 'meta',
+    93: 'meta',
+    224: 'meta'
+  };
+  /**
+   * mapping for special characters so they can support
+   *
+   * this dictionary is only used incase you want to bind a
+   * keyup or keydown event to one of these keys
+   *
+   * @type {Object}
+   */
+
+  var _KEYCODE_MAP = {
+    106: '*',
+    107: '+',
+    109: '-',
+    110: '.',
+    111: '/',
+    186: ';',
+    187: '=',
+    188: ',',
+    189: '-',
+    190: '.',
+    191: '/',
+    192: '`',
+    219: '[',
+    220: '\\',
+    221: ']',
+    222: '\''
+  };
+  /**
+   * this is a mapping of keys that require shift on a US keypad
+   * back to the non shift equivelents
+   *
+   * this is so you can use keyup events with these keys
+   *
+   * note that this will only work reliably on US keyboards
+   *
+   * @type {Object}
+   */
+
+  var _SHIFT_MAP = {
+    '~': '`',
+    '!': '1',
+    '@': '2',
+    '#': '3',
+    '$': '4',
+    '%': '5',
+    '^': '6',
+    '&': '7',
+    '*': '8',
+    '(': '9',
+    ')': '0',
+    '_': '-',
+    '+': '=',
+    ':': ';',
+    '\"': '\'',
+    '<': ',',
+    '>': '.',
+    '?': '/',
+    '|': '\\'
+  };
+  /**
+   * this is a list of special strings you can use to map
+   * to modifier keys when you specify your keyboard shortcuts
+   *
+   * @type {Object}
+   */
+
+  var _SPECIAL_ALIASES = {
+    'option': 'alt',
+    'command': 'meta',
+    'return': 'enter',
+    'escape': 'esc',
+    'plus': '+',
+    'mod': /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'meta' : 'ctrl'
+  };
+  /**
+   * variable to store the flipped version of _MAP from above
+   * needed to check if we should use keypress or not when no action
+   * is specified
+   *
+   * @type {Object|undefined}
+   */
+
+  var _REVERSE_MAP;
+  /**
+   * loop through the f keys, f1 to f19 and add them to the map
+   * programatically
+   */
+
+
+  for (var i = 1; i < 20; ++i) {
+    _MAP[111 + i] = 'f' + i;
+  }
+  /**
+   * loop through to map numbers on the numeric keypad
+   */
+
+
+  for (i = 0; i <= 9; ++i) {
+    // This needs to use a string cause otherwise since 0 is falsey
+    // mousetrap will never fire for numpad 0 pressed as part of a keydown
+    // event.
+    //
+    // @see https://github.com/ccampbell/mousetrap/pull/258
+    _MAP[i + 96] = i.toString();
+  }
+  /**
+   * cross browser add event method
+   *
+   * @param {Element|HTMLDocument} object
+   * @param {string} type
+   * @param {Function} callback
+   * @returns void
+   */
+
+
+  function _addEvent(object, type, callback) {
+    if (object.addEventListener) {
+      object.addEventListener(type, callback, false);
+      return;
+    }
+
+    object.attachEvent('on' + type, callback);
+  }
+  /**
+   * takes the event and returns the key character
+   *
+   * @param {Event} e
+   * @return {string}
+   */
+
+
+  function _characterFromEvent(e) {
+    // for keypress events we should return the character as is
+    if (e.type == 'keypress') {
+      var character = String.fromCharCode(e.which); // if the shift key is not pressed then it is safe to assume
+      // that we want the character to be lowercase.  this means if
+      // you accidentally have caps lock on then your key bindings
+      // will continue to work
+      //
+      // the only side effect that might not be desired is if you
+      // bind something like 'A' cause you want to trigger an
+      // event when capital A is pressed caps lock will no longer
+      // trigger the event.  shift+a will though.
+
+      if (!e.shiftKey) {
+        character = character.toLowerCase();
+      }
+
+      return character;
+    } // for non keypress events the special maps are needed
+
+
+    if (_MAP[e.which]) {
+      return _MAP[e.which];
+    }
+
+    if (_KEYCODE_MAP[e.which]) {
+      return _KEYCODE_MAP[e.which];
+    } // if it is not in the special map
+    // with keydown and keyup events the character seems to always
+    // come in as an uppercase character whether you are pressing shift
+    // or not.  we should make sure it is always lowercase for comparisons
+
+
+    return String.fromCharCode(e.which).toLowerCase();
+  }
+  /**
+   * checks if two arrays are equal
+   *
+   * @param {Array} modifiers1
+   * @param {Array} modifiers2
+   * @returns {boolean}
+   */
+
+
+  function _modifiersMatch(modifiers1, modifiers2) {
+    return modifiers1.sort().join(',') === modifiers2.sort().join(',');
+  }
+  /**
+   * takes a key event and figures out what the modifiers are
+   *
+   * @param {Event} e
+   * @returns {Array}
+   */
+
+
+  function _eventModifiers(e) {
+    var modifiers = [];
+
+    if (e.shiftKey) {
+      modifiers.push('shift');
+    }
+
+    if (e.altKey) {
+      modifiers.push('alt');
+    }
+
+    if (e.ctrlKey) {
+      modifiers.push('ctrl');
+    }
+
+    if (e.metaKey) {
+      modifiers.push('meta');
+    }
+
+    return modifiers;
+  }
+  /**
+   * prevents default for this event
+   *
+   * @param {Event} e
+   * @returns void
+   */
+
+
+  function _preventDefault(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+      return;
+    }
+
+    e.returnValue = false;
+  }
+  /**
+   * stops propogation for this event
+   *
+   * @param {Event} e
+   * @returns void
+   */
+
+
+  function _stopPropagation(e) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+      return;
+    }
+
+    e.cancelBubble = true;
+  }
+  /**
+   * determines if the keycode specified is a modifier key or not
+   *
+   * @param {string} key
+   * @returns {boolean}
+   */
+
+
+  function _isModifier(key) {
+    return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
+  }
+  /**
+   * reverses the map lookup so that we can look for specific keys
+   * to see what can and can't use keypress
+   *
+   * @return {Object}
+   */
+
+
+  function _getReverseMap() {
+    if (!_REVERSE_MAP) {
+      _REVERSE_MAP = {};
+
+      for (var key in _MAP) {
+        // pull out the numeric keypad from here cause keypress should
+        // be able to detect the keys from the character
+        if (key > 95 && key < 112) {
+          continue;
+        }
+
+        if (_MAP.hasOwnProperty(key)) {
+          _REVERSE_MAP[_MAP[key]] = key;
+        }
+      }
+    }
+
+    return _REVERSE_MAP;
+  }
+  /**
+   * picks the best action based on the key combination
+   *
+   * @param {string} key - character for key
+   * @param {Array} modifiers
+   * @param {string=} action passed in
+   */
+
+
+  function _pickBestAction(key, modifiers, action) {
+    // if no action was picked in we should try to pick the one
+    // that we think would work best for this key
+    if (!action) {
+      action = _getReverseMap()[key] ? 'keydown' : 'keypress';
+    } // modifier keys don't work as expected with keypress,
+    // switch to keydown
+
+
+    if (action == 'keypress' && modifiers.length) {
+      action = 'keydown';
+    }
+
+    return action;
+  }
+  /**
+   * Converts from a string key combination to an array
+   *
+   * @param  {string} combination like "command+shift+l"
+   * @return {Array}
+   */
+
+
+  function _keysFromString(combination) {
+    if (combination === '+') {
+      return ['+'];
+    }
+
+    combination = combination.replace(/\+{2}/g, '+plus');
+    return combination.split('+');
+  }
+  /**
+   * Gets info for a specific key combination
+   *
+   * @param  {string} combination key combination ("command+s" or "a" or "*")
+   * @param  {string=} action
+   * @returns {Object}
+   */
+
+
+  function _getKeyInfo(combination, action) {
+    var keys;
+    var key;
+    var i;
+    var modifiers = []; // take the keys from this pattern and figure out what the actual
+    // pattern is all about
+
+    keys = _keysFromString(combination);
+
+    for (i = 0; i < keys.length; ++i) {
+      key = keys[i]; // normalize key names
+
+      if (_SPECIAL_ALIASES[key]) {
+        key = _SPECIAL_ALIASES[key];
+      } // if this is not a keypress event then we should
+      // be smart about using shift keys
+      // this will only work for US keyboards however
+
+
+      if (action && action != 'keypress' && _SHIFT_MAP[key]) {
+        key = _SHIFT_MAP[key];
+        modifiers.push('shift');
+      } // if this key is a modifier then add it to the list of modifiers
+
+
+      if (_isModifier(key)) {
+        modifiers.push(key);
+      }
+    } // depending on what the key combination is
+    // we will try to pick the best event for it
+
+
+    action = _pickBestAction(key, modifiers, action);
+    return {
+      key: key,
+      modifiers: modifiers,
+      action: action
+    };
+  }
+
+  function _belongsTo(element, ancestor) {
+    if (element === null || element === document) {
+      return false;
+    }
+
+    if (element === ancestor) {
+      return true;
+    }
+
+    return _belongsTo(element.parentNode, ancestor);
+  }
+
+  function Mousetrap(targetElement) {
+    var self = this;
+    targetElement = targetElement || document;
+
+    if (!(self instanceof Mousetrap)) {
+      return new Mousetrap(targetElement);
+    }
+    /**
+     * element to attach key events to
+     *
+     * @type {Element}
+     */
+
+
+    self.target = targetElement;
+    /**
+     * a list of all the callbacks setup via Mousetrap.bind()
+     *
+     * @type {Object}
+     */
+
+    self._callbacks = {};
+    /**
+     * direct map of string combinations to callbacks used for trigger()
+     *
+     * @type {Object}
+     */
+
+    self._directMap = {};
+    /**
+     * keeps track of what level each sequence is at since multiple
+     * sequences can start out with the same sequence
+     *
+     * @type {Object}
+     */
+
+    var _sequenceLevels = {};
+    /**
+     * variable to store the setTimeout call
+     *
+     * @type {null|number}
+     */
+
+    var _resetTimer;
+    /**
+     * temporary state where we will ignore the next keyup
+     *
+     * @type {boolean|string}
+     */
+
+
+    var _ignoreNextKeyup = false;
+    /**
+     * temporary state where we will ignore the next keypress
+     *
+     * @type {boolean}
+     */
+
+    var _ignoreNextKeypress = false;
+    /**
+     * are we currently inside of a sequence?
+     * type of action ("keyup" or "keydown" or "keypress") or false
+     *
+     * @type {boolean|string}
+     */
+
+    var _nextExpectedAction = false;
+    /**
+     * resets all sequence counters except for the ones passed in
+     *
+     * @param {Object} doNotReset
+     * @returns void
+     */
+
+    function _resetSequences(doNotReset) {
+      doNotReset = doNotReset || {};
+      var activeSequences = false,
+          key;
+
+      for (key in _sequenceLevels) {
+        if (doNotReset[key]) {
+          activeSequences = true;
+          continue;
+        }
+
+        _sequenceLevels[key] = 0;
+      }
+
+      if (!activeSequences) {
+        _nextExpectedAction = false;
+      }
+    }
+    /**
+     * finds all callbacks that match based on the keycode, modifiers,
+     * and action
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {Event|Object} e
+     * @param {string=} sequenceName - name of the sequence we are looking for
+     * @param {string=} combination
+     * @param {number=} level
+     * @returns {Array}
+     */
+
+
+    function _getMatches(character, modifiers, e, sequenceName, combination, level) {
+      var i;
+      var callback;
+      var matches = [];
+      var action = e.type; // if there are no events related to this keycode
+
+      if (!self._callbacks[character]) {
+        return [];
+      } // if a modifier key is coming up on its own we should allow it
+
+
+      if (action == 'keyup' && _isModifier(character)) {
+        modifiers = [character];
+      } // loop through all callbacks for the key that was pressed
+      // and see if any of them match
+
+
+      for (i = 0; i < self._callbacks[character].length; ++i) {
+        callback = self._callbacks[character][i]; // if a sequence name is not specified, but this is a sequence at
+        // the wrong level then move onto the next match
+
+        if (!sequenceName && callback.seq && _sequenceLevels[callback.seq] != callback.level) {
+          continue;
+        } // if the action we are looking for doesn't match the action we got
+        // then we should keep going
+
+
+        if (action != callback.action) {
+          continue;
+        } // if this is a keypress event and the meta key and control key
+        // are not pressed that means that we need to only look at the
+        // character, otherwise check the modifiers as well
+        //
+        // chrome will not fire a keypress if meta or control is down
+        // safari will fire a keypress if meta or meta+shift is down
+        // firefox will fire a keypress if meta or control is down
+
+
+        if (action == 'keypress' && !e.metaKey && !e.ctrlKey || _modifiersMatch(modifiers, callback.modifiers)) {
+          // when you bind a combination or sequence a second time it
+          // should overwrite the first one.  if a sequenceName or
+          // combination is specified in this call it does just that
+          //
+          // @todo make deleting its own method?
+          var deleteCombo = !sequenceName && callback.combo == combination;
+          var deleteSequence = sequenceName && callback.seq == sequenceName && callback.level == level;
+
+          if (deleteCombo || deleteSequence) {
+            self._callbacks[character].splice(i, 1);
+          }
+
+          matches.push(callback);
+        }
+      }
+
+      return matches;
+    }
+    /**
+     * actually calls the callback function
+     *
+     * if your callback function returns false this will use the jquery
+     * convention - prevent default and stop propogation on the event
+     *
+     * @param {Function} callback
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    function _fireCallback(callback, e, combo, sequence) {
+      // if this event should not happen stop here
+      if (self.stopCallback(e, e.target || e.srcElement, combo, sequence)) {
+        return;
+      }
+
+      if (callback(e, combo) === false) {
+        _preventDefault(e);
+
+        _stopPropagation(e);
+      }
+    }
+    /**
+     * handles a character key event
+     *
+     * @param {string} character
+     * @param {Array} modifiers
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    self._handleKey = function (character, modifiers, e) {
+      var callbacks = _getMatches(character, modifiers, e);
+
+      var i;
+      var doNotReset = {};
+      var maxLevel = 0;
+      var processedSequenceCallback = false; // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
+
+      for (i = 0; i < callbacks.length; ++i) {
+        if (callbacks[i].seq) {
+          maxLevel = Math.max(maxLevel, callbacks[i].level);
+        }
+      } // loop through matching callbacks for this key event
+
+
+      for (i = 0; i < callbacks.length; ++i) {
+        // fire for all sequence callbacks
+        // this is because if for example you have multiple sequences
+        // bound such as "g i" and "g t" they both need to fire the
+        // callback for matching g cause otherwise you can only ever
+        // match the first one
+        if (callbacks[i].seq) {
+          // only fire callbacks for the maxLevel to prevent
+          // subsequences from also firing
+          //
+          // for example 'a option b' should not cause 'option b' to fire
+          // even though 'option b' is part of the other sequence
+          //
+          // any sequences that do not match here will be discarded
+          // below by the _resetSequences call
+          if (callbacks[i].level != maxLevel) {
+            continue;
+          }
+
+          processedSequenceCallback = true; // keep a list of which sequences were matches for later
+
+          doNotReset[callbacks[i].seq] = 1;
+
+          _fireCallback(callbacks[i].callback, e, callbacks[i].combo, callbacks[i].seq);
+
+          continue;
+        } // if there were no sequence matches but we are still here
+        // that means this is a regular match so we should fire that
+
+
+        if (!processedSequenceCallback) {
+          _fireCallback(callbacks[i].callback, e, callbacks[i].combo);
+        }
+      } // if the key you pressed matches the type of sequence without
+      // being a modifier (ie "keyup" or "keypress") then we should
+      // reset all sequences that were not matched by this event
+      //
+      // this is so, for example, if you have the sequence "h a t" and you
+      // type "h e a r t" it does not match.  in this case the "e" will
+      // cause the sequence to reset
+      //
+      // modifier keys are ignored because you can have a sequence
+      // that contains modifiers such as "enter ctrl+space" and in most
+      // cases the modifier key will be pressed before the next key
+      //
+      // also if you have a sequence such as "ctrl+b a" then pressing the
+      // "b" key will trigger a "keypress" and a "keydown"
+      //
+      // the "keydown" is expected when there is a modifier, but the
+      // "keypress" ends up matching the _nextExpectedAction since it occurs
+      // after and that causes the sequence to reset
+      //
+      // we ignore keypresses in a sequence that directly follow a keydown
+      // for the same character
+
+
+      var ignoreThisKeypress = e.type == 'keypress' && _ignoreNextKeypress;
+
+      if (e.type == _nextExpectedAction && !_isModifier(character) && !ignoreThisKeypress) {
+        _resetSequences(doNotReset);
+      }
+
+      _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
+    };
+    /**
+     * handles a keydown event
+     *
+     * @param {Event} e
+     * @returns void
+     */
+
+
+    function _handleKeyEvent(e) {
+      // normalize e.which for key events
+      // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
+      if (typeof e.which !== 'number') {
+        e.which = e.keyCode;
+      }
+
+      var character = _characterFromEvent(e); // no character found then stop
+
+
+      if (!character) {
+        return;
+      } // need to use === for the character check because the character can be 0
+
+
+      if (e.type == 'keyup' && _ignoreNextKeyup === character) {
+        _ignoreNextKeyup = false;
+        return;
+      }
+
+      self.handleKey(character, _eventModifiers(e), e);
+    }
+    /**
+     * called to set a 1 second timeout on the specified sequence
+     *
+     * this is so after each key press in the sequence you have 1 second
+     * to press the next key before you have to start over
+     *
+     * @returns void
+     */
+
+
+    function _resetSequenceTimer() {
+      clearTimeout(_resetTimer);
+      _resetTimer = setTimeout(_resetSequences, 1000);
+    }
+    /**
+     * binds a key sequence to an event
+     *
+     * @param {string} combo - combo specified in bind call
+     * @param {Array} keys
+     * @param {Function} callback
+     * @param {string=} action
+     * @returns void
+     */
+
+
+    function _bindSequence(combo, keys, callback, action) {
+      // start off by adding a sequence level record for this combination
+      // and setting the level to 0
+      _sequenceLevels[combo] = 0;
+      /**
+       * callback to increase the sequence level for this sequence and reset
+       * all other sequences that were active
+       *
+       * @param {string} nextAction
+       * @returns {Function}
+       */
+
+      function _increaseSequence(nextAction) {
+        return function () {
+          _nextExpectedAction = nextAction;
+          ++_sequenceLevels[combo];
+
+          _resetSequenceTimer();
+        };
+      }
+      /**
+       * wraps the specified callback inside of another function in order
+       * to reset all sequence counters as soon as this sequence is done
+       *
+       * @param {Event} e
+       * @returns void
+       */
+
+
+      function _callbackAndReset(e) {
+        _fireCallback(callback, e, combo); // we should ignore the next key up if the action is key down
+        // or keypress.  this is so if you finish a sequence and
+        // release the key the final key will not trigger a keyup
+
+
+        if (action !== 'keyup') {
+          _ignoreNextKeyup = _characterFromEvent(e);
+        } // weird race condition if a sequence ends with the key
+        // another sequence begins with
+
+
+        setTimeout(_resetSequences, 10);
+      } // loop through keys one at a time and bind the appropriate callback
+      // function.  for any key leading up to the final one it should
+      // increase the sequence. after the final, it should reset all sequences
+      //
+      // if an action is specified in the original bind call then that will
+      // be used throughout.  otherwise we will pass the action that the
+      // next key in the sequence should match.  this allows a sequence
+      // to mix and match keypress and keydown events depending on which
+      // ones are better suited to the key provided
+
+
+      for (var i = 0; i < keys.length; ++i) {
+        var isFinal = i + 1 === keys.length;
+        var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || _getKeyInfo(keys[i + 1]).action);
+
+        _bindSingle(keys[i], wrappedCallback, action, combo, i);
+      }
+    }
+    /**
+     * binds a single keyboard combination
+     *
+     * @param {string} combination
+     * @param {Function} callback
+     * @param {string=} action
+     * @param {string=} sequenceName - name of sequence if part of sequence
+     * @param {number=} level - what part of the sequence the command is
+     * @returns void
+     */
+
+
+    function _bindSingle(combination, callback, action, sequenceName, level) {
+      // store a direct mapped reference for use with Mousetrap.trigger
+      self._directMap[combination + ':' + action] = callback; // make sure multiple spaces in a row become a single space
+
+      combination = combination.replace(/\s+/g, ' ');
+      var sequence = combination.split(' ');
+      var info; // if this pattern is a sequence of keys then run through this method
+      // to reprocess each pattern one key at a time
+
+      if (sequence.length > 1) {
+        _bindSequence(combination, sequence, callback, action);
+
+        return;
+      }
+
+      info = _getKeyInfo(combination, action); // make sure to initialize array if this is the first time
+      // a callback is added for this key
+
+      self._callbacks[info.key] = self._callbacks[info.key] || []; // remove an existing match if there is one
+
+      _getMatches(info.key, info.modifiers, {
+        type: info.action
+      }, sequenceName, combination, level); // add this call back to the array
+      // if it is a sequence put it at the beginning
+      // if not put it at the end
+      //
+      // this is important because the way these are processed expects
+      // the sequence ones to come first
+
+
+      self._callbacks[info.key][sequenceName ? 'unshift' : 'push']({
+        callback: callback,
+        modifiers: info.modifiers,
+        action: info.action,
+        seq: sequenceName,
+        level: level,
+        combo: combination
+      });
+    }
+    /**
+     * binds multiple combinations to the same callback
+     *
+     * @param {Array} combinations
+     * @param {Function} callback
+     * @param {string|undefined} action
+     * @returns void
+     */
+
+
+    self._bindMultiple = function (combinations, callback, action) {
+      for (var i = 0; i < combinations.length; ++i) {
+        _bindSingle(combinations[i], callback, action);
+      }
+    }; // start!
+
+
+    _addEvent(targetElement, 'keypress', _handleKeyEvent);
+
+    _addEvent(targetElement, 'keydown', _handleKeyEvent);
+
+    _addEvent(targetElement, 'keyup', _handleKeyEvent);
+  }
+  /**
+   * binds an event to mousetrap
+   *
+   * can be a single key, a combination of keys separated with +,
+   * an array of keys, or a sequence of keys separated by spaces
+   *
+   * be sure to list the modifier keys first to make sure that the
+   * correct key ends up getting bound (the last key in the pattern)
+   *
+   * @param {string|Array} keys
+   * @param {Function} callback
+   * @param {string=} action - 'keypress', 'keydown', or 'keyup'
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.bind = function (keys, callback, action) {
+    var self = this;
+    keys = keys instanceof Array ? keys : [keys];
+
+    self._bindMultiple.call(self, keys, callback, action);
+
+    return self;
+  };
+  /**
+   * unbinds an event to mousetrap
+   *
+   * the unbinding sets the callback function of the specified key combo
+   * to an empty function and deletes the corresponding key in the
+   * _directMap dict.
+   *
+   * TODO: actually remove this from the _callbacks dictionary instead
+   * of binding an empty function
+   *
+   * the keycombo+action has to be exactly the same as
+   * it was defined in the bind method
+   *
+   * @param {string|Array} keys
+   * @param {string} action
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.unbind = function (keys, action) {
+    var self = this;
+    return self.bind.call(self, keys, function () {}, action);
+  };
+  /**
+   * triggers an event that has already been bound
+   *
+   * @param {string} keys
+   * @param {string=} action
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.trigger = function (keys, action) {
+    var self = this;
+
+    if (self._directMap[keys + ':' + action]) {
+      self._directMap[keys + ':' + action]({}, keys);
+    }
+
+    return self;
+  };
+  /**
+   * resets the library back to its initial state.  this is useful
+   * if you want to clear out the current keyboard shortcuts and bind
+   * new ones - for example if you switch to another page
+   *
+   * @returns void
+   */
+
+
+  Mousetrap.prototype.reset = function () {
+    var self = this;
+    self._callbacks = {};
+    self._directMap = {};
+    return self;
+  };
+  /**
+   * should we stop this event before firing off callbacks
+   *
+   * @param {Event} e
+   * @param {Element} element
+   * @return {boolean}
+   */
+
+
+  Mousetrap.prototype.stopCallback = function (e, element) {
+    var self = this; // if the element has the class "mousetrap" then no need to stop
+
+    if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+      return false;
+    }
+
+    if (_belongsTo(element, self.target)) {
+      return false;
+    } // Events originating from a shadow DOM are re-targetted and `e.target` is the shadow host,
+    // not the initial event target in the shadow tree. Note that not all events cross the
+    // shadow boundary.
+    // For shadow trees with `mode: 'open'`, the initial event target is the first element in
+    // the event’s composed path. For shadow trees with `mode: 'closed'`, the initial event
+    // target cannot be obtained.
+
+
+    if ('composedPath' in e && typeof e.composedPath === 'function') {
+      // For open shadow trees, update `element` so that the following check works.
+      var initialEventTarget = e.composedPath()[0];
+
+      if (initialEventTarget !== e.target) {
+        element = initialEventTarget;
+      }
+    } // stop for input, select, and textarea
+
+
+    return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
+  };
+  /**
+   * exposes _handleKey publicly so it can be overwritten by extensions
+   */
+
+
+  Mousetrap.prototype.handleKey = function () {
+    var self = this;
+    return self._handleKey.apply(self, arguments);
+  };
+  /**
+   * allow custom key mappings
+   */
+
+
+  Mousetrap.addKeycodes = function (object) {
+    for (var key in object) {
+      if (object.hasOwnProperty(key)) {
+        _MAP[key] = object[key];
+      }
+    }
+
+    _REVERSE_MAP = null;
+  };
+  /**
+   * Init the global mousetrap functions
+   *
+   * This method is needed to allow the global mousetrap functions to work
+   * now that mousetrap is a constructor function.
+   */
+
+
+  Mousetrap.init = function () {
+    var documentMousetrap = Mousetrap(document);
+
+    for (var method in documentMousetrap) {
+      if (method.charAt(0) !== '_') {
+        Mousetrap[method] = function (method) {
+          return function () {
+            return documentMousetrap[method].apply(documentMousetrap, arguments);
+          };
+        }(method);
+      }
+    }
+  };
+
+  Mousetrap.init(); // expose mousetrap to the global object
+
+  window.Mousetrap = Mousetrap; // expose as a common js module
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Mousetrap;
+  } // expose mousetrap as an AMD module
+
+
+  if (typeof define === 'function' && define.amd) {
+    define(function () {
+      return Mousetrap;
+    });
+  }
+})(typeof window !== 'undefined' ? window : null, typeof window !== 'undefined' ? document : null);
+},{}],"84dd184ecea3d468eeaab1eb358565eb":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47048,13 +48230,13 @@ var _tilemap = require("./tilemap");
 
 var _ecs = require("../ecs/ecs");
 
-var _CombatC = require("../ecs/CombatC");
+var _CombatC = require("../ecs/combat/CombatC");
 
 var _input = require("./input");
 
 var _sprite = require("../ecs/sprite");
 
-var _CombatS = require("../ecs/CombatS");
+var _CombatS = require("../ecs/combat/CombatS");
 
 var _MenuScene = require("../MenuScene");
 
@@ -47064,6 +48246,8 @@ var _mousetrap = _interopRequireDefault(require("mousetrap"));
 
 var _LevelSceneGfx = require("./LevelSceneGfx");
 
+var _UpgradeScene = require("../UpgradeScene");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -47071,7 +48255,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 class LevelScene {
   /* state management */
   // display
-  constructor(game, n) {
+  constructor(game, n, upgrades) {
     _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
 
     _defineProperty(this, "possibleMoves", []);
@@ -47102,13 +48286,14 @@ class LevelScene {
 
     this.game = game;
     this.n = n;
+    this.upgrades = upgrades;
     this.gfx = new _LevelSceneGfx.LevelSceneGfx(game, this.map);
     window.levelScene = this;
   }
 
   goToNextScene() {
     if (this.n < _difficulties.DIFFICULTIES.length - 2) {
-      this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
+      this.game.replaceScenes([new _UpgradeScene.UpgradeScene(this.game, this.n + 1, this.upgrades, this.ecs.rng)]);
     } else {
       this.game.replaceScenes([new _MenuScene.MenuScene(this.game)]);
     }
@@ -47127,7 +48312,7 @@ class LevelScene {
       this.map.updateCells(cell => {
         this.bindCellEvents(cell, cell.sprite);
       });
-      this.ecs = (0, _ecs.makeECS)(this.game, this.gfx.arena, this.map, this.gfx.writeMessage, this.n);
+      this.ecs = (0, _ecs.makeECS)(this.game, this.gfx.arena, this.map, this.gfx.writeMessage, this.n, this.upgrades);
       this.ecs.combatSystem.tilemap = this.map;
       this.updateTileSprites();
       this.ecs.engine.update(1);
@@ -47139,6 +48324,10 @@ class LevelScene {
       this.handleCombatEvent(event);
     });
     this.gfx.writeMessage("Atman enters the room.");
+
+    if (this.upgrades) {
+      this.gfx.writeMessage(`Atman's upgrades: ${this.upgrades.map(u => u.name).join(", ")}`);
+    }
   }
 
   exit() {
@@ -47274,7 +48463,9 @@ class LevelScene {
   }
 
   updateHearts() {
-    this.gfx.updateHearts(this.ecs.player.getComponent(_CombatC.CombatC).hp);
+    const combatC = this.ecs.player.getComponent(_CombatC.CombatC);
+    this.gfx.updateHearts(combatC.hp);
+    this.gfx.heartsContainer.position.set(this.gfx.messageLogBg.x - this.gfx.heartSprites[0].width * combatC.hpMax / 2 - 10, 10);
   }
 
   handleClick(pos, action) {
@@ -47307,7 +48498,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87","./LevelSceneGfx":"3455fb2a563c046f1f6dc8946c2f2715"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87","./LevelSceneGfx":"3455fb2a563c046f1f6dc8946c2f2715","../ecs/combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","../ecs/combat/CombatS":"2871d32e219d5c0342ae2d41268918ee","../UpgradeScene":"c0960333d972f732087ce2f7ba56a88b"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47436,11 +48627,11 @@ var _vector2d = require("vector2d");
 
 var _moves = require("./moves");
 
-var _CombatS = require("./CombatS");
+var _CombatS = require("./combat/CombatS");
 
-var _CombatC = require("./CombatC");
+var _CombatC = require("./combat/CombatC");
 
-var _CombatTrait = require("./CombatTrait");
+var _CombatTrait = require("./combat/CombatTrait");
 
 var _henchmanName = _interopRequireDefault(require("../prose/henchmanName"));
 
@@ -47501,14 +48692,7 @@ function makeTitanThug(pos, orientation) {
   return e;
 }
 
-function makeECS(game, container, tilemap, writeMessage, n) {
-  const rng = new _RNG.default(`${Math.random()}`);
-  console.log("Map RNG seed:", rng.seed);
-  const engine = new _ecs.Engine();
-  const spriteSystem = new _sprite.SpriteSystem(game, container);
-  const combatSystem = new _CombatS.CombatSystem(game);
-  engine.addSystems(combatSystem);
-  engine.addSystems(spriteSystem);
+function generateMap(tilemap, rng) {
   const skipSize = 5;
   let availableCells = new Array();
   let needsUpdate = true;
@@ -47569,7 +48753,24 @@ function makeECS(game, container, tilemap, writeMessage, n) {
   }
 
   rng.shuffle(availableCells);
+  return availableCells;
+}
+
+function makeECS(game, container, tilemap, writeMessage, n, upgrades) {
+  const rng = new _RNG.default(`${Math.random()}`);
+  console.log("Map RNG seed:", rng.seed);
+  const engine = new _ecs.Engine();
+  const spriteSystem = new _sprite.SpriteSystem(game, container);
+  const combatSystem = new _CombatS.CombatSystem(game);
+  engine.addSystems(combatSystem);
+  engine.addSystems(spriteSystem);
+  const availableCells = generateMap(tilemap, rng);
   const player = makePlayer(availableCells.shift(), 0);
+
+  for (const u of upgrades) {
+    u.apply(player);
+  }
+
   engine.addEntity(player);
   const difficulty = _difficulties.DIFFICULTIES[n];
   const orientations = [0, 0.5, 1, 1, 5, 2, 2.5, 3, 3.5];
@@ -47598,7 +48799,7 @@ function makeECS(game, container, tilemap, writeMessage, n) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e","./difficulties":"7239331cdf35d95f398eb1e7aba31779","./direction":"8d08baf8b9861766c30a87961a2d3da1"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e","./difficulties":"7239331cdf35d95f398eb1e7aba31779","./direction":"8d08baf8b9861766c30a87961a2d3da1","./combat/CombatS":"2871d32e219d5c0342ae2d41268918ee","./combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./combat/CombatTrait":"af5199635117af6c70c1e65b48892e1f"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -48092,7 +49293,7 @@ var _pixi = require("pixi.js");
 
 var _vector2d = require("vector2d");
 
-var _CombatC = require("./CombatC");
+var _CombatC = require("./combat/CombatC");
 
 var _direction = require("./direction");
 
@@ -48248,7 +49449,7 @@ class SpriteSystem extends _ecs.System {
 
 exports.SpriteSystem = SpriteSystem;
 SpriteC.tag = "SpriteC";
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./direction":"8d08baf8b9861766c30a87961a2d3da1","./CombatC":"b6e902b421f06cf2a74c6c109af52761"}],"8d08baf8b9861766c30a87961a2d3da1":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./direction":"8d08baf8b9861766c30a87961a2d3da1","./combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"8d08baf8b9861766c30a87961a2d3da1":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48306,7 +49507,7 @@ function getOrientation(v) {
 
   throw new Error("Unknown orientation: " + v);
 }
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"b6e902b421f06cf2a74c6c109af52761":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"54e3c7e3cc7b7efbf98dcccfb2b84044":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48340,6 +49541,8 @@ class CombatC {
 
     _defineProperty(this, "goal", null);
 
+    _defineProperty(this, "upgrades", new Array());
+
     _defineProperty(this, "superpunchTarget", null);
   }
 
@@ -48372,6 +49575,10 @@ class CombatC {
 
   hasTrait(trait) {
     return this.traits.indexOf(trait) !== -1;
+  }
+
+  hasUpgrade(name) {
+    return this.upgrades.indexOf(name) !== -1;
   }
 
   becomeProne(turns, spriteC) {
@@ -48419,7 +49626,7 @@ exports.CombatC = CombatC;
 _defineProperty(CombatC, "tag", "CombatC");
 
 CombatC.tag = "CombatC";
-},{"./CombatState":"5ebcbb2585b4779db34c41483d6ad94f"}],"5ebcbb2585b4779db34c41483d6ad94f":[function(require,module,exports) {
+},{"./CombatState":"3c3af5741b84d45f18e66c70d6c9d3db"}],"3c3af5741b84d45f18e66c70d6c9d3db":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48430,9 +49637,9 @@ exports.stateToPlayerSpriteIndex = stateToPlayerSpriteIndex;
 exports.stateToHenchmanSpriteIndex = stateToHenchmanSpriteIndex;
 exports.CombatState = void 0;
 
-var _assets = require("../assets");
+var _assets = require("../../assets");
 
-var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+var _UnreachableCaseError = _interopRequireDefault(require("../../UnreachableCaseError"));
 
 var _CombatTrait = require("./CombatTrait");
 
@@ -48546,7 +49753,7 @@ function stateToHenchmanSpriteIndex(state) {
       throw new _UnreachableCaseError.default(state);
   }
 }
-},{"../assets":"be73c6663579275afb4521336d5df627","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
+},{"../../assets":"be73c6663579275afb4521336d5df627","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatTrait":"af5199635117af6c70c1e65b48892e1f"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48562,7 +49769,7 @@ class UnreachableCaseError extends Error {
 }
 
 exports.default = UnreachableCaseError;
-},{}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
+},{}],"af5199635117af6c70c1e65b48892e1f":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48621,9 +49828,9 @@ var _input = require("../../game/input");
 
 var _tilemap = require("../../game/tilemap");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _helpers = require("./_helpers");
 
@@ -48705,7 +49912,7 @@ class Walk {
 }
 
 exports.Walk = Walk;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"60d50d152119e01a0f05aa9be6432259":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"60d50d152119e01a0f05aa9be6432259":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48780,9 +49987,9 @@ var _assets = require("../../assets");
 
 var _tilemap = require("../../game/tilemap");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _sprite = require("../sprite");
 
@@ -48871,7 +50078,7 @@ function ensureStandingAndTargetIsAdjacentEnemy(ctx, target) {
     success: true
   };
 }
-},{"../../assets":"be73c6663579275afb4521336d5df627","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
+},{"../../assets":"be73c6663579275afb4521336d5df627","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../sprite":"488445ffc318f5d280c0d86556dce008","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"5f653e4293240883170322ba382d4013":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48881,9 +50088,9 @@ exports.Wait = void 0;
 
 var _input = require("../../game/input");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _sprite = require("../sprite");
 
@@ -48941,7 +50148,7 @@ class Wait {
 }
 
 exports.Wait = Wait;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../sprite":"488445ffc318f5d280c0d86556dce008","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"b99ca3553cd73cf95091d9e983745d90":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48949,9 +50156,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TelegraphedPunchFollowthroughMiss = exports.TelegraphedPunchFollowthroughHit = exports.TelegraphedPunchPrepare = void 0;
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _direction = require("../direction");
 
@@ -49103,7 +50310,7 @@ class TelegraphedPunchFollowthroughMiss {
 }
 
 exports.TelegraphedPunchFollowthroughMiss = TelegraphedPunchFollowthroughMiss;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
+},{"../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"3c317739c70eba769b5ef5cf0eb645ff":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49113,9 +50320,9 @@ exports.FastPunch = void 0;
 
 var _input = require("../../game/input");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _helpers = require("./_helpers");
 
@@ -49190,7 +50397,7 @@ class FastPunch {
 }
 
 exports.FastPunch = FastPunch;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"f8ca4efbddc20d7e5b79d513fdc0d887":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49202,19 +50409,19 @@ var _input = require("../../game/input");
 
 var _tilemap = require("../../game/tilemap");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _helpers = require("./_helpers");
 
 var _sprite = require("../sprite");
 
-var _CombatS = require("../CombatS");
+var _CombatS = require("../combat/CombatS");
 
 var _stats = require("../stats");
 
-var _CombatTrait = require("../CombatTrait");
+var _CombatTrait = require("../combat/CombatTrait");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -49324,7 +50531,22 @@ class Counter {
 }
 
 exports.Counter = Counter;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatTrait":"349225c40e349ec8c722faa04ec8f27a"}],"e32769aa44fa2bb3b4698cdeb79e039a":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../stats":"f5de88ee31cebd904f144c7f51872c1a","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","../combat/CombatS":"2871d32e219d5c0342ae2d41268918ee","../combat/CombatTrait":"af5199635117af6c70c1e65b48892e1f"}],"f5de88ee31cebd904f144c7f51872c1a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.STATS = void 0;
+const STATS = {
+  PUNCH_DAMAGE: 1,
+  SUPERPUNCH_DAMAGE: 2,
+  COUNTER_DAMAGE: 2,
+  LOW_HP: 4,
+  HIGH_HP: 8
+};
+exports.STATS = STATS;
+},{}],"2871d32e219d5c0342ae2d41268918ee":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49334,15 +50556,15 @@ exports.CombatSystem = exports.CombatEventType = void 0;
 
 var _ecs = require("@nova-engine/ecs");
 
-var _assets = require("../assets");
+var _assets = require("../../assets");
 
-var _tilemap = require("../game/tilemap");
+var _tilemap = require("../../game/tilemap");
 
-var _direction = require("./direction");
+var _direction = require("../direction");
 
-var _sprite = require("./sprite");
+var _sprite = require("../sprite");
 
-var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+var _UnreachableCaseError = _interopRequireDefault(require("../../UnreachableCaseError"));
 
 var _CombatC = require("./CombatC");
 
@@ -49350,11 +50572,11 @@ var _CombatTrait = require("./CombatTrait");
 
 var _CombatState = require("./CombatState");
 
-var _KefirBus = _interopRequireDefault(require("../KefirBus"));
+var _KefirBus = _interopRequireDefault(require("../../KefirBus"));
 
-var _stats = require("./stats");
+var _stats = require("../stats");
 
-var _RNG = _interopRequireDefault(require("../game/RNG"));
+var _RNG = _interopRequireDefault(require("../../game/RNG"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -49705,7 +50927,7 @@ class CombatSystem extends _ecs.System {
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"e69508817b554227faa09f5ca2f18e8f":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../../assets":"be73c6663579275afb4521336d5df627","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../direction":"8d08baf8b9861766c30a87961a2d3da1","../sprite":"488445ffc318f5d280c0d86556dce008","../../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./CombatTrait":"af5199635117af6c70c1e65b48892e1f","./CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../../KefirBus":"e69508817b554227faa09f5ca2f18e8f","../stats":"f5de88ee31cebd904f144c7f51872c1a","../../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"e69508817b554227faa09f5ca2f18e8f":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53729,21 +54951,6 @@ var global = arguments[3];
     value: true
   });
 });
-},{}],"f5de88ee31cebd904f144c7f51872c1a":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.STATS = void 0;
-const STATS = {
-  PUNCH_DAMAGE: 1,
-  SUPERPUNCH_DAMAGE: 2,
-  COUNTER_DAMAGE: 2,
-  LOW_HP: 4,
-  HIGH_HP: 8
-};
-exports.STATS = STATS;
 },{}],"e2e767bdcbb3fbc301711f9c0ddedc0e":[function(require,module,exports) {
 "use strict";
 
@@ -54927,9 +56134,9 @@ exports.Stun = void 0;
 
 var _input = require("../../game/input");
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _helpers = require("./_helpers");
 
@@ -54951,6 +56158,14 @@ class Stun {
   check(ctx, target) {
     const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
     if (!checkResult.success) return checkResult;
+
+    if (ctx.ecs.spriteSystem.findCombatEntity(target)?.getComponent(_CombatC.CombatC).state === _CombatState.CombatState.Prone) {
+      return {
+        success: false,
+        message: "Prone enemies cannot be stunned"
+      };
+    }
+
     return {
       success: true
     };
@@ -54979,7 +56194,7 @@ class Stun {
 }
 
 exports.Stun = Stun;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"b5fa364c092432c1f44aa6a4841f92ad":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -54987,9 +56202,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.SuperpunchFollowthroughMiss = exports.SuperpunchFollowthroughHit = exports.SuperpunchPrepare = void 0;
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _direction = require("../direction");
 
@@ -55001,7 +56216,7 @@ var _tilemap = require("../../game/tilemap");
 
 var _stats = require("../stats");
 
-var _CombatS = require("../CombatS");
+var _CombatS = require("../combat/CombatS");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -55183,7 +56398,7 @@ class SuperpunchFollowthroughMiss {
 }
 
 exports.SuperpunchFollowthroughMiss = SuperpunchFollowthroughMiss;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../stats":"f5de88ee31cebd904f144c7f51872c1a","../CombatS":"e32769aa44fa2bb3b4698cdeb79e039a"}],"da4a9da55055c95e23b4ed6dc0be38d4":[function(require,module,exports) {
+},{"../direction":"8d08baf8b9861766c30a87961a2d3da1","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../stats":"f5de88ee31cebd904f144c7f51872c1a","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","../combat/CombatS":"2871d32e219d5c0342ae2d41268918ee"}],"da4a9da55055c95e23b4ed6dc0be38d4":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -55191,9 +56406,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CreateAndFollowGoal = void 0;
 
-var _CombatState = require("../CombatState");
+var _CombatState = require("../combat/CombatState");
 
-var _CombatC = require("../CombatC");
+var _CombatC = require("../combat/CombatC");
 
 var _sprite = require("../sprite");
 
@@ -55310,7 +56525,7 @@ class CreateAndFollowGoal {
 }
 
 exports.CreateAndFollowGoal = CreateAndFollowGoal;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008","../Goal":"30af87a48fcf0fb57744a406c9060a26","./findPath":"da952e304ac8530f7190f245d41eedbd","./PlannedWalk":"2ae6ed8ce9b5a365163b72556a4501f4"}],"30af87a48fcf0fb57744a406c9060a26":[function(require,module,exports) {
+},{"../sprite":"488445ffc318f5d280c0d86556dce008","../Goal":"30af87a48fcf0fb57744a406c9060a26","./findPath":"da952e304ac8530f7190f245d41eedbd","./PlannedWalk":"2ae6ed8ce9b5a365163b72556a4501f4","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"30af87a48fcf0fb57744a406c9060a26":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -56133,1185 +57348,6 @@ const DIFFICULTIES = [// {
   mapgenAlgo: "basic"
 }];
 exports.DIFFICULTIES = DIFFICULTIES;
-},{}],"3d2e89863f09a0b02a84cdeaa16aee37":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.MenuScene = void 0;
-
-var _mousetrap = _interopRequireDefault(require("mousetrap"));
-
-var PIXI = _interopRequireWildcard(require("pixi.js"));
-
-var _LevelScene = require("./game/LevelScene");
-
-function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class MenuScene {
-  constructor(game) {
-    _defineProperty(this, "container", new PIXI.Container());
-
-    _defineProperty(this, "gameLoop", dt => {
-      /* hi */
-    });
-
-    _defineProperty(this, "handleTouchStart", () => {
-      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
-    });
-
-    _defineProperty(this, "handleKeyPress", () => {
-      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
-    });
-
-    this.game = game;
-    this.container.interactive = true;
-  }
-
-  enter() {
-    console.log("enter", this);
-
-    _mousetrap.default.bind(["enter", "space"], this.handleKeyPress);
-
-    this.game.app.ticker.add(this.gameLoop);
-
-    if (!this.container.children.length) {
-      const title = new PIXI.Text("vigil@nte");
-      title.style = new PIXI.TextStyle({
-        fontSize: this.game.app.screen.width / 10,
-        fontFamily: "Barlow Condensed",
-        fill: "white",
-        align: "center"
-      });
-      title.anchor.x = 0.5;
-      title.anchor.y = 0.5;
-      title.position.set(this.game.app.screen.width / 2, this.game.app.screen.height / 4);
-      this.container.addChild(title);
-      const instructions = new PIXI.Text("Click here to start");
-      instructions.style = new PIXI.TextStyle({
-        fontSize: this.game.app.screen.width / 40,
-        fontFamily: "Barlow Condensed",
-        fill: "white",
-        align: "center"
-      });
-      instructions.anchor.x = 0.5;
-      instructions.anchor.y = 0.5;
-      instructions.position.set(this.game.app.screen.width / 2, this.game.app.screen.height * 0.66);
-      this.container.addChild(instructions);
-      instructions.interactive = true;
-      title.interactive = true;
-      instructions.on("click", this.handleTouchStart);
-    }
-
-    this.game.app.stage.addChild(this.container);
-  }
-
-  exit() {
-    console.log("exit", this);
-
-    _mousetrap.default.unbind(["enter", "space"]);
-
-    this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
-  }
-
-}
-
-exports.MenuScene = MenuScene;
-},{"mousetrap":"4c5780164a035c90cc9be975eec0ed87","pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"4c5780164a035c90cc9be975eec0ed87":[function(require,module,exports) {
-var define;
-
-/*global define:false */
-
-/**
- * Copyright 2012-2017 Craig Campbell
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * Mousetrap is a simple keyboard shortcut library for Javascript with
- * no external dependencies
- *
- * @version 1.6.5
- * @url craig.is/killing/mice
- */
-(function (window, document, undefined) {
-  // Check if mousetrap is used inside browser, if not, return
-  if (!window) {
-    return;
-  }
-  /**
-   * mapping of special keycodes to their corresponding keys
-   *
-   * everything in this dictionary cannot use keypress events
-   * so it has to be here to map to the correct keycodes for
-   * keyup/keydown events
-   *
-   * @type {Object}
-   */
-
-
-  var _MAP = {
-    8: 'backspace',
-    9: 'tab',
-    13: 'enter',
-    16: 'shift',
-    17: 'ctrl',
-    18: 'alt',
-    20: 'capslock',
-    27: 'esc',
-    32: 'space',
-    33: 'pageup',
-    34: 'pagedown',
-    35: 'end',
-    36: 'home',
-    37: 'left',
-    38: 'up',
-    39: 'right',
-    40: 'down',
-    45: 'ins',
-    46: 'del',
-    91: 'meta',
-    93: 'meta',
-    224: 'meta'
-  };
-  /**
-   * mapping for special characters so they can support
-   *
-   * this dictionary is only used incase you want to bind a
-   * keyup or keydown event to one of these keys
-   *
-   * @type {Object}
-   */
-
-  var _KEYCODE_MAP = {
-    106: '*',
-    107: '+',
-    109: '-',
-    110: '.',
-    111: '/',
-    186: ';',
-    187: '=',
-    188: ',',
-    189: '-',
-    190: '.',
-    191: '/',
-    192: '`',
-    219: '[',
-    220: '\\',
-    221: ']',
-    222: '\''
-  };
-  /**
-   * this is a mapping of keys that require shift on a US keypad
-   * back to the non shift equivelents
-   *
-   * this is so you can use keyup events with these keys
-   *
-   * note that this will only work reliably on US keyboards
-   *
-   * @type {Object}
-   */
-
-  var _SHIFT_MAP = {
-    '~': '`',
-    '!': '1',
-    '@': '2',
-    '#': '3',
-    '$': '4',
-    '%': '5',
-    '^': '6',
-    '&': '7',
-    '*': '8',
-    '(': '9',
-    ')': '0',
-    '_': '-',
-    '+': '=',
-    ':': ';',
-    '\"': '\'',
-    '<': ',',
-    '>': '.',
-    '?': '/',
-    '|': '\\'
-  };
-  /**
-   * this is a list of special strings you can use to map
-   * to modifier keys when you specify your keyboard shortcuts
-   *
-   * @type {Object}
-   */
-
-  var _SPECIAL_ALIASES = {
-    'option': 'alt',
-    'command': 'meta',
-    'return': 'enter',
-    'escape': 'esc',
-    'plus': '+',
-    'mod': /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'meta' : 'ctrl'
-  };
-  /**
-   * variable to store the flipped version of _MAP from above
-   * needed to check if we should use keypress or not when no action
-   * is specified
-   *
-   * @type {Object|undefined}
-   */
-
-  var _REVERSE_MAP;
-  /**
-   * loop through the f keys, f1 to f19 and add them to the map
-   * programatically
-   */
-
-
-  for (var i = 1; i < 20; ++i) {
-    _MAP[111 + i] = 'f' + i;
-  }
-  /**
-   * loop through to map numbers on the numeric keypad
-   */
-
-
-  for (i = 0; i <= 9; ++i) {
-    // This needs to use a string cause otherwise since 0 is falsey
-    // mousetrap will never fire for numpad 0 pressed as part of a keydown
-    // event.
-    //
-    // @see https://github.com/ccampbell/mousetrap/pull/258
-    _MAP[i + 96] = i.toString();
-  }
-  /**
-   * cross browser add event method
-   *
-   * @param {Element|HTMLDocument} object
-   * @param {string} type
-   * @param {Function} callback
-   * @returns void
-   */
-
-
-  function _addEvent(object, type, callback) {
-    if (object.addEventListener) {
-      object.addEventListener(type, callback, false);
-      return;
-    }
-
-    object.attachEvent('on' + type, callback);
-  }
-  /**
-   * takes the event and returns the key character
-   *
-   * @param {Event} e
-   * @return {string}
-   */
-
-
-  function _characterFromEvent(e) {
-    // for keypress events we should return the character as is
-    if (e.type == 'keypress') {
-      var character = String.fromCharCode(e.which); // if the shift key is not pressed then it is safe to assume
-      // that we want the character to be lowercase.  this means if
-      // you accidentally have caps lock on then your key bindings
-      // will continue to work
-      //
-      // the only side effect that might not be desired is if you
-      // bind something like 'A' cause you want to trigger an
-      // event when capital A is pressed caps lock will no longer
-      // trigger the event.  shift+a will though.
-
-      if (!e.shiftKey) {
-        character = character.toLowerCase();
-      }
-
-      return character;
-    } // for non keypress events the special maps are needed
-
-
-    if (_MAP[e.which]) {
-      return _MAP[e.which];
-    }
-
-    if (_KEYCODE_MAP[e.which]) {
-      return _KEYCODE_MAP[e.which];
-    } // if it is not in the special map
-    // with keydown and keyup events the character seems to always
-    // come in as an uppercase character whether you are pressing shift
-    // or not.  we should make sure it is always lowercase for comparisons
-
-
-    return String.fromCharCode(e.which).toLowerCase();
-  }
-  /**
-   * checks if two arrays are equal
-   *
-   * @param {Array} modifiers1
-   * @param {Array} modifiers2
-   * @returns {boolean}
-   */
-
-
-  function _modifiersMatch(modifiers1, modifiers2) {
-    return modifiers1.sort().join(',') === modifiers2.sort().join(',');
-  }
-  /**
-   * takes a key event and figures out what the modifiers are
-   *
-   * @param {Event} e
-   * @returns {Array}
-   */
-
-
-  function _eventModifiers(e) {
-    var modifiers = [];
-
-    if (e.shiftKey) {
-      modifiers.push('shift');
-    }
-
-    if (e.altKey) {
-      modifiers.push('alt');
-    }
-
-    if (e.ctrlKey) {
-      modifiers.push('ctrl');
-    }
-
-    if (e.metaKey) {
-      modifiers.push('meta');
-    }
-
-    return modifiers;
-  }
-  /**
-   * prevents default for this event
-   *
-   * @param {Event} e
-   * @returns void
-   */
-
-
-  function _preventDefault(e) {
-    if (e.preventDefault) {
-      e.preventDefault();
-      return;
-    }
-
-    e.returnValue = false;
-  }
-  /**
-   * stops propogation for this event
-   *
-   * @param {Event} e
-   * @returns void
-   */
-
-
-  function _stopPropagation(e) {
-    if (e.stopPropagation) {
-      e.stopPropagation();
-      return;
-    }
-
-    e.cancelBubble = true;
-  }
-  /**
-   * determines if the keycode specified is a modifier key or not
-   *
-   * @param {string} key
-   * @returns {boolean}
-   */
-
-
-  function _isModifier(key) {
-    return key == 'shift' || key == 'ctrl' || key == 'alt' || key == 'meta';
-  }
-  /**
-   * reverses the map lookup so that we can look for specific keys
-   * to see what can and can't use keypress
-   *
-   * @return {Object}
-   */
-
-
-  function _getReverseMap() {
-    if (!_REVERSE_MAP) {
-      _REVERSE_MAP = {};
-
-      for (var key in _MAP) {
-        // pull out the numeric keypad from here cause keypress should
-        // be able to detect the keys from the character
-        if (key > 95 && key < 112) {
-          continue;
-        }
-
-        if (_MAP.hasOwnProperty(key)) {
-          _REVERSE_MAP[_MAP[key]] = key;
-        }
-      }
-    }
-
-    return _REVERSE_MAP;
-  }
-  /**
-   * picks the best action based on the key combination
-   *
-   * @param {string} key - character for key
-   * @param {Array} modifiers
-   * @param {string=} action passed in
-   */
-
-
-  function _pickBestAction(key, modifiers, action) {
-    // if no action was picked in we should try to pick the one
-    // that we think would work best for this key
-    if (!action) {
-      action = _getReverseMap()[key] ? 'keydown' : 'keypress';
-    } // modifier keys don't work as expected with keypress,
-    // switch to keydown
-
-
-    if (action == 'keypress' && modifiers.length) {
-      action = 'keydown';
-    }
-
-    return action;
-  }
-  /**
-   * Converts from a string key combination to an array
-   *
-   * @param  {string} combination like "command+shift+l"
-   * @return {Array}
-   */
-
-
-  function _keysFromString(combination) {
-    if (combination === '+') {
-      return ['+'];
-    }
-
-    combination = combination.replace(/\+{2}/g, '+plus');
-    return combination.split('+');
-  }
-  /**
-   * Gets info for a specific key combination
-   *
-   * @param  {string} combination key combination ("command+s" or "a" or "*")
-   * @param  {string=} action
-   * @returns {Object}
-   */
-
-
-  function _getKeyInfo(combination, action) {
-    var keys;
-    var key;
-    var i;
-    var modifiers = []; // take the keys from this pattern and figure out what the actual
-    // pattern is all about
-
-    keys = _keysFromString(combination);
-
-    for (i = 0; i < keys.length; ++i) {
-      key = keys[i]; // normalize key names
-
-      if (_SPECIAL_ALIASES[key]) {
-        key = _SPECIAL_ALIASES[key];
-      } // if this is not a keypress event then we should
-      // be smart about using shift keys
-      // this will only work for US keyboards however
-
-
-      if (action && action != 'keypress' && _SHIFT_MAP[key]) {
-        key = _SHIFT_MAP[key];
-        modifiers.push('shift');
-      } // if this key is a modifier then add it to the list of modifiers
-
-
-      if (_isModifier(key)) {
-        modifiers.push(key);
-      }
-    } // depending on what the key combination is
-    // we will try to pick the best event for it
-
-
-    action = _pickBestAction(key, modifiers, action);
-    return {
-      key: key,
-      modifiers: modifiers,
-      action: action
-    };
-  }
-
-  function _belongsTo(element, ancestor) {
-    if (element === null || element === document) {
-      return false;
-    }
-
-    if (element === ancestor) {
-      return true;
-    }
-
-    return _belongsTo(element.parentNode, ancestor);
-  }
-
-  function Mousetrap(targetElement) {
-    var self = this;
-    targetElement = targetElement || document;
-
-    if (!(self instanceof Mousetrap)) {
-      return new Mousetrap(targetElement);
-    }
-    /**
-     * element to attach key events to
-     *
-     * @type {Element}
-     */
-
-
-    self.target = targetElement;
-    /**
-     * a list of all the callbacks setup via Mousetrap.bind()
-     *
-     * @type {Object}
-     */
-
-    self._callbacks = {};
-    /**
-     * direct map of string combinations to callbacks used for trigger()
-     *
-     * @type {Object}
-     */
-
-    self._directMap = {};
-    /**
-     * keeps track of what level each sequence is at since multiple
-     * sequences can start out with the same sequence
-     *
-     * @type {Object}
-     */
-
-    var _sequenceLevels = {};
-    /**
-     * variable to store the setTimeout call
-     *
-     * @type {null|number}
-     */
-
-    var _resetTimer;
-    /**
-     * temporary state where we will ignore the next keyup
-     *
-     * @type {boolean|string}
-     */
-
-
-    var _ignoreNextKeyup = false;
-    /**
-     * temporary state where we will ignore the next keypress
-     *
-     * @type {boolean}
-     */
-
-    var _ignoreNextKeypress = false;
-    /**
-     * are we currently inside of a sequence?
-     * type of action ("keyup" or "keydown" or "keypress") or false
-     *
-     * @type {boolean|string}
-     */
-
-    var _nextExpectedAction = false;
-    /**
-     * resets all sequence counters except for the ones passed in
-     *
-     * @param {Object} doNotReset
-     * @returns void
-     */
-
-    function _resetSequences(doNotReset) {
-      doNotReset = doNotReset || {};
-      var activeSequences = false,
-          key;
-
-      for (key in _sequenceLevels) {
-        if (doNotReset[key]) {
-          activeSequences = true;
-          continue;
-        }
-
-        _sequenceLevels[key] = 0;
-      }
-
-      if (!activeSequences) {
-        _nextExpectedAction = false;
-      }
-    }
-    /**
-     * finds all callbacks that match based on the keycode, modifiers,
-     * and action
-     *
-     * @param {string} character
-     * @param {Array} modifiers
-     * @param {Event|Object} e
-     * @param {string=} sequenceName - name of the sequence we are looking for
-     * @param {string=} combination
-     * @param {number=} level
-     * @returns {Array}
-     */
-
-
-    function _getMatches(character, modifiers, e, sequenceName, combination, level) {
-      var i;
-      var callback;
-      var matches = [];
-      var action = e.type; // if there are no events related to this keycode
-
-      if (!self._callbacks[character]) {
-        return [];
-      } // if a modifier key is coming up on its own we should allow it
-
-
-      if (action == 'keyup' && _isModifier(character)) {
-        modifiers = [character];
-      } // loop through all callbacks for the key that was pressed
-      // and see if any of them match
-
-
-      for (i = 0; i < self._callbacks[character].length; ++i) {
-        callback = self._callbacks[character][i]; // if a sequence name is not specified, but this is a sequence at
-        // the wrong level then move onto the next match
-
-        if (!sequenceName && callback.seq && _sequenceLevels[callback.seq] != callback.level) {
-          continue;
-        } // if the action we are looking for doesn't match the action we got
-        // then we should keep going
-
-
-        if (action != callback.action) {
-          continue;
-        } // if this is a keypress event and the meta key and control key
-        // are not pressed that means that we need to only look at the
-        // character, otherwise check the modifiers as well
-        //
-        // chrome will not fire a keypress if meta or control is down
-        // safari will fire a keypress if meta or meta+shift is down
-        // firefox will fire a keypress if meta or control is down
-
-
-        if (action == 'keypress' && !e.metaKey && !e.ctrlKey || _modifiersMatch(modifiers, callback.modifiers)) {
-          // when you bind a combination or sequence a second time it
-          // should overwrite the first one.  if a sequenceName or
-          // combination is specified in this call it does just that
-          //
-          // @todo make deleting its own method?
-          var deleteCombo = !sequenceName && callback.combo == combination;
-          var deleteSequence = sequenceName && callback.seq == sequenceName && callback.level == level;
-
-          if (deleteCombo || deleteSequence) {
-            self._callbacks[character].splice(i, 1);
-          }
-
-          matches.push(callback);
-        }
-      }
-
-      return matches;
-    }
-    /**
-     * actually calls the callback function
-     *
-     * if your callback function returns false this will use the jquery
-     * convention - prevent default and stop propogation on the event
-     *
-     * @param {Function} callback
-     * @param {Event} e
-     * @returns void
-     */
-
-
-    function _fireCallback(callback, e, combo, sequence) {
-      // if this event should not happen stop here
-      if (self.stopCallback(e, e.target || e.srcElement, combo, sequence)) {
-        return;
-      }
-
-      if (callback(e, combo) === false) {
-        _preventDefault(e);
-
-        _stopPropagation(e);
-      }
-    }
-    /**
-     * handles a character key event
-     *
-     * @param {string} character
-     * @param {Array} modifiers
-     * @param {Event} e
-     * @returns void
-     */
-
-
-    self._handleKey = function (character, modifiers, e) {
-      var callbacks = _getMatches(character, modifiers, e);
-
-      var i;
-      var doNotReset = {};
-      var maxLevel = 0;
-      var processedSequenceCallback = false; // Calculate the maxLevel for sequences so we can only execute the longest callback sequence
-
-      for (i = 0; i < callbacks.length; ++i) {
-        if (callbacks[i].seq) {
-          maxLevel = Math.max(maxLevel, callbacks[i].level);
-        }
-      } // loop through matching callbacks for this key event
-
-
-      for (i = 0; i < callbacks.length; ++i) {
-        // fire for all sequence callbacks
-        // this is because if for example you have multiple sequences
-        // bound such as "g i" and "g t" they both need to fire the
-        // callback for matching g cause otherwise you can only ever
-        // match the first one
-        if (callbacks[i].seq) {
-          // only fire callbacks for the maxLevel to prevent
-          // subsequences from also firing
-          //
-          // for example 'a option b' should not cause 'option b' to fire
-          // even though 'option b' is part of the other sequence
-          //
-          // any sequences that do not match here will be discarded
-          // below by the _resetSequences call
-          if (callbacks[i].level != maxLevel) {
-            continue;
-          }
-
-          processedSequenceCallback = true; // keep a list of which sequences were matches for later
-
-          doNotReset[callbacks[i].seq] = 1;
-
-          _fireCallback(callbacks[i].callback, e, callbacks[i].combo, callbacks[i].seq);
-
-          continue;
-        } // if there were no sequence matches but we are still here
-        // that means this is a regular match so we should fire that
-
-
-        if (!processedSequenceCallback) {
-          _fireCallback(callbacks[i].callback, e, callbacks[i].combo);
-        }
-      } // if the key you pressed matches the type of sequence without
-      // being a modifier (ie "keyup" or "keypress") then we should
-      // reset all sequences that were not matched by this event
-      //
-      // this is so, for example, if you have the sequence "h a t" and you
-      // type "h e a r t" it does not match.  in this case the "e" will
-      // cause the sequence to reset
-      //
-      // modifier keys are ignored because you can have a sequence
-      // that contains modifiers such as "enter ctrl+space" and in most
-      // cases the modifier key will be pressed before the next key
-      //
-      // also if you have a sequence such as "ctrl+b a" then pressing the
-      // "b" key will trigger a "keypress" and a "keydown"
-      //
-      // the "keydown" is expected when there is a modifier, but the
-      // "keypress" ends up matching the _nextExpectedAction since it occurs
-      // after and that causes the sequence to reset
-      //
-      // we ignore keypresses in a sequence that directly follow a keydown
-      // for the same character
-
-
-      var ignoreThisKeypress = e.type == 'keypress' && _ignoreNextKeypress;
-
-      if (e.type == _nextExpectedAction && !_isModifier(character) && !ignoreThisKeypress) {
-        _resetSequences(doNotReset);
-      }
-
-      _ignoreNextKeypress = processedSequenceCallback && e.type == 'keydown';
-    };
-    /**
-     * handles a keydown event
-     *
-     * @param {Event} e
-     * @returns void
-     */
-
-
-    function _handleKeyEvent(e) {
-      // normalize e.which for key events
-      // @see http://stackoverflow.com/questions/4285627/javascript-keycode-vs-charcode-utter-confusion
-      if (typeof e.which !== 'number') {
-        e.which = e.keyCode;
-      }
-
-      var character = _characterFromEvent(e); // no character found then stop
-
-
-      if (!character) {
-        return;
-      } // need to use === for the character check because the character can be 0
-
-
-      if (e.type == 'keyup' && _ignoreNextKeyup === character) {
-        _ignoreNextKeyup = false;
-        return;
-      }
-
-      self.handleKey(character, _eventModifiers(e), e);
-    }
-    /**
-     * called to set a 1 second timeout on the specified sequence
-     *
-     * this is so after each key press in the sequence you have 1 second
-     * to press the next key before you have to start over
-     *
-     * @returns void
-     */
-
-
-    function _resetSequenceTimer() {
-      clearTimeout(_resetTimer);
-      _resetTimer = setTimeout(_resetSequences, 1000);
-    }
-    /**
-     * binds a key sequence to an event
-     *
-     * @param {string} combo - combo specified in bind call
-     * @param {Array} keys
-     * @param {Function} callback
-     * @param {string=} action
-     * @returns void
-     */
-
-
-    function _bindSequence(combo, keys, callback, action) {
-      // start off by adding a sequence level record for this combination
-      // and setting the level to 0
-      _sequenceLevels[combo] = 0;
-      /**
-       * callback to increase the sequence level for this sequence and reset
-       * all other sequences that were active
-       *
-       * @param {string} nextAction
-       * @returns {Function}
-       */
-
-      function _increaseSequence(nextAction) {
-        return function () {
-          _nextExpectedAction = nextAction;
-          ++_sequenceLevels[combo];
-
-          _resetSequenceTimer();
-        };
-      }
-      /**
-       * wraps the specified callback inside of another function in order
-       * to reset all sequence counters as soon as this sequence is done
-       *
-       * @param {Event} e
-       * @returns void
-       */
-
-
-      function _callbackAndReset(e) {
-        _fireCallback(callback, e, combo); // we should ignore the next key up if the action is key down
-        // or keypress.  this is so if you finish a sequence and
-        // release the key the final key will not trigger a keyup
-
-
-        if (action !== 'keyup') {
-          _ignoreNextKeyup = _characterFromEvent(e);
-        } // weird race condition if a sequence ends with the key
-        // another sequence begins with
-
-
-        setTimeout(_resetSequences, 10);
-      } // loop through keys one at a time and bind the appropriate callback
-      // function.  for any key leading up to the final one it should
-      // increase the sequence. after the final, it should reset all sequences
-      //
-      // if an action is specified in the original bind call then that will
-      // be used throughout.  otherwise we will pass the action that the
-      // next key in the sequence should match.  this allows a sequence
-      // to mix and match keypress and keydown events depending on which
-      // ones are better suited to the key provided
-
-
-      for (var i = 0; i < keys.length; ++i) {
-        var isFinal = i + 1 === keys.length;
-        var wrappedCallback = isFinal ? _callbackAndReset : _increaseSequence(action || _getKeyInfo(keys[i + 1]).action);
-
-        _bindSingle(keys[i], wrappedCallback, action, combo, i);
-      }
-    }
-    /**
-     * binds a single keyboard combination
-     *
-     * @param {string} combination
-     * @param {Function} callback
-     * @param {string=} action
-     * @param {string=} sequenceName - name of sequence if part of sequence
-     * @param {number=} level - what part of the sequence the command is
-     * @returns void
-     */
-
-
-    function _bindSingle(combination, callback, action, sequenceName, level) {
-      // store a direct mapped reference for use with Mousetrap.trigger
-      self._directMap[combination + ':' + action] = callback; // make sure multiple spaces in a row become a single space
-
-      combination = combination.replace(/\s+/g, ' ');
-      var sequence = combination.split(' ');
-      var info; // if this pattern is a sequence of keys then run through this method
-      // to reprocess each pattern one key at a time
-
-      if (sequence.length > 1) {
-        _bindSequence(combination, sequence, callback, action);
-
-        return;
-      }
-
-      info = _getKeyInfo(combination, action); // make sure to initialize array if this is the first time
-      // a callback is added for this key
-
-      self._callbacks[info.key] = self._callbacks[info.key] || []; // remove an existing match if there is one
-
-      _getMatches(info.key, info.modifiers, {
-        type: info.action
-      }, sequenceName, combination, level); // add this call back to the array
-      // if it is a sequence put it at the beginning
-      // if not put it at the end
-      //
-      // this is important because the way these are processed expects
-      // the sequence ones to come first
-
-
-      self._callbacks[info.key][sequenceName ? 'unshift' : 'push']({
-        callback: callback,
-        modifiers: info.modifiers,
-        action: info.action,
-        seq: sequenceName,
-        level: level,
-        combo: combination
-      });
-    }
-    /**
-     * binds multiple combinations to the same callback
-     *
-     * @param {Array} combinations
-     * @param {Function} callback
-     * @param {string|undefined} action
-     * @returns void
-     */
-
-
-    self._bindMultiple = function (combinations, callback, action) {
-      for (var i = 0; i < combinations.length; ++i) {
-        _bindSingle(combinations[i], callback, action);
-      }
-    }; // start!
-
-
-    _addEvent(targetElement, 'keypress', _handleKeyEvent);
-
-    _addEvent(targetElement, 'keydown', _handleKeyEvent);
-
-    _addEvent(targetElement, 'keyup', _handleKeyEvent);
-  }
-  /**
-   * binds an event to mousetrap
-   *
-   * can be a single key, a combination of keys separated with +,
-   * an array of keys, or a sequence of keys separated by spaces
-   *
-   * be sure to list the modifier keys first to make sure that the
-   * correct key ends up getting bound (the last key in the pattern)
-   *
-   * @param {string|Array} keys
-   * @param {Function} callback
-   * @param {string=} action - 'keypress', 'keydown', or 'keyup'
-   * @returns void
-   */
-
-
-  Mousetrap.prototype.bind = function (keys, callback, action) {
-    var self = this;
-    keys = keys instanceof Array ? keys : [keys];
-
-    self._bindMultiple.call(self, keys, callback, action);
-
-    return self;
-  };
-  /**
-   * unbinds an event to mousetrap
-   *
-   * the unbinding sets the callback function of the specified key combo
-   * to an empty function and deletes the corresponding key in the
-   * _directMap dict.
-   *
-   * TODO: actually remove this from the _callbacks dictionary instead
-   * of binding an empty function
-   *
-   * the keycombo+action has to be exactly the same as
-   * it was defined in the bind method
-   *
-   * @param {string|Array} keys
-   * @param {string} action
-   * @returns void
-   */
-
-
-  Mousetrap.prototype.unbind = function (keys, action) {
-    var self = this;
-    return self.bind.call(self, keys, function () {}, action);
-  };
-  /**
-   * triggers an event that has already been bound
-   *
-   * @param {string} keys
-   * @param {string=} action
-   * @returns void
-   */
-
-
-  Mousetrap.prototype.trigger = function (keys, action) {
-    var self = this;
-
-    if (self._directMap[keys + ':' + action]) {
-      self._directMap[keys + ':' + action]({}, keys);
-    }
-
-    return self;
-  };
-  /**
-   * resets the library back to its initial state.  this is useful
-   * if you want to clear out the current keyboard shortcuts and bind
-   * new ones - for example if you switch to another page
-   *
-   * @returns void
-   */
-
-
-  Mousetrap.prototype.reset = function () {
-    var self = this;
-    self._callbacks = {};
-    self._directMap = {};
-    return self;
-  };
-  /**
-   * should we stop this event before firing off callbacks
-   *
-   * @param {Event} e
-   * @param {Element} element
-   * @return {boolean}
-   */
-
-
-  Mousetrap.prototype.stopCallback = function (e, element) {
-    var self = this; // if the element has the class "mousetrap" then no need to stop
-
-    if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
-      return false;
-    }
-
-    if (_belongsTo(element, self.target)) {
-      return false;
-    } // Events originating from a shadow DOM are re-targetted and `e.target` is the shadow host,
-    // not the initial event target in the shadow tree. Note that not all events cross the
-    // shadow boundary.
-    // For shadow trees with `mode: 'open'`, the initial event target is the first element in
-    // the event’s composed path. For shadow trees with `mode: 'closed'`, the initial event
-    // target cannot be obtained.
-
-
-    if ('composedPath' in e && typeof e.composedPath === 'function') {
-      // For open shadow trees, update `element` so that the following check works.
-      var initialEventTarget = e.composedPath()[0];
-
-      if (initialEventTarget !== e.target) {
-        element = initialEventTarget;
-      }
-    } // stop for input, select, and textarea
-
-
-    return element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable;
-  };
-  /**
-   * exposes _handleKey publicly so it can be overwritten by extensions
-   */
-
-
-  Mousetrap.prototype.handleKey = function () {
-    var self = this;
-    return self._handleKey.apply(self, arguments);
-  };
-  /**
-   * allow custom key mappings
-   */
-
-
-  Mousetrap.addKeycodes = function (object) {
-    for (var key in object) {
-      if (object.hasOwnProperty(key)) {
-        _MAP[key] = object[key];
-      }
-    }
-
-    _REVERSE_MAP = null;
-  };
-  /**
-   * Init the global mousetrap functions
-   *
-   * This method is needed to allow the global mousetrap functions to work
-   * now that mousetrap is a constructor function.
-   */
-
-
-  Mousetrap.init = function () {
-    var documentMousetrap = Mousetrap(document);
-
-    for (var method in documentMousetrap) {
-      if (method.charAt(0) !== '_') {
-        Mousetrap[method] = function (method) {
-          return function () {
-            return documentMousetrap[method].apply(documentMousetrap, arguments);
-          };
-        }(method);
-      }
-    }
-  };
-
-  Mousetrap.init(); // expose mousetrap to the global object
-
-  window.Mousetrap = Mousetrap; // expose as a common js module
-
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Mousetrap;
-  } // expose mousetrap as an AMD module
-
-
-  if (typeof define === 'function' && define.amd) {
-    define(function () {
-      return Mousetrap;
-    });
-  }
-})(typeof window !== 'undefined' ? window : null, typeof window !== 'undefined' ? document : null);
 },{}],"3455fb2a563c046f1f6dc8946c2f2715":[function(require,module,exports) {
 "use strict";
 
@@ -57326,7 +57362,7 @@ var _vector2d = require("vector2d");
 
 var _assets = require("../assets");
 
-var _CombatC = require("../ecs/CombatC");
+var _CombatC = require("../ecs/combat/CombatC");
 
 var _sprite = require("../ecs/sprite");
 
@@ -57581,7 +57617,7 @@ class LevelSceneGfx {
 }
 
 exports.LevelSceneGfx = LevelSceneGfx;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11"}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11","../ecs/combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044"}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -57640,6 +57676,267 @@ function makeDriftAndFadeAnimation(obj, duration, velocity) {
     }
   };
 }
-},{}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
+},{}],"c0960333d972f732087ce2f7ba56a88b":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.UpgradeScene = void 0;
+
+var _pixi = require("pixi.js");
+
+var _vector2d = require("vector2d");
+
+var _upgrades = require("./ecs/upgrades");
+
+var _LevelScene = require("./game/LevelScene");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+const margin = 20;
+
+class UpgradeCard {
+  constructor(title, description, onClick) {
+    _defineProperty(this, "container", new _pixi.Container());
+
+    _defineProperty(this, "backgroundGfx", new _pixi.Graphics());
+
+    _defineProperty(this, "titleLabel", new _pixi.Text("Lorem Ipsum", {
+      fontSize: 24,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "center"
+    }));
+
+    _defineProperty(this, "descriptionLabel", new _pixi.Text("Lorem Ipsum", {
+      fontSize: 18,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "left",
+      wordWrap: true,
+      wordWrapWidth: 320 - margin * 2
+    }));
+
+    _defineProperty(this, "size", new _vector2d.Vector(320, 240));
+
+    this.container.addChild(this.backgroundGfx);
+    this.container.addChild(this.titleLabel);
+    this.container.addChild(this.descriptionLabel);
+    this.titleLabel.position.set(this.size.x / 2, margin);
+    this.titleLabel.anchor.set(0.5, 0);
+    this.descriptionLabel.position.set(margin, 40 + margin);
+    this.backgroundGfx.lineStyle({
+      width: 1,
+      color: 0xffffff
+    });
+    this.backgroundGfx.beginFill(0x000000);
+    this.backgroundGfx.drawRect(0, 0, this.size.x, this.size.y - 2);
+    this.backgroundGfx.endFill();
+    this.backgroundGfx.interactive = true;
+    this.backgroundGfx.on("click", onClick);
+    this.container.width = this.size.x;
+    this.container.height = this.size.y;
+    this.configure(title, description);
+  }
+
+  configure(title, description) {
+    this.titleLabel.text = title;
+    this.descriptionLabel.text = description;
+  }
+
+}
+
+class UpgradeScene {
+  constructor(game, n, usedUpgrades, rng) {
+    _defineProperty(this, "container", new _pixi.Container());
+
+    _defineProperty(this, "upgradesContainer", new _pixi.Container());
+
+    _defineProperty(this, "gameLoop", dt => {
+      /* hi */
+    });
+
+    this.game = game;
+    this.n = n;
+    this.usedUpgrades = usedUpgrades;
+    this.container.interactive = true;
+    const usedUpgradeNames = this.usedUpgrades.map(u => u.name);
+    const availableUpgrades = (0, _upgrades.makeUpgradePool)().filter(u => !u.exclusive || usedUpgradeNames.indexOf(u.name) === -1);
+    rng.shuffle(usedUpgrades);
+    this.upgrades = availableUpgrades.slice(0, 3);
+    console.log(this.upgrades);
+  }
+
+  get screenSize() {
+    let width = this.game.app.screen.width;
+    let height = width * (3 / 4);
+
+    if (height > this.game.app.screen.height) {
+      height = this.game.app.screen.height;
+      width = height * (4 / 3);
+    }
+
+    return new _vector2d.Vector(width, height);
+  }
+
+  enter() {
+    console.log("enter", this);
+    this.game.app.ticker.add(this.gameLoop);
+    const title = new _pixi.Text("Choose an upgrade");
+    title.style = new _pixi.TextStyle({
+      fontSize: this.game.app.screen.width / margin * 2,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "center"
+    });
+    title.anchor.x = 0.5;
+    title.anchor.y = 1;
+    title.position.set(this.screenSize.x / 2, this.screenSize.y / 6);
+    this.container.addChild(title);
+    this.container.addChild(this.upgradesContainer);
+    let upgradesContainerWidth = 0;
+
+    for (let i = 0; i < this.upgrades.length; i++) {
+      const u = this.upgrades[i];
+      const card = new UpgradeCard(u.name, u.description, () => this.chooseUpgrade(u));
+      card.container.position.set(card.size.x * i + margin * i, 0);
+      upgradesContainerWidth = card.container.position.x + card.size.x + margin;
+      this.upgradesContainer.addChild(card.container);
+    }
+
+    this.upgradesContainer.position.set(this.screenSize.x / 2 - this.upgradesContainer.width / 2 - margin, title.position.y + 40);
+    this.game.app.stage.addChild(this.container);
+  }
+
+  exit() {
+    console.log("exit", this);
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+  }
+
+  chooseUpgrade(u) {
+    this.game.replaceScenes([new _LevelScene.LevelScene(this.game, this.n, this.usedUpgrades.concat([u]))]);
+  }
+
+}
+
+exports.UpgradeScene = UpgradeScene;
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb","./ecs/upgrades":"4b6d614b1c8c1206b3becf73fcaab6bf"}],"4b6d614b1c8c1206b3becf73fcaab6bf":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeUpgradePool = makeUpgradePool;
+
+var _CombatC = require("./combat/CombatC");
+
+var _GroundTakedown = require("./moves/GroundTakedown");
+
+function makeUpgradePool() {
+  return [{
+    name: "Ground Takedown",
+    exclusive: true,
+    description: "If an enemy is prone, knock them out immediately, regardless of their remaining hit points.",
+    apply: player => {
+      player.getComponent(_CombatC.CombatC).moves.push(new _GroundTakedown.GroundTakedown());
+    }
+  }, {
+    name: "Toughen Up",
+    exclusive: false,
+    description: "2 extra hit points.",
+    apply: player => {
+      player.getComponent(_CombatC.CombatC).hpMax += 2;
+      player.getComponent(_CombatC.CombatC).hp += 2;
+    }
+  }];
+}
+},{"./combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./moves/GroundTakedown":"d6c934b7c30f9254f51dd80c80f8aef9"}],"d6c934b7c30f9254f51dd80c80f8aef9":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.GroundTakedown = void 0;
+
+var _input = require("../../game/input");
+
+var _CombatState = require("../combat/CombatState");
+
+var _CombatC = require("../combat/CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _assets = require("../../assets");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class GroundTakedown {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.X);
+
+    _defineProperty(this, "name", "Ground Takedown");
+
+    _defineProperty(this, "help", "Knock out the target immediately regardless of their remaining hit points.");
+  }
+
+  check(ctx, target) {
+    const checkResult = (0, _helpers.ensureStandingAndTargetIsAdjacentEnemy)(ctx, target);
+    if (!checkResult.success) return checkResult;
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target);
+    const enemyState = enemy.getComponent(_CombatC.CombatC).state;
+
+    switch (enemyState) {
+      case _CombatState.CombatState.Prone:
+        return {
+          success: true
+        };
+
+      default:
+        return {
+          success: false,
+          message: "Enemy must be prone."
+        };
+    }
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+    spriteC.turnToward(target);
+    ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.PunchTelegraph, spriteC);
+    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    setTimeout(() => {
+      const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+      combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
+      const enemy = ctx.ecs.spriteSystem.findCombatEntity(target);
+      const enemySpriteC = enemy.getComponent(_sprite.SpriteC);
+      const enemyCombatC = enemy.getComponent(_CombatC.CombatC);
+      enemyCombatC.hp = 0;
+      setTimeout(() => {
+        spriteC.pos = enemySpriteC.pos;
+        combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_PUNCH_AFTER);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+        ctx.ecs.writeMessage(`${spriteC.flavorName} knocks out ${enemySpriteC.flavorName} while they're down!`);
+        setTimeout(() => {
+          combatC.setState(_CombatState.CombatState.Standing, spriteC);
+          ctx.ecs.spriteSystem.cowboyUpdate();
+          doNext();
+        });
+      }, 300);
+    }, 300);
+    return true;
+  }
+
+}
+
+exports.GroundTakedown = GroundTakedown;
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
