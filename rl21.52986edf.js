@@ -47498,6 +47498,8 @@ exports.Tilemap = exports.Cell = void 0;
 
 var _vector2d = require("vector2d");
 
+var _assets = require("../assets");
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class Cell {
@@ -47523,9 +47525,14 @@ class Tilemap {
       this.contents[y] = new Array(size.x);
 
       for (let x = 0; x < size.x; x++) {
-        this.contents[y][x] = new Cell(new _vector2d.Vector(x, y), x === 0 || y === 0 || x === size.x - 1 || y === size.y - 1 ? 1 : 0);
+        const pos = new _vector2d.Vector(x, y);
+        this.contents[y][x] = new Cell(pos, this.getDefaultIndex(pos));
       }
     }
+  }
+
+  getDefaultIndex(pos) {
+    return pos.x === 0 || pos.y === 0 || pos.x === this.size.x - 1 || pos.y === this.size.y - 1 ? _assets.EnvIndices.WALL : _assets.EnvIndices.FLOOR;
   }
 
   getCell(pos) {
@@ -47574,7 +47581,7 @@ function neighbors(a) {
 
   return val;
 }
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c"}],"7e9c77cd2979f2959c520616dcbe2768":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627"}],"7e9c77cd2979f2959c520616dcbe2768":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47607,6 +47614,8 @@ var _stats = require("./stats");
 var _RNG = _interopRequireDefault(require("../game/RNG"));
 
 var _difficulties = require("./difficulties");
+
+var _direction = require("./direction");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -47659,6 +47668,7 @@ function makeTitanThug(pos, orientation) {
 
 function makeECS(game, container, tilemap, writeMessage, n) {
   const rng = new _RNG.default(`${Math.random()}`);
+  console.log("Map RNG seed:", rng.seed);
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
   const combatSystem = new _CombatS.CombatSystem(game);
@@ -47666,30 +47676,60 @@ function makeECS(game, container, tilemap, writeMessage, n) {
   engine.addSystems(spriteSystem);
   const skipSize = 5;
   let availableCells = new Array();
+  let needsUpdate = true;
 
-  for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
-    for (let skipY = 0; skipY + skipSize <= tilemap.size.y; skipY += skipSize) {
-      const areaCells = new Array();
+  while (needsUpdate) {
+    for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
+      for (let skipY = 0; skipY + skipSize <= tilemap.size.y; skipY += skipSize) {
+        const areaCells = new Array();
 
-      for (let x = skipX; x < skipX + skipSize; x++) {
-        for (let y = skipY; y < skipY + skipSize; y++) {
-          const cellPos = new _vector2d.Vector(x, y);
+        for (let x = skipX; x < skipX + skipSize; x++) {
+          for (let y = skipY; y < skipY + skipSize; y++) {
+            const cellPos = new _vector2d.Vector(x, y);
 
-          if (tilemap.getCell(cellPos)?.index === _assets.EnvIndices.FLOOR) {
-            areaCells.push(cellPos);
+            if (tilemap.getCell(cellPos)?.index === _assets.EnvIndices.FLOOR) {
+              areaCells.push(cellPos);
+            }
           }
+        }
+
+        rng.shuffle(areaCells);
+
+        for (let i = 0; i < 4; i++) {
+          const wallPos = areaCells.shift();
+          const cell = tilemap.getCell(wallPos);
+          cell.index = _assets.EnvIndices.WALL;
+        }
+
+        availableCells = availableCells.concat(areaCells);
+      }
+    }
+
+    needsUpdate = false;
+
+    for (const pos of availableCells) {
+      let hasOpening = false;
+
+      for (const adjacentPos of (0, _direction.getNeighbors)(pos)) {
+        if (tilemap.getCell(adjacentPos)?.index === _assets.EnvIndices.FLOOR) {
+          hasOpening = true;
+          break;
         }
       }
 
-      rng.shuffle(areaCells);
+      if (!hasOpening) {
+        needsUpdate = true;
 
-      for (let i = 0; i < 4; i++) {
-        const wallPos = areaCells.shift();
-        const cell = tilemap.getCell(wallPos);
-        cell.index = _assets.EnvIndices.WALL;
+        for (let y = 0; y < tilemap.size.y; y++) {
+          for (let x = 0; x < tilemap.size.x; x++) {
+            const cell = tilemap.getCell(new _vector2d.Vector(x, y));
+            cell.index = tilemap.getDefaultIndex(cell.pos);
+          }
+        }
+
+        console.warn("Regenerating map due to enclosed space");
+        break;
       }
-
-      availableCells = availableCells.concat(areaCells);
     }
   }
 
@@ -47722,7 +47762,7 @@ function makeECS(game, container, tilemap, writeMessage, n) {
   combatSystem.ecs = ecs;
   return ecs;
 }
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e","./difficulties":"7239331cdf35d95f398eb1e7aba31779"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../getID":"c979f9173dd374eaf070d00545fa6b10","./sprite":"488445ffc318f5d280c0d86556dce008","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./moves":"73d749e6e343a99543ba0639dd49d959","./CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","../prose/henchmanName":"9eb4fc62c76a2fd6f764f9b4b50ee68a","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e","./difficulties":"7239331cdf35d95f398eb1e7aba31779","./direction":"8d08baf8b9861766c30a87961a2d3da1"}],"62d869f68915639c760dec8a8cc99c86":[function(require,module,exports) {
 module.exports = require("./lib/index");
 },{"./lib/index":"b28a792b1fa99254f464e95d32fd6dd1"}],"b28a792b1fa99254f464e95d32fd6dd1":[function(require,module,exports) {
 "use strict";
@@ -53803,6 +53843,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class RNG {
   constructor(seed) {
+    this.seed = seed;
     this.getRandom = (0, _seedrandom.default)(seed);
   }
 
