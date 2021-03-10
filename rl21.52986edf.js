@@ -47256,14 +47256,19 @@ class LevelScene {
     const okMoves = this.possibleMoves.filter(x => x[1].success);
     const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
     this.gfx.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
-    let firstLine = okMoves.map(([move]) => `${move.name} (${(0, _input.getActionText)(move.action)})`) // (${move.help})`)
+    let firstLine = "Possible moves: " + okMoves.map(([move]) => `${move.name} (${(0, _input.getActionText)(move.action)})`) // (${move.help})`)
     .join("; ");
 
     if (okMoves.length === 0) {
       firstLine = "No moves available at selected position";
-    }
+    } // const secondLine =
+    //   "Omitted: " +
+    //   notOkMoves
+    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
+    //     .join("; ");
 
-    const secondLine = "Omitted: " + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("; ");
+
+    const secondLine = "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
     this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }
 
@@ -48349,12 +48354,15 @@ class CombatC {
     const traitsText = this.traits.join("\n");
     let text = hpText + "\n\n";
 
-    if (this.recoveryTimer) {
-      text += `${this.state} for ${this.recoveryTimer} turns`;
+    if (this.recoveryTimer === 1) {
+      text += `${this.state} for 1 turn.`;
+    } else if (this.recoveryTimer > 1) {
+      text += `${this.state} for ${this.recoveryTimer} turns.`;
     } else {
       text += this.state;
     }
 
+    text += "\n" + (0, _CombatState.getStateHelpText)(this.state, this.traits);
     text += "\n\n";
     text += traitsText;
     return text;
@@ -48415,6 +48423,7 @@ CombatC.tag = "CombatC";
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getStateHelpText = getStateHelpText;
 exports.stateToPlayerSpriteIndex = stateToPlayerSpriteIndex;
 exports.stateToHenchmanSpriteIndex = stateToHenchmanSpriteIndex;
 exports.CombatState = void 0;
@@ -48422,6 +48431,8 @@ exports.CombatState = void 0;
 var _assets = require("../assets");
 
 var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+
+var _CombatTrait = require("./CombatTrait");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -48437,6 +48448,42 @@ exports.CombatState = CombatState;
   CombatState["Prone"] = "Prone";
   CombatState["Stunned"] = "Stunned";
 })(CombatState || (exports.CombatState = CombatState = {}));
+
+function getStateHelpText(state, traits) {
+  const isArmored = traits.indexOf(_CombatTrait.CombatTrait.Armored) !== -1;
+
+  switch (state) {
+    case CombatState.Standing:
+      if (isArmored) {
+        return "Not doing anything in particular. Can be hit, but hits will do no damage unless stunned.";
+      } else {
+        return "Not doing anything in particular. Can be hit.";
+      }
+
+    case CombatState.PunchTelegraph:
+      return "About to punch.";
+
+    case CombatState.PunchFollowthrough:
+      return "Just punched.";
+
+    case CombatState.SuperpunchTelegraph:
+      return "About to punch REALLY HARD. Cannot counter. Dodge away to avoid.";
+
+    case CombatState.SuperpunchFollowthrough:
+      return "Just punched REALLY HARD.";
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
+
+    case CombatState.Prone:
+      return "On the ground and out of commission for a bit.";
+
+    case CombatState.Stunned:
+      return "Knocked back by a hit. Will need to wait to recover.";
+
+    default:
+      throw new _UnreachableCaseError.default(state);
+  }
+}
 
 function stateToPlayerSpriteIndex(state) {
   switch (state) {
@@ -48497,7 +48544,7 @@ function stateToHenchmanSpriteIndex(state) {
       throw new _UnreachableCaseError.default(state);
   }
 }
-},{"../assets":"be73c6663579275afb4521336d5df627","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
+},{"../assets":"be73c6663579275afb4521336d5df627","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a"}],"3add87e37894a9d9803dcf3bbb445654":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48513,6 +48560,23 @@ class UnreachableCaseError extends Error {
 }
 
 exports.default = UnreachableCaseError;
+},{}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CombatTrait = void 0;
+let CombatTrait;
+exports.CombatTrait = CombatTrait;
+
+(function (CombatTrait) {
+  CombatTrait["Armored"] = "Armored";
+  CombatTrait["Fluid"] = "Fluid";
+  CombatTrait["WieldingGun"] = "WieldingGun";
+  CombatTrait["WieldingShield"] = "WieldingShield";
+  CombatTrait["WieldingShockBaton"] = "WieldingShockBaton";
+})(CombatTrait || (exports.CombatTrait = CombatTrait = {}));
 },{}],"73d749e6e343a99543ba0639dd49d959":[function(require,module,exports) {
 "use strict";
 
@@ -49529,10 +49593,10 @@ class CombatSystem extends _ecs.System {
           this.changeHP(defender, -_stats.STATS.PUNCH_DAMAGE);
 
           if (this.rng.choice([0, 1]) === 0) {
-            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`);
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert. (50% chance to stun failed.)`);
           } else {
             defenderCombatC.becomeStunned(1, defender.getComponent(_sprite.SpriteC));
-            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`);
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn. (50% chance to stun succeeded.)`);
           }
 
           break;
@@ -49629,24 +49693,7 @@ class CombatSystem extends _ecs.System {
 }
 
 exports.CombatSystem = CombatSystem;
-},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"349225c40e349ec8c722faa04ec8f27a":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.CombatTrait = void 0;
-let CombatTrait;
-exports.CombatTrait = CombatTrait;
-
-(function (CombatTrait) {
-  CombatTrait["Armored"] = "Armored";
-  CombatTrait["Fluid"] = "Fluid";
-  CombatTrait["WieldingGun"] = "WieldingGun";
-  CombatTrait["WieldingShield"] = "WieldingShield";
-  CombatTrait["WieldingShockBaton"] = "WieldingShockBaton";
-})(CombatTrait || (exports.CombatTrait = CombatTrait = {}));
-},{}],"e69508817b554227faa09f5ca2f18e8f":[function(require,module,exports) {
+},{"@nova-engine/ecs":"62d869f68915639c760dec8a8cc99c86","../assets":"be73c6663579275afb4521336d5df627","../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","./direction":"8d08baf8b9861766c30a87961a2d3da1","./sprite":"488445ffc318f5d280c0d86556dce008","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654","./CombatC":"b6e902b421f06cf2a74c6c109af52761","./CombatTrait":"349225c40e349ec8c722faa04ec8f27a","./CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../KefirBus":"e69508817b554227faa09f5ca2f18e8f","./stats":"f5de88ee31cebd904f144c7f51872c1a","../game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"e69508817b554227faa09f5ca2f18e8f":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
