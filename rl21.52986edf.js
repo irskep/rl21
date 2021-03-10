@@ -47066,6 +47066,10 @@ var _MenuScene = require("../MenuScene");
 
 var _difficulties = require("../ecs/difficulties");
 
+var _mousetrap = _interopRequireDefault(require("mousetrap"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class LevelScene {
@@ -47170,7 +47174,9 @@ class LevelScene {
   }
 
   enter() {
-    console.log("enter", this); // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
+    console.log("enter", this);
+
+    _mousetrap.default.bind(["n"], () => this.goToNextScene());
 
     this.game.app.ticker.add(this.gameLoop);
 
@@ -47183,6 +47189,14 @@ class LevelScene {
       this.handleCombatEvent(event);
     });
     this.writeMessage("Atman enters the room.");
+  }
+
+  exit() {
+    console.log("exit", this);
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+
+    _mousetrap.default.unbind(["n"]);
   }
 
   addChildren() {
@@ -47283,12 +47297,6 @@ class LevelScene {
       if (!action) return;
       this.handleClick(cell.pos, action);
     });
-  }
-
-  exit() {
-    console.log("exit", this);
-    this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
   }
 
   updateTileSprites() {
@@ -47485,7 +47493,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49780,7 +49788,7 @@ class CombatSystem extends _ecs.System {
     newPosD = newPosD.clone().add(delta);
     let i = 0;
 
-    while (ecs.tilemap.getCell(newPosD)?.index === _assets.EnvIndices.FLOOR && i < n) {
+    while (ecs.tilemap.getCell(newPosD)?.index === _assets.EnvIndices.FLOOR && i < n && ecs.spriteSystem.findCombatEntity(newPosD) === null) {
       didPush = true;
       i += 1;
       defenderSpriteC.pos = newPosD;
