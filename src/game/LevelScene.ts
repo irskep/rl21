@@ -26,6 +26,7 @@ import {
 } from "./AnimationHandler";
 import { MenuScene } from "../MenuScene";
 import { DIFFICULTIES } from "../ecs/difficulties";
+import Mousetrap from "mousetrap";
 
 export class LevelScene implements GameScene {
   /* pixi stuff */
@@ -87,7 +88,7 @@ export class LevelScene implements GameScene {
 
   enter() {
     console.log("enter", this);
-    // Mousetrap.bind(["enter", "space"], this.handleKeyPress);
+    Mousetrap.bind(["n"], () => this.goToNextScene());
     this.game.app.ticker.add(this.gameLoop);
 
     if (!this.container.children.length) {
@@ -101,6 +102,13 @@ export class LevelScene implements GameScene {
     });
 
     this.writeMessage("Atman enters the room.");
+  }
+
+  exit() {
+    console.log("exit", this);
+    this.game.app.ticker.remove(this.gameLoop);
+    this.game.app.stage.removeChild(this.container);
+    Mousetrap.unbind(["n"]);
   }
 
   addChildren() {
@@ -235,12 +243,6 @@ export class LevelScene implements GameScene {
       if (!action) return;
       this.handleClick(cell.pos, action);
     });
-  }
-
-  exit() {
-    console.log("exit", this);
-    this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
   }
 
   updateTileSprites() {

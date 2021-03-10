@@ -376,7 +376,11 @@ export class CombatSystem extends System {
     let newPosD = posD;
     newPosD = newPosD.clone().add(delta);
     let i = 0;
-    while (ecs.tilemap.getCell(newPosD)?.index === EnvIndices.FLOOR && i < n) {
+    while (
+      ecs.tilemap.getCell(newPosD)?.index === EnvIndices.FLOOR &&
+      i < n &&
+      ecs.spriteSystem.findCombatEntity(newPosD) === null
+    ) {
       didPush = true;
       i += 1;
       defenderSpriteC.pos = newPosD;

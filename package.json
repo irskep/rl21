@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/kefir": "^3.8.5",
+    "@types/mousetrap": "^1.6.5",
     "@types/pixi.js": "^5.0.0",
     "@types/rot-js": "^2.0.1",
     "@types/seedrandom": "^2.4.28",
