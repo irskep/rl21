@@ -202,18 +202,22 @@ export class LevelScene implements GameScene {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
     const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
     this.gfx.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
-    let firstLine = okMoves
-      .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
-      .join("; ");
+    let firstLine =
+      "Possible moves: " +
+      okMoves
+        .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
+        .join("; ");
     if (okMoves.length === 0) {
       firstLine = "No moves available at selected position";
     }
 
+    // const secondLine =
+    //   "Omitted: " +
+    //   notOkMoves
+    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
+    //     .join("; ");
     const secondLine =
-      "Omitted: " +
-      notOkMoves
-        .map(([move, result]) => `${move.name} (${result.message || "?"})`)
-        .join("; ");
+      "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
 
     this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }

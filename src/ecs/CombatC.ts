@@ -5,6 +5,7 @@ import {
   CombatState,
   stateToPlayerSpriteIndex,
   stateToHenchmanSpriteIndex,
+  getStateHelpText,
 } from "./CombatState";
 import { CombatTrait } from "./CombatTrait";
 import { Goal } from "./Goal";
@@ -37,11 +38,14 @@ export class CombatC implements Component {
     const hpText = `HP: ${this.hp}/${this.hpMax}`;
     const traitsText = this.traits.join("\n");
     let text = hpText + "\n\n";
-    if (this.recoveryTimer) {
-      text += `${this.state} for ${this.recoveryTimer} turns`;
+    if (this.recoveryTimer === 1) {
+      text += `${this.state} for 1 turn.`;
+    } else if (this.recoveryTimer > 1) {
+      text += `${this.state} for ${this.recoveryTimer} turns.`;
     } else {
       text += this.state;
     }
+    text += "\n" + getStateHelpText(this.state, this.traits);
     text += "\n\n";
     text += traitsText;
     return text;

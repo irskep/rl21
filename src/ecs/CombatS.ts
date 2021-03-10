@@ -283,12 +283,12 @@ export class CombatSystem extends System {
           this.changeHP(defender, -STATS.PUNCH_DAMAGE);
           if (this.rng.choice([0, 1]) === 0) {
             ecs.writeMessage(
-              `${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`
+              `${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert. (50% chance to stun failed.)`
             );
           } else {
             defenderCombatC.becomeStunned(1, defender.getComponent(SpriteC));
             ecs.writeMessage(
-              `${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`
+              `${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn. (50% chance to stun succeeded.)`
             );
           }
           break;

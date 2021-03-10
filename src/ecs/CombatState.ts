@@ -1,5 +1,7 @@
 import { SpriteIndices } from "../assets";
+import { isAdjacent } from "../game/tilemap";
 import UnreachableCaseError from "../UnreachableCaseError";
+import { CombatTrait } from "./CombatTrait";
 
 export enum CombatState {
   Standing = "Standing",
@@ -10,6 +12,37 @@ export enum CombatState {
   // Punched = "Punched",
   Prone = "Prone",
   Stunned = "Stunned",
+}
+
+export function getStateHelpText(
+  state: CombatState,
+  traits: CombatTrait[]
+): string {
+  const isArmored = traits.indexOf(CombatTrait.Armored) !== -1;
+  switch (state) {
+    case CombatState.Standing:
+      if (isArmored) {
+        return "Not doing anything in particular. Can be hit, but hits will do no damage unless stunned.";
+      } else {
+        return "Not doing anything in particular. Can be hit.";
+      }
+    case CombatState.PunchTelegraph:
+      return "About to punch.";
+    case CombatState.PunchFollowthrough:
+      return "Just punched.";
+    case CombatState.SuperpunchTelegraph:
+      return "About to punch REALLY HARD. Cannot counter. Dodge away to avoid.";
+    case CombatState.SuperpunchFollowthrough:
+      return "Just punched REALLY HARD.";
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
+    case CombatState.Prone:
+      return "On the ground and out of commission for a bit.";
+    case CombatState.Stunned:
+      return "Knocked back by a hit. Will need to wait to recover.";
+    default:
+      throw new UnreachableCaseError(state);
+  }
 }
 
 export function stateToPlayerSpriteIndex(state: CombatState): number {
