@@ -47068,11 +47068,11 @@ class MenuScene {
     });
 
     _defineProperty(this, "handleTouchStart", () => {
-      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0, [])]);
     });
 
     _defineProperty(this, "handleKeyPress", () => {
-      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0)]);
+      this.game.replaceScenes([new _LevelScene.LevelScene(this.game, 0, [])]);
     });
 
     this.game = game;
@@ -48451,11 +48451,14 @@ class LevelScene {
 
     if (okMoves.length === 0) {
       firstLine = "No moves available at selected position";
-    }
+    } // const secondLine =
+    //   "Omitted: " +
+    //   notOkMoves
+    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
+    //     .join("; ");
 
-    const secondLine = "Omitted: " + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("; "); // const secondLine =
-    //   "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
 
+    const secondLine = "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
     this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }
 
