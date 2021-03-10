@@ -59,8 +59,8 @@ export class FastPunch implements Move {
         );
         ctx.ecs.spriteSystem.cowboyUpdate();
         doNext();
-      }, 500);
-    }, 500);
+      }, 300);
+    }, 300);
     return true;
   }
 }

@@ -51,7 +51,8 @@ export class CombatSystem extends System {
 
   rng = new RNG(`${Date.now()}`);
 
-  STUN_TIMER_CHOICES = [1, 2];
+  STUN_TIMER_NORMAL = 1;
+  STUN_TIMER_ARMORED = 2;
 
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
@@ -74,16 +75,21 @@ export class CombatSystem extends System {
 
   update(engine: Engine, delta: number) {
     this.isProcessing = true;
+    this.checkForDeadEnemies();
     this.entitiesToProcess = new Array<Entity>().concat(this.family.entities);
     this.processNextEntity();
   }
 
-  private cleanupProcessingAndNotify() {
+  checkForDeadEnemies() {
     for (let e of new Array<Entity>().concat(this.family.entities)) {
       const combatC = e.getComponent(CombatC);
       if (combatC.hp > 0) continue;
       this.kill(e);
     }
+  }
+
+  private cleanupProcessingAndNotify() {
+    this.checkForDeadEnemies();
     const remainingEntities = this.family.entities;
     if (
       remainingEntities.length === 1 &&
@@ -294,7 +300,7 @@ export class CombatSystem extends System {
     switch (state) {
       case CombatState.Stunned:
         landPunch();
-        defenderCombatC.recoveryTimer += 1; // stay stunned longer
+        // defenderCombatC.recoveryTimer += 1; // stay stunned longer
         defenderCombatC.updateText(defender.getComponent(SpriteC));
         break;
       case CombatState.Punched:
@@ -342,7 +348,9 @@ export class CombatSystem extends System {
           object: defender,
         });
         defenderCombatC.becomeStunned(
-          this.STUN_TIMER,
+          defenderCombatC.hasTrait(CombatTrait.Armored)
+            ? this.STUN_TIMER_ARMORED
+            : this.STUN_TIMER_NORMAL,
           defender.getComponent(SpriteC)
         );
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);

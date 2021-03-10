@@ -438,7 +438,7 @@ export class LevelScene implements GameScene {
 
   writeMessage = (msg: string) => {
     this.messages.push(msg);
-    while (this.messages.length > 10) {
+    while (this.messages.length > 20) {
       this.messages.shift();
     }
     this.messageLog.text = this.messages.join("\n");

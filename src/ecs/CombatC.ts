@@ -59,6 +59,7 @@ export class CombatC implements Component {
   }
 
   becomeStunned(turns: number, spriteC: SpriteC) {
+    console.log("Stun for", turns, "turns");
     this.setState(CombatState.Stunned, spriteC);
     this.recoveryTimer = turns;
     this.updateText(spriteC);
