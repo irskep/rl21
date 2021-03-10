@@ -47042,11 +47042,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.LevelScene = void 0;
 
-var _pixi = require("pixi.js");
-
 var _vector2d = require("vector2d");
-
-var _assets = require("../assets");
 
 var _tilemap = require("./tilemap");
 
@@ -47060,61 +47056,25 @@ var _sprite = require("../ecs/sprite");
 
 var _CombatS = require("../ecs/CombatS");
 
-var _AnimationHandler = require("./AnimationHandler");
-
 var _MenuScene = require("../MenuScene");
 
 var _difficulties = require("../ecs/difficulties");
 
 var _mousetrap = _interopRequireDefault(require("mousetrap"));
 
+var _LevelSceneGfx = require("./LevelSceneGfx");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class LevelScene {
-  /* pixi stuff */
+  /* state management */
   // display
   constructor(game, n) {
-    _defineProperty(this, "container", new _pixi.Container());
-
-    _defineProperty(this, "hudContainer", new _pixi.Container());
-
-    _defineProperty(this, "gameAreaContainer", new _pixi.Container());
-
-    _defineProperty(this, "tilemapContainer", new _pixi.Container());
-
-    _defineProperty(this, "arena", new _pixi.Container());
-
-    _defineProperty(this, "overlayContainer", new _pixi.Container());
-
-    _defineProperty(this, "hoverSprite", new _pixi.Sprite());
-
-    _defineProperty(this, "dbgText", new _pixi.Text(""));
-
-    _defineProperty(this, "inputHintText", new _pixi.Text(""));
-
-    _defineProperty(this, "messageLogBg", new _pixi.Graphics());
-
-    _defineProperty(this, "messageLog", new _pixi.Text(""));
-
-    _defineProperty(this, "messages", new Array());
-
-    _defineProperty(this, "mouseoverContainer", new _pixi.Container());
-
-    _defineProperty(this, "mouseoverBg", new _pixi.Graphics());
-
-    _defineProperty(this, "mouseoverText", new _pixi.Text(""));
-
-    _defineProperty(this, "heartsContainer", new _pixi.Container());
-
-    _defineProperty(this, "heartSprites", []);
-
     _defineProperty(this, "map", new _tilemap.Tilemap(new _vector2d.Vector(10, 10)));
 
     _defineProperty(this, "possibleMoves", []);
-
-    _defineProperty(this, "animationHandler", new _AnimationHandler.AnimationHandler());
 
     _defineProperty(this, "hoveredPos", null);
 
@@ -47122,18 +47082,10 @@ class LevelScene {
 
     _defineProperty(this, "hoveredEntity", null);
 
-    _defineProperty(this, "writeMessage", msg => {
-      this.messages.push(msg);
-
-      while (this.messages.length > 20) {
-        this.messages.shift();
-      }
-
-      this.messageLog.text = this.messages.join("\n");
-    });
+    _defineProperty(this, "isInitialized", false);
 
     _defineProperty(this, "gameLoop", dt => {
-      this.animationHandler.tick(dt);
+      this.gfx.tick(dt);
     });
 
     _defineProperty(this, "tick", () => {
@@ -47150,19 +47102,7 @@ class LevelScene {
 
     this.game = game;
     this.n = n;
-    this.container.interactive = true;
-  }
-
-  get screenSize() {
-    let width = this.game.app.screen.width;
-    let height = width * (3 / 4);
-
-    if (height > this.game.app.screen.height) {
-      height = this.game.app.screen.height;
-      width = height * (4 / 3);
-    }
-
-    return new _vector2d.Vector(width, height);
+    this.gfx = new _LevelSceneGfx.LevelSceneGfx(game, this.map);
   }
 
   goToNextScene() {
@@ -47179,104 +47119,36 @@ class LevelScene {
     _mousetrap.default.bind(["n"], () => this.goToNextScene());
 
     this.game.app.ticker.add(this.gameLoop);
+    this.gfx.enter();
 
-    if (!this.container.children.length) {
-      this.addChildren();
+    if (!this.isInitialized) {
+      this.isInitialized = true;
+      this.map.updateCells(cell => {
+        this.bindCellEvents(cell, cell.sprite);
+      });
+      this.ecs = (0, _ecs.makeECS)(this.game, this.gfx.arena, this.map, this.gfx.writeMessage, this.n);
+      this.ecs.combatSystem.tilemap = this.map;
+      this.updateTileSprites();
+      this.ecs.engine.update(1);
+      this.updateHUDText();
+      this.updateHearts();
     }
 
-    this.game.app.stage.addChild(this.container);
     this.ecs.combatSystem.events.stream.onValue(event => {
       this.handleCombatEvent(event);
     });
-    this.writeMessage("Atman enters the room.");
+    this.gfx.writeMessage("Atman enters the room.");
   }
 
   exit() {
     console.log("exit", this);
     this.game.app.ticker.remove(this.gameLoop);
-    this.game.app.stage.removeChild(this.container);
+    this.gfx.exit();
 
     _mousetrap.default.unbind(["n"]);
   }
 
-  addChildren() {
-    this.container.addChild(this.gameAreaContainer);
-    this.gameAreaContainer.addChild(this.tilemapContainer);
-    this.gameAreaContainer.addChild(this.arena);
-    this.gameAreaContainer.addChild(this.overlayContainer);
-    this.container.addChild(this.hudContainer);
-    this.tilemapContainer.interactive = true;
-    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
-    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.hoverSprite.texture = this.game.filmstrips.env[_assets.EnvIndices.HOVER];
-    this.hoverSprite.visible = false;
-    this.overlayContainer.addChild(this.hoverSprite);
-    const consoleStyle = {
-      fontSize: 18,
-      fontFamily: "Barlow Condensed",
-      fill: "white",
-      align: "left",
-      wordWrap: true,
-      wordWrapWidth: 320
-    };
-    this.dbgText.style = new _pixi.TextStyle(consoleStyle);
-    this.hudContainer.addChild(this.dbgText);
-    this.inputHintText.style = new _pixi.TextStyle(consoleStyle);
-    this.hudContainer.addChild(this.inputHintText);
-    this.hudContainer.addChild(this.heartsContainer);
-    this.messageLog.style = new _pixi.TextStyle(consoleStyle);
-    this.hudContainer.addChild(this.messageLogBg);
-    this.messageLogBg.addChild(this.messageLog);
-    this.mouseoverText.style = new _pixi.TextStyle(consoleStyle);
-    this.mouseoverContainer.addChild(this.mouseoverBg);
-    this.mouseoverContainer.addChild(this.mouseoverText);
-    this.mouseoverContainer.visible = false;
-    this.hudContainer.addChild(this.mouseoverContainer);
-
-    for (let y = 0; y < this.map.size.y; y++) {
-      for (let x = 0; x < this.map.size.x; x++) {
-        const cellSprite = new _pixi.Sprite();
-        const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.filmstrips.env[cell.index];
-        cell.sprite = cellSprite;
-        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
-        cellSprite.interactive = true;
-        this.bindEvents(cell, cellSprite);
-        this.tilemapContainer.addChild(cellSprite);
-      }
-    }
-
-    this.layoutScreenElements();
-    this.ecs = (0, _ecs.makeECS)(this.game, this.arena, this.map, this.writeMessage, this.n);
-    this.ecs.combatSystem.tilemap = this.map;
-    this.updateTileSprites();
-    this.ecs.engine.update(1);
-    this.updateHUDText();
-    this.updateHearts();
-  }
-
-  layoutScreenElements() {
-    /* set up whole-screen layout */
-    const gameAreaMask = new _pixi.Graphics();
-    gameAreaMask.beginFill(0xffffff);
-    gameAreaMask.drawRect(0, 0, this.screenSize.x - 320, this.screenSize.y - 60);
-    gameAreaMask.endFill();
-    this.gameAreaContainer.mask = gameAreaMask;
-    this.gameAreaContainer.position.set(0, 30);
-    this.dbgText.position.set(10, 10);
-    this.inputHintText.position.set(10, this.gameAreaContainer.position.y + this.gameAreaContainer.height);
-    this.inputHintText.style.wordWrapWidth = this.screenSize.x;
-    this.messageLogBg.position.set(this.gameAreaContainer.width, 0);
-    this.messageLog.position.set(10, 10);
-    this.messageLogBg.beginFill(0x333366);
-    this.messageLogBg.drawRect(0, 0, this.screenSize.x - this.gameAreaContainer.width, this.gameAreaContainer.height + this.gameAreaContainer.position.y);
-    this.messageLogBg.endFill();
-    this.messageLog.style.wordWrapWidth = this.screenSize.x - this.gameAreaContainer.width - 10;
-    this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
-  }
-
-  bindEvents(cell, cellSprite) {
+  bindCellEvents(cell, cellSprite) {
     cellSprite.on("mouseover", e => {
       if (this.ecs.combatSystem.isProcessing) {
         this.hoveredPosDuringUpdate = cell.pos;
@@ -47317,23 +47189,12 @@ class LevelScene {
           this.updateHearts();
         }
 
-        const text = new _pixi.Text(`${event.value}`, {
-          fontSize: 48,
-          fontFamily: "Barlow Condensed",
-          fill: "#ff6666"
-        });
-        const sourceSprite = event.subject.getComponent(_sprite.SpriteC);
-        text.position.set(sourceSprite.sprite.position.x, sourceSprite.sprite.position.y);
-        sourceSprite.sprite.parent.addChild(text);
-        this.animationHandler.add((0, _AnimationHandler.makeDriftAndFadeAnimation)(text, 3, new _vector2d.Vector(-100, -100)));
+        this.gfx.showFloatingText(event.subject.getComponent(_sprite.SpriteC).sprite, `${event.value}`, "#ff6666");
         break;
 
       case _CombatS.CombatEventType.Die:
         if (event.subject === this.ecs.player) {
-          const victorySprite = new _pixi.Sprite(this.game.images["youlose"]);
-          victorySprite.anchor.set(0.5, 0.5);
-          victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
-          this.hudContainer.addChild(victorySprite);
+          this.gfx.showLoss();
           setTimeout(() => {
             this.game.replaceScenes([new _MenuScene.MenuScene(this.game)]);
           }, 2000);
@@ -47342,10 +47203,7 @@ class LevelScene {
         break;
 
       case _CombatS.CombatEventType.AllEnemiesDead:
-        const victorySprite = new _pixi.Sprite(this.game.images["stagecomplete"]);
-        victorySprite.anchor.set(0.5, 0.5);
-        victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
-        this.hudContainer.addChild(victorySprite);
+        this.gfx.showVictory();
         setTimeout(() => {
           this.goToNextScene();
         }, 2000);
@@ -47358,44 +47216,17 @@ class LevelScene {
     this.updateHUDText();
 
     if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
-      this.hoverSprite.visible = true;
-      this.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
+      this.gfx.hoverSprite.visible = true;
+      this.gfx.hoverSprite.position.set(this.hoveredPos.x * this.game.tileSize, this.hoveredPos.y * this.game.tileSize);
     } else {
-      this.hoverSprite.visible = false;
+      this.gfx.hoverSprite.visible = false;
     }
 
     if (pos) {
-      this.updateHoveredEntity(this.ecs.spriteSystem.findCombatEntity(pos) || null);
+      this.gfx.updateHoveredEntity(this.ecs.spriteSystem.findCombatEntity(pos) || null);
     } else {
-      this.updateHoveredEntity(null);
+      this.gfx.updateHoveredEntity(null);
     }
-  }
-
-  updateHoveredEntity(e) {
-    if (!e) {
-      this.mouseoverContainer.visible = false;
-      return;
-    }
-
-    const tilePos = e.getComponent(_sprite.SpriteC).pos;
-    const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
-    this.mouseoverContainer.position.set(pos.x, pos.y);
-    this.mouseoverContainer.visible = true;
-    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_CombatC.CombatC).hoverText}`;
-    this.mouseoverText.text = text;
-    this.mouseoverText.position.set(4, 4);
-    const size = new _vector2d.Vector(this.mouseoverText.width + 8, this.mouseoverText.height + 8);
-    const gfx = this.mouseoverBg;
-    gfx.clear();
-    gfx.width = size.x;
-    gfx.height = size.y;
-    gfx.lineStyle({
-      width: 1,
-      color: 0xffffff
-    });
-    gfx.beginFill(0x000000);
-    gfx.drawRect(0, 0, size.x, size.y - 2);
-    gfx.endFill();
   }
 
   updatePossibleMoves() {
@@ -47424,7 +47255,7 @@ class LevelScene {
   updateHUDText() {
     const okMoves = this.possibleMoves.filter(x => x[1].success);
     const notOkMoves = this.possibleMoves.filter(x => !x[1].success);
-    this.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
+    this.gfx.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
     let firstLine = okMoves.map(([move]) => `${move.name} (${(0, _input.getActionText)(move.action)})`) // (${move.help})`)
     .join("; ");
 
@@ -47433,35 +47264,11 @@ class LevelScene {
     }
 
     const secondLine = "Omitted: " + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("; ");
-    this.inputHintText.text = firstLine + "\n\n" + secondLine;
+    this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }
 
   updateHearts() {
-    const combatC = this.ecs.player.getComponent(_CombatC.CombatC);
-    const halfHP = combatC.hp / 2;
-
-    for (const sprite of this.heartSprites) {
-      sprite.visible = false;
-    }
-
-    for (let i = 0; i < Math.ceil(halfHP); i++) {
-      let sprite;
-
-      if (i >= this.heartSprites.length) {
-        sprite = new _pixi.Sprite(this.game.filmstrips["heart"][0]);
-        sprite.position.set(i * 21, 0);
-        this.heartSprites.push(sprite);
-        this.heartsContainer.addChild(sprite);
-      } else {
-        sprite = this.heartSprites[i];
-      }
-
-      sprite.visible = true;
-
-      if (i + 1 == Math.ceil(halfHP)) {
-        sprite.texture = this.game.filmstrips["heart"][halfHP % 1 === 0 ? 0 : 1];
-      }
-    }
+    this.gfx.updateHearts(this.ecs.player.getComponent(_CombatC.CombatC).hp);
   }
 
   handleClick(pos, action) {
@@ -47475,7 +47282,7 @@ class LevelScene {
     }
 
     this.hoveredPosDuringUpdate = this.hoveredPos;
-    this.writeMessage("-----------------");
+    this.gfx.writeMessage("-----------------");
 
     if (actionMoves.length === 1) {
       this.updateHoverCell(null);
@@ -47494,7 +47301,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../ecs/CombatS":"e32769aa44fa2bb3b4698cdeb79e039a","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87","./LevelSceneGfx":"3455fb2a563c046f1f6dc8946c2f2715"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -47547,6 +47354,14 @@ class Tilemap {
   updateCell(pos, callback) {
     const cell = this.getCell(pos);
     if (cell) callback(cell);
+  }
+
+  updateCells(callback) {
+    for (let y = 0; y < this.size.y; y++) {
+      for (let x = 0; x < this.size.x; x++) {
+        callback(this.contents[y][x]);
+      }
+    }
   }
 
   getCell(pos) {
@@ -49154,6 +48969,7 @@ class TelegraphedPunchFollowthroughHit {
 
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+    ctx.ecs.spriteSystem.cowboyUpdate();
     setTimeout(() => {
       combatC.setState(_CombatState.CombatState.Standing, spriteC);
       ctx.ecs.spriteSystem.cowboyUpdate();
@@ -56252,65 +56068,6 @@ const DIFFICULTIES = [{
   mapgenAlgo: "basic"
 }];
 exports.DIFFICULTIES = DIFFICULTIES;
-},{}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.makeDriftAndFadeAnimation = makeDriftAndFadeAnimation;
-exports.AnimationHandler = void 0;
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-class AnimationHandler {
-  constructor() {
-    _defineProperty(this, "animations", new Array());
-
-    _defineProperty(this, "lastT", performance.now());
-  }
-
-  tick(dtMs) {
-    const now = performance.now();
-    const dt = (now - this.lastT) / 1000;
-    this.lastT = now;
-    const nextAnimations = new Array();
-
-    for (let animation of this.animations) {
-      animation.timePassed = (animation.timePassed || 0) + dt; // console.log(animation.timePassed);
-
-      animation.apply(dt, animation.timePassed);
-
-      if (animation.timePassed >= animation.duration) {
-        animation.finish();
-      } else {
-        nextAnimations.push(animation);
-      }
-    }
-
-    this.animations = nextAnimations;
-  }
-
-  add(a) {
-    this.animations.push(a);
-  }
-
-}
-
-exports.AnimationHandler = AnimationHandler;
-
-function makeDriftAndFadeAnimation(obj, duration, velocity) {
-  return {
-    duration,
-    apply: (dt, timePassed) => {
-      obj.position.set(obj.position.x + dt * velocity.x, obj.position.y + dt * velocity.y);
-      obj.alpha = 1 - timePassed / duration;
-    },
-    finish: () => {
-      obj.parent.removeChild(obj);
-    }
-  };
-}
 },{}],"3d2e89863f09a0b02a84cdeaa16aee37":[function(require,module,exports) {
 "use strict";
 
@@ -57490,6 +57247,334 @@ var define;
     });
   }
 })(typeof window !== 'undefined' ? window : null, typeof window !== 'undefined' ? document : null);
+},{}],"3455fb2a563c046f1f6dc8946c2f2715":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LevelSceneGfx = void 0;
+
+var _pixi = require("pixi.js");
+
+var _vector2d = require("vector2d");
+
+var _assets = require("../assets");
+
+var _CombatC = require("../ecs/CombatC");
+
+var _sprite = require("../ecs/sprite");
+
+var _AnimationHandler = require("./AnimationHandler");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class LevelSceneGfx {
+  /* pixi stuff */
+  constructor(game, map) {
+    _defineProperty(this, "container", new _pixi.Container());
+
+    _defineProperty(this, "hudContainer", new _pixi.Container());
+
+    _defineProperty(this, "gameAreaContainer", new _pixi.Container());
+
+    _defineProperty(this, "tilemapContainer", new _pixi.Container());
+
+    _defineProperty(this, "arena", new _pixi.Container());
+
+    _defineProperty(this, "overlayContainer", new _pixi.Container());
+
+    _defineProperty(this, "hoverSprite", new _pixi.Sprite());
+
+    _defineProperty(this, "dbgText", new _pixi.Text(""));
+
+    _defineProperty(this, "inputHintText", new _pixi.Text(""));
+
+    _defineProperty(this, "messageLogBg", new _pixi.Graphics());
+
+    _defineProperty(this, "messageLog", new _pixi.Text(""));
+
+    _defineProperty(this, "messages", new Array());
+
+    _defineProperty(this, "mouseoverContainer", new _pixi.Container());
+
+    _defineProperty(this, "mouseoverBg", new _pixi.Graphics());
+
+    _defineProperty(this, "mouseoverText", new _pixi.Text(""));
+
+    _defineProperty(this, "heartsContainer", new _pixi.Container());
+
+    _defineProperty(this, "heartSprites", []);
+
+    _defineProperty(this, "animationHandler", new _AnimationHandler.AnimationHandler());
+
+    _defineProperty(this, "tick", dt => {
+      this.animationHandler.tick(dt);
+    });
+
+    _defineProperty(this, "writeMessage", msg => {
+      this.messages.push(msg);
+
+      while (this.messages.length > 20) {
+        this.messages.shift();
+      }
+
+      this.messageLog.text = this.messages.join("\n");
+    });
+
+    this.game = game;
+    this.map = map;
+    this.app = game.app;
+    this.container.interactive = true;
+  }
+
+  get screenSize() {
+    let width = this.app.screen.width;
+    let height = width * (3 / 4);
+
+    if (height > this.app.screen.height) {
+      height = this.app.screen.height;
+      width = height * (4 / 3);
+    }
+
+    return new _vector2d.Vector(width, height);
+  }
+
+  enter() {
+    if (!this.container.children.length) {
+      this.addChildren();
+    }
+
+    this.app.stage.addChild(this.container);
+  }
+
+  exit() {
+    this.app.stage.removeChild(this.container);
+  }
+
+  addChildren() {
+    this.container.addChild(this.gameAreaContainer);
+    this.gameAreaContainer.addChild(this.tilemapContainer);
+    this.gameAreaContainer.addChild(this.arena);
+    this.gameAreaContainer.addChild(this.overlayContainer);
+    this.container.addChild(this.hudContainer);
+    this.tilemapContainer.interactive = true;
+    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
+    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
+    this.hoverSprite.texture = this.game.filmstrips.env[_assets.EnvIndices.HOVER];
+    this.hoverSprite.visible = false;
+    this.overlayContainer.addChild(this.hoverSprite);
+    const consoleStyle = {
+      fontSize: 18,
+      fontFamily: "Barlow Condensed",
+      fill: "white",
+      align: "left",
+      wordWrap: true,
+      wordWrapWidth: 320
+    };
+    this.dbgText.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.dbgText);
+    this.inputHintText.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.inputHintText);
+    this.hudContainer.addChild(this.heartsContainer);
+    this.messageLog.style = new _pixi.TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.messageLogBg);
+    this.messageLogBg.addChild(this.messageLog);
+    this.mouseoverText.style = new _pixi.TextStyle(consoleStyle);
+    this.mouseoverContainer.addChild(this.mouseoverBg);
+    this.mouseoverContainer.addChild(this.mouseoverText);
+    this.mouseoverContainer.visible = false;
+    this.hudContainer.addChild(this.mouseoverContainer);
+
+    for (let y = 0; y < this.map.size.y; y++) {
+      for (let x = 0; x < this.map.size.x; x++) {
+        const cellSprite = new _pixi.Sprite();
+        const cell = this.map.contents[y][x];
+        cellSprite.texture = this.game.filmstrips.env[cell.index];
+        cell.sprite = cellSprite;
+        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+        cellSprite.interactive = true;
+        this.tilemapContainer.addChild(cellSprite);
+      }
+    }
+
+    this.layoutScreenElements();
+    this.updateTileSprites();
+  }
+
+  layoutScreenElements() {
+    /* set up whole-screen layout */
+    const gameAreaMask = new _pixi.Graphics();
+    gameAreaMask.beginFill(0xffffff);
+    gameAreaMask.drawRect(0, 0, this.screenSize.x - 320, this.screenSize.y - 60);
+    gameAreaMask.endFill();
+    this.gameAreaContainer.mask = gameAreaMask;
+    this.gameAreaContainer.position.set(0, 30);
+    this.dbgText.position.set(10, 10);
+    this.inputHintText.position.set(10, this.gameAreaContainer.position.y + this.gameAreaContainer.height);
+    this.inputHintText.style.wordWrapWidth = this.screenSize.x;
+    this.messageLogBg.position.set(this.gameAreaContainer.width, 0);
+    this.messageLog.position.set(10, 10);
+    this.messageLogBg.beginFill(0x333366);
+    this.messageLogBg.drawRect(0, 0, this.screenSize.x - this.gameAreaContainer.width, this.gameAreaContainer.height + this.gameAreaContainer.position.y);
+    this.messageLogBg.endFill();
+    this.messageLog.style.wordWrapWidth = this.screenSize.x - this.gameAreaContainer.width - 10;
+    this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
+  }
+
+  updateTileSprites() {
+    for (let y = 0; y < this.map.size.y; y++) {
+      for (let x = 0; x < this.map.size.x; x++) {
+        const cell = this.map.contents[y][x];
+        cell.sprite.texture = this.game.filmstrips.env[cell.index];
+      }
+    }
+  }
+
+  updateHoveredEntity(e) {
+    if (!e) {
+      this.mouseoverContainer.visible = false;
+      return;
+    }
+
+    const tilePos = e.getComponent(_sprite.SpriteC).pos;
+    const pos = new _vector2d.Vector((tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10, tilePos.y * this.game.tileSize * this.arena.scale.y);
+    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.visible = true;
+    const text = `${e.getComponent(_sprite.SpriteC).hoverText}\n\n${e.getComponent(_CombatC.CombatC).hoverText}`;
+    this.mouseoverText.text = text;
+    this.mouseoverText.position.set(4, 4);
+    const size = new _vector2d.Vector(this.mouseoverText.width + 8, this.mouseoverText.height + 8);
+    const gfx = this.mouseoverBg;
+    gfx.clear();
+    gfx.width = size.x;
+    gfx.height = size.y;
+    gfx.lineStyle({
+      width: 1,
+      color: 0xffffff
+    });
+    gfx.beginFill(0x000000);
+    gfx.drawRect(0, 0, size.x, size.y - 2);
+    gfx.endFill();
+  }
+
+  updateHearts(hp) {
+    const halfHP = hp / 2;
+
+    for (const sprite of this.heartSprites) {
+      sprite.visible = false;
+    }
+
+    for (let i = 0; i < Math.ceil(halfHP); i++) {
+      let sprite;
+
+      if (i >= this.heartSprites.length) {
+        sprite = new _pixi.Sprite(this.game.filmstrips["heart"][0]);
+        sprite.position.set(i * 21, 0);
+        this.heartSprites.push(sprite);
+        this.heartsContainer.addChild(sprite);
+      } else {
+        sprite = this.heartSprites[i];
+      }
+
+      sprite.visible = true;
+
+      if (i + 1 == Math.ceil(halfHP)) {
+        sprite.texture = this.game.filmstrips["heart"][halfHP % 1 === 0 ? 0 : 1];
+      }
+    }
+  }
+  /** Stuff you can do */
+
+
+  showLoss() {
+    const victorySprite = new _pixi.Sprite(this.game.images["youlose"]);
+    victorySprite.anchor.set(0.5, 0.5);
+    victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
+    this.hudContainer.addChild(victorySprite);
+  }
+
+  showVictory() {
+    const victorySprite = new _pixi.Sprite(this.game.images["stagecomplete"]);
+    victorySprite.anchor.set(0.5, 0.5);
+    victorySprite.position.set(this.hudContainer.width / 2, this.hudContainer.height / 2);
+    this.hudContainer.addChild(victorySprite);
+  }
+
+  showFloatingText(sourceSprite, textValue, fill) {
+    const text = new _pixi.Text(textValue, {
+      fontSize: 48,
+      fontFamily: "Barlow Condensed",
+      fill: fill
+    });
+    text.position.set(sourceSprite.position.x, sourceSprite.position.y);
+    sourceSprite.parent.addChild(text);
+    this.animationHandler.add((0, _AnimationHandler.makeDriftAndFadeAnimation)(text, 3, new _vector2d.Vector(-100, -100)));
+  }
+
+}
+
+exports.LevelSceneGfx = LevelSceneGfx;
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../assets":"be73c6663579275afb4521336d5df627","../ecs/CombatC":"b6e902b421f06cf2a74c6c109af52761","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","./AnimationHandler":"05c0971ee104aa14fdfc24822181ae11"}],"05c0971ee104aa14fdfc24822181ae11":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeDriftAndFadeAnimation = makeDriftAndFadeAnimation;
+exports.AnimationHandler = void 0;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class AnimationHandler {
+  constructor() {
+    _defineProperty(this, "animations", new Array());
+
+    _defineProperty(this, "lastT", performance.now());
+  }
+
+  tick(dtMs) {
+    const now = performance.now();
+    const dt = (now - this.lastT) / 1000;
+    this.lastT = now;
+    const nextAnimations = new Array();
+
+    for (let animation of this.animations) {
+      animation.timePassed = (animation.timePassed || 0) + dt; // console.log(animation.timePassed);
+
+      animation.apply(dt, animation.timePassed);
+
+      if (animation.timePassed >= animation.duration) {
+        animation.finish();
+      } else {
+        nextAnimations.push(animation);
+      }
+    }
+
+    this.animations = nextAnimations;
+  }
+
+  add(a) {
+    this.animations.push(a);
+  }
+
+}
+
+exports.AnimationHandler = AnimationHandler;
+
+function makeDriftAndFadeAnimation(obj, duration, velocity) {
+  return {
+    duration,
+    apply: (dt, timePassed) => {
+      obj.position.set(obj.position.x + dt * velocity.x, obj.position.y + dt * velocity.y);
+      obj.alpha = 1 - timePassed / duration;
+    },
+    finish: () => {
+      obj.parent.removeChild(obj);
+    }
+  };
+}
 },{}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
