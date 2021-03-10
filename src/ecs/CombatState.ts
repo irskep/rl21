@@ -7,7 +7,7 @@ export enum CombatState {
   PunchFollowthrough = "PunchFollowthrough",
   SuperpunchTelegraph = "SuperpunchTelegraph",
   SuperpunchFollowthrough = "SuperpunchFollowthrough",
-  Punched = "Punched",
+  // Punched = "Punched",
   Prone = "Prone",
   Stunned = "Stunned",
 }
@@ -24,8 +24,8 @@ export function stateToPlayerSpriteIndex(state: CombatState): number {
       return SpriteIndices.BM_PUNCH_BEFORE;
     case CombatState.SuperpunchFollowthrough:
       return SpriteIndices.BM_PUNCH_AFTER;
-    case CombatState.Punched:
-      return SpriteIndices.STUMBLING;
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
     case CombatState.Prone:
       return SpriteIndices.BM_DEAD;
     case CombatState.Stunned:
@@ -47,8 +47,8 @@ export function stateToHenchmanSpriteIndex(state: CombatState): number {
       return SpriteIndices.SUPERPUNCH_BEFORE;
     case CombatState.SuperpunchFollowthrough:
       return SpriteIndices.SUPERPUNCH_AFTER;
-    case CombatState.Punched:
-      return SpriteIndices.STUMBLING;
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
     case CombatState.Prone:
       return SpriteIndices.PRONE;
     case CombatState.Stunned:

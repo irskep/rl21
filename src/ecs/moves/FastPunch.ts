@@ -58,7 +58,12 @@ export class FastPunch implements Move {
           SpriteIndices.BM_PUNCH_AFTER
         );
         ctx.ecs.spriteSystem.cowboyUpdate();
-        doNext();
+
+        setTimeout(() => {
+          combatC.setState(CombatState.Standing, spriteC);
+          ctx.ecs.spriteSystem.cowboyUpdate();
+          doNext();
+        });
       }, 300);
     }, 300);
     return true;

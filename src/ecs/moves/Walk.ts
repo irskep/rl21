@@ -27,7 +27,7 @@ export class Walk implements Move {
         return { success: true };
       case CombatState.Prone:
         return { success: false, message: "Prone" };
-      case CombatState.Punched:
+      // case CombatState.Punched:
       case CombatState.Stunned:
         return { success: false, message: "Reeling from punch" };
       case CombatState.PunchFollowthrough:

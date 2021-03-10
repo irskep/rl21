@@ -331,7 +331,7 @@ export class LevelScene implements GameScene {
   }
 
   updateHoveredEntity(e: Entity | null) {
-    if (!e || e === this.ecs.player) {
+    if (!e) {
       this.mouseoverContainer.visible = false;
       return;
     }
@@ -474,6 +474,7 @@ export class LevelScene implements GameScene {
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
     this.hoveredPosDuringUpdate = this.hoveredPos;
+    this.writeMessage("-----------------");
     if (actionMoves.length === 1) {
       this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);

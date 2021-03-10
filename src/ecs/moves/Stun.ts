@@ -8,7 +8,7 @@ import { SpriteC } from "../sprite";
 import { SpriteIndices } from "../../assets";
 
 export class Stun implements Move {
-  action = Action.B;
+  action = Action.Y;
   name = "Stun";
   help = "If an enemy is about to strike, counter their move";
 

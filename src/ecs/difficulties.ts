@@ -19,27 +19,33 @@ export const DIFFICULTIES: Difficulty[] = [
     mapgenAlgo: "basic",
   },
   {
-    numThugs: 5,
+    numThugs: 4,
     numArmoredThugs: 1,
     numTitanThugs: 0,
     mapgenAlgo: "basic",
   },
   {
-    numThugs: 5,
+    numThugs: 4,
     numArmoredThugs: 3,
     numTitanThugs: 0,
     mapgenAlgo: "basic",
   },
   {
-    numThugs: 5,
+    numThugs: 4,
     numArmoredThugs: 0,
+    numTitanThugs: 2,
+    mapgenAlgo: "basic",
+  },
+  {
+    numThugs: 3,
+    numArmoredThugs: 1,
     numTitanThugs: 3,
     mapgenAlgo: "basic",
   },
   {
     numThugs: 0,
-    numArmoredThugs: 3,
-    numTitanThugs: 3,
+    numArmoredThugs: 2,
+    numTitanThugs: 2,
     mapgenAlgo: "basic",
   },
 ];

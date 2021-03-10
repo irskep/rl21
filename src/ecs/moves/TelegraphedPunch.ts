@@ -69,7 +69,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     return 100;
   }
 
-  apply(ctx: MoveContext, target: AbstractVector): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
 
@@ -80,7 +80,13 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     // face attacker
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-    return false;
+
+    setTimeout(() => {
+      combatC.setState(CombatState.Standing, spriteC);
+      ctx.ecs.spriteSystem.cowboyUpdate();
+      doNext();
+    }, 300);
+    return true;
   }
 }
 
@@ -115,13 +121,21 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     return 100;
   }
 
-  apply(ctx: MoveContext): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
     // stumble forward
     combatC.setState(CombatState.PunchFollowthrough, spriteC); // ok
     spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
     ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
-    return false;
+    ctx.ecs.spriteSystem.cowboyUpdate();
+
+    setTimeout(() => {
+      combatC.becomeStunned(1, spriteC);
+      ctx.ecs.spriteSystem.cowboyUpdate();
+      doNext();
+    }, 300);
+
+    return true;
   }
 }

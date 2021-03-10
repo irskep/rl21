@@ -11,7 +11,7 @@ import { STATS } from "../stats";
 import { CombatTrait } from "../CombatTrait";
 
 export class Counter implements Move {
-  action = Action.Y;
+  action = Action.B;
   name = "Counter";
   help = "If an enemy is about to strike, counter their move";
 

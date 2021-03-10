@@ -102,7 +102,7 @@ export class SuperpunchFollowthroughHit implements Move {
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
 
     combatC.setState(CombatState.SuperpunchFollowthrough, spriteC);
-    enemyCombatC.setState(CombatState.Stunned, enemySpriteC);
+    enemyCombatC.becomeStunned(1, enemySpriteC);
     ctx.ecs.combatSystem.events.emit({
       type: CombatEventType.Punch,
       subject: ctx.entity,
@@ -117,7 +117,7 @@ export class SuperpunchFollowthroughHit implements Move {
     setTimeout(() => {
       combatC.setState(CombatState.PunchFollowthrough, spriteC);
       doNext();
-    });
+    }, 300);
     return true;
   }
 }

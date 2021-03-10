@@ -286,10 +286,7 @@ export class CombatSystem extends System {
               `${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`
             );
           } else {
-            defenderCombatC.setState(
-              CombatState.Punched,
-              defender.getComponent(SpriteC)
-            );
+            defenderCombatC.becomeStunned(1, defender.getComponent(SpriteC));
             ecs.writeMessage(
               `${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`
             );
@@ -303,7 +300,7 @@ export class CombatSystem extends System {
         // defenderCombatC.recoveryTimer += 1; // stay stunned longer
         defenderCombatC.updateText(defender.getComponent(SpriteC));
         break;
-      case CombatState.Punched:
+      // case CombatState.Punched:
       case CombatState.Prone:
         landPunch();
         break;
@@ -340,7 +337,7 @@ export class CombatSystem extends System {
       case CombatState.PunchTelegraph:
       case CombatState.PunchFollowthrough:
       case CombatState.Prone:
-      case CombatState.Punched:
+      // case CombatState.Punched:
       case CombatState.Stunned:
         this.events.emit({
           type: CombatEventType.Stun,
