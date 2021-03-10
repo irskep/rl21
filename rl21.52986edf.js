@@ -47121,7 +47121,7 @@ class LevelScene {
     _defineProperty(this, "writeMessage", msg => {
       this.messages.push(msg);
 
-      while (this.messages.length > 10) {
+      while (this.messages.length > 20) {
         this.messages.shift();
       }
 
@@ -47533,6 +47533,11 @@ class Tilemap {
 
   getDefaultIndex(pos) {
     return pos.x === 0 || pos.y === 0 || pos.x === this.size.x - 1 || pos.y === this.size.y - 1 ? _assets.EnvIndices.WALL : _assets.EnvIndices.FLOOR;
+  }
+
+  updateCell(pos, callback) {
+    const cell = this.getCell(pos);
+    if (cell) callback(cell);
   }
 
   getCell(pos) {
@@ -48543,6 +48548,7 @@ class CombatC {
   }
 
   becomeStunned(turns, spriteC) {
+    console.log("Stun for", turns, "turns");
     this.setState(_CombatState.CombatState.Stunned, spriteC);
     this.recoveryTimer = turns;
     this.updateText(spriteC);
@@ -49273,8 +49279,8 @@ class FastPunch {
         combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_PUNCH_AFTER);
         ctx.ecs.spriteSystem.cowboyUpdate();
         doNext();
-      }, 500);
-    }, 500);
+      }, 300);
+    }, 300);
     return true;
   }
 
@@ -49465,7 +49471,11 @@ class CombatSystem extends _ecs.System {
 
     _defineProperty(this, "isProcessing", false);
 
-    _defineProperty(this, "STUN_TIMER", 2);
+    _defineProperty(this, "rng", new _RNG.default(`${Date.now()}`));
+
+    _defineProperty(this, "STUN_TIMER_NORMAL", 1);
+
+    _defineProperty(this, "STUN_TIMER_ARMORED", 2);
 
     _defineProperty(this, "entitiesToProcess", []);
 
@@ -49531,7 +49541,7 @@ class CombatSystem extends _ecs.System {
         // loop)
 
 
-        if (this.entitiesToProcess.length > 0) {
+        if (this.entitiesToProcess.length > 0 && m.name !== "Wait") {
           setTimeout(this.processNextEntity, 200);
         } else {
           this.processNextEntity();
@@ -49549,17 +49559,21 @@ class CombatSystem extends _ecs.System {
 
   update(engine, delta) {
     this.isProcessing = true;
+    this.checkForDeadEnemies();
     this.entitiesToProcess = new Array().concat(this.family.entities);
     this.processNextEntity();
   }
 
-  cleanupProcessingAndNotify() {
+  checkForDeadEnemies() {
     for (let e of new Array().concat(this.family.entities)) {
       const combatC = e.getComponent(_CombatC.CombatC);
       if (combatC.hp > 0) continue;
       this.kill(e);
     }
+  }
 
+  cleanupProcessingAndNotify() {
+    this.checkForDeadEnemies();
     const remainingEntities = this.family.entities;
 
     if (remainingEntities.length === 1 && remainingEntities[0].getComponent(_CombatC.CombatC).isPlayer) {
@@ -49675,17 +49689,22 @@ class CombatSystem extends _ecs.System {
             subject: attacker,
             object: defender
           });
-          defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
           this.changeHP(defender, -_stats.STATS.PUNCH_DAMAGE);
-          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+
+          if (this.rng.choice([0, 1]) === 0) {
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`);
+          } else {
+            defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`);
+          }
+
           break;
       }
     };
 
     switch (state) {
       case _CombatState.CombatState.Stunned:
-        landPunch();
-        defenderCombatC.recoveryTimer = this.STUN_TIMER; // reset
+        landPunch(); // defenderCombatC.recoveryTimer += 1; // stay stunned longer
 
         defenderCombatC.updateText(defender.getComponent(_sprite.SpriteC));
         break;
@@ -49736,7 +49755,7 @@ class CombatSystem extends _ecs.System {
           subject: attacker,
           object: defender
         });
-        defenderCombatC.becomeStunned(this.STUN_TIMER, defender.getComponent(_sprite.SpriteC));
+        defenderCombatC.becomeStunned(defenderCombatC.hasTrait(_CombatTrait.CombatTrait.Armored) ? this.STUN_TIMER_ARMORED : this.STUN_TIMER_NORMAL, defender.getComponent(_sprite.SpriteC));
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
         break;
 
@@ -55290,6 +55309,7 @@ var _PlannedWalk = require("./PlannedWalk");
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+// import { isAdjacent } from "../../game/tilemap";
 class CreateAndFollowGoal {
   constructor() {
     _defineProperty(this, "name", "CreateAndFollowGoal");
