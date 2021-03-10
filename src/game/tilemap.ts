@@ -37,6 +37,11 @@ export class Tilemap {
       : EnvIndices.FLOOR;
   }
 
+  updateCell(pos: AbstractVector, callback: (cell: Cell) => void) {
+    const cell = this.getCell(pos);
+    if (cell) callback(cell);
+  }
+
   getCell(pos: AbstractVector): Cell | null {
     if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y)
       return null;
