@@ -1,4 +1,4 @@
-import { AbstractVector, Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { Action } from "../../game/input";
 import { isAdjacent } from "../../game/tilemap";
 import { CombatState } from "../combat/CombatState";

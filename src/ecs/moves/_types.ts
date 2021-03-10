@@ -12,6 +12,7 @@ export interface Move {
   name: string;
   help: string;
   action?: Action;
+  extraNeighbors?: AbstractVector[];
   check: (ctx: MoveContext, target: AbstractVector) => MoveCheckResult;
   computeValue?: (ctx: MoveContext, target: AbstractVector) => number;
   // return true if doing async work. if return true, must call doNext().

@@ -5,10 +5,10 @@ import { CombatTrait } from "./CombatTrait";
 
 export enum CombatState {
   Standing = "Standing",
-  PunchTelegraph = "PunchTelegraph",
-  PunchFollowthrough = "PunchFollowthrough",
-  SuperpunchTelegraph = "SuperpunchTelegraph",
-  SuperpunchFollowthrough = "SuperpunchFollowthrough",
+  PunchTelegraph = "Punch Windup",
+  PunchFollowthrough = "Punch Followthrough",
+  SuperpunchTelegraph = "Super-punch Windup",
+  SuperpunchFollowthrough = "Super-punch Followthrough",
   // Punched = "Punched",
   Prone = "Prone",
   Stunned = "Stunned",

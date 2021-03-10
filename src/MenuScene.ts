@@ -65,10 +65,10 @@ export class MenuScene implements GameScene {
   };
 
   handleTouchStart = () => {
-    this.game.replaceScenes([new LevelScene(this.game, 0)]);
+    this.game.replaceScenes([new LevelScene(this.game, 0, [])]);
   };
 
   handleKeyPress = () => {
-    this.game.replaceScenes([new LevelScene(this.game, 0)]);
+    this.game.replaceScenes([new LevelScene(this.game, 0, [])]);
   };
 }

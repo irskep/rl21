@@ -74,7 +74,7 @@ export class UpgradeScene implements GameScene {
     const availableUpgrades = makeUpgradePool().filter(
       (u) => !u.exclusive || usedUpgradeNames.indexOf(u.name) === -1
     );
-    rng.shuffle(usedUpgrades);
+    rng.shuffle(availableUpgrades);
     this.upgrades = availableUpgrades.slice(0, 3);
     console.log(this.upgrades);
   }
