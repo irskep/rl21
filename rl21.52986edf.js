@@ -47372,7 +47372,7 @@ class LevelScene {
   }
 
   updateHoveredEntity(e) {
-    if (!e || e === this.ecs.player) {
+    if (!e) {
       this.mouseoverContainer.visible = false;
       return;
     }
@@ -47475,6 +47475,7 @@ class LevelScene {
     }
 
     this.hoveredPosDuringUpdate = this.hoveredPos;
+    this.writeMessage("-----------------");
 
     if (actionMoves.length === 1) {
       this.updateHoverCell(null);
@@ -48618,7 +48619,6 @@ exports.CombatState = CombatState;
   CombatState["PunchFollowthrough"] = "PunchFollowthrough";
   CombatState["SuperpunchTelegraph"] = "SuperpunchTelegraph";
   CombatState["SuperpunchFollowthrough"] = "SuperpunchFollowthrough";
-  CombatState["Punched"] = "Punched";
   CombatState["Prone"] = "Prone";
   CombatState["Stunned"] = "Stunned";
 })(CombatState || (exports.CombatState = CombatState = {}));
@@ -48639,9 +48639,8 @@ function stateToPlayerSpriteIndex(state) {
 
     case CombatState.SuperpunchFollowthrough:
       return _assets.SpriteIndices.BM_PUNCH_AFTER;
-
-    case CombatState.Punched:
-      return _assets.SpriteIndices.STUMBLING;
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
 
     case CombatState.Prone:
       return _assets.SpriteIndices.BM_DEAD;
@@ -48670,9 +48669,8 @@ function stateToHenchmanSpriteIndex(state) {
 
     case CombatState.SuperpunchFollowthrough:
       return _assets.SpriteIndices.SUPERPUNCH_AFTER;
-
-    case CombatState.Punched:
-      return _assets.SpriteIndices.STUMBLING;
+    // case CombatState.Punched:
+    //   return SpriteIndices.STUMBLING;
 
     case CombatState.Prone:
       return _assets.SpriteIndices.PRONE;
@@ -48789,8 +48787,8 @@ class Walk {
           success: false,
           message: "Prone"
         };
+      // case CombatState.Punched:
 
-      case _CombatState.CombatState.Punched:
       case _CombatState.CombatState.Stunned:
         return {
           success: false,
@@ -49147,7 +49145,7 @@ class TelegraphedPunchFollowthroughHit {
     return 100;
   }
 
-  apply(ctx, target) {
+  apply(ctx, target, doNext) {
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
     combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
@@ -49156,7 +49154,12 @@ class TelegraphedPunchFollowthroughHit {
 
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-    return false;
+    setTimeout(() => {
+      combatC.setState(_CombatState.CombatState.Standing, spriteC);
+      ctx.ecs.spriteSystem.cowboyUpdate();
+      doNext();
+    }, 300);
+    return true;
   }
 
 }
@@ -49198,7 +49201,7 @@ class TelegraphedPunchFollowthroughMiss {
     return 100;
   }
 
-  apply(ctx) {
+  apply(ctx, target, doNext) {
     const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
     const combatC = ctx.entity.getComponent(_CombatC.CombatC); // stumble forward
 
@@ -49206,7 +49209,13 @@ class TelegraphedPunchFollowthroughMiss {
 
     spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
     ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
-    return false;
+    ctx.ecs.spriteSystem.cowboyUpdate();
+    setTimeout(() => {
+      combatC.becomeStunned(1, spriteC);
+      ctx.ecs.spriteSystem.cowboyUpdate();
+      doNext();
+    }, 300);
+    return true;
   }
 
 }
@@ -49286,7 +49295,11 @@ class FastPunch {
       setTimeout(() => {
         combatC.setState(_CombatState.CombatState.Standing, spriteC, _assets.SpriteIndices.BM_PUNCH_AFTER);
         ctx.ecs.spriteSystem.cowboyUpdate();
-        doNext();
+        setTimeout(() => {
+          combatC.setState(_CombatState.CombatState.Standing, spriteC);
+          ctx.ecs.spriteSystem.cowboyUpdate();
+          doNext();
+        });
       }, 300);
     }, 300);
     return true;
@@ -49325,7 +49338,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 class Counter {
   constructor() {
-    _defineProperty(this, "action", _input.Action.Y);
+    _defineProperty(this, "action", _input.Action.B);
 
     _defineProperty(this, "name", "Counter");
 
@@ -49702,7 +49715,7 @@ class CombatSystem extends _ecs.System {
           if (this.rng.choice([0, 1]) === 0) {
             ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`);
           } else {
-            defenderCombatC.setState(_CombatState.CombatState.Punched, defender.getComponent(_sprite.SpriteC));
+            defenderCombatC.becomeStunned(1, defender.getComponent(_sprite.SpriteC));
             ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`);
           }
 
@@ -49716,8 +49729,8 @@ class CombatSystem extends _ecs.System {
 
         defenderCombatC.updateText(defender.getComponent(_sprite.SpriteC));
         break;
+      // case CombatState.Punched:
 
-      case _CombatState.CombatState.Punched:
       case _CombatState.CombatState.Prone:
         landPunch();
         break;
@@ -49755,8 +49768,8 @@ class CombatSystem extends _ecs.System {
       case _CombatState.CombatState.Standing:
       case _CombatState.CombatState.PunchTelegraph:
       case _CombatState.CombatState.PunchFollowthrough:
-      case _CombatState.CombatState.Prone:
-      case _CombatState.CombatState.Punched:
+      case _CombatState.CombatState.Prone: // case CombatState.Punched:
+
       case _CombatState.CombatState.Stunned:
         this.events.emit({
           type: CombatEventType.Stun,
@@ -55053,7 +55066,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 class Stun {
   constructor() {
-    _defineProperty(this, "action", _input.Action.B);
+    _defineProperty(this, "action", _input.Action.Y);
 
     _defineProperty(this, "name", "Stun");
 
@@ -55221,7 +55234,7 @@ class SuperpunchFollowthroughHit {
     spriteC.orientation = (0, _direction.getOrientation)(enemySpriteC.pos.clone().subtract(spriteC.pos));
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     combatC.setState(_CombatState.CombatState.SuperpunchFollowthrough, spriteC);
-    enemyCombatC.setState(_CombatState.CombatState.Stunned, enemySpriteC);
+    enemyCombatC.becomeStunned(1, enemySpriteC);
     ctx.ecs.combatSystem.events.emit({
       type: _CombatS.CombatEventType.Punch,
       subject: ctx.entity,
@@ -55233,7 +55246,7 @@ class SuperpunchFollowthroughHit {
     setTimeout(() => {
       combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC);
       doNext();
-    });
+    }, 300);
     return true;
   }
 
@@ -56213,24 +56226,29 @@ const DIFFICULTIES = [{
   numTitanThugs: 0,
   mapgenAlgo: "basic"
 }, {
-  numThugs: 5,
+  numThugs: 4,
   numArmoredThugs: 1,
   numTitanThugs: 0,
   mapgenAlgo: "basic"
 }, {
-  numThugs: 5,
+  numThugs: 4,
   numArmoredThugs: 3,
   numTitanThugs: 0,
   mapgenAlgo: "basic"
 }, {
-  numThugs: 5,
+  numThugs: 4,
   numArmoredThugs: 0,
+  numTitanThugs: 2,
+  mapgenAlgo: "basic"
+}, {
+  numThugs: 3,
+  numArmoredThugs: 1,
   numTitanThugs: 3,
   mapgenAlgo: "basic"
 }, {
   numThugs: 0,
-  numArmoredThugs: 3,
-  numTitanThugs: 3,
+  numArmoredThugs: 2,
+  numTitanThugs: 2,
   mapgenAlgo: "basic"
 }];
 exports.DIFFICULTIES = DIFFICULTIES;
