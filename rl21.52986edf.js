@@ -55247,8 +55247,6 @@ var _findPath = require("./findPath");
 
 var _PlannedWalk = require("./PlannedWalk");
 
-var _tilemap = require("../../game/tilemap");
-
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 class CreateAndFollowGoal {
@@ -55260,24 +55258,34 @@ class CreateAndFollowGoal {
 
   populateGoal(ctx) {
     const combatC = ctx.entity.getComponent(_CombatC.CombatC); // nullify goal if finished
+    // if (combatC.goal) {
+    //   if (
+    //     combatC.goal.type === GoalType.HuntPlayer &&
+    //     (combatC.goal.path.length < 1 ||
+    //       !isAdjacent(
+    //         combatC.goal.path[combatC.goal.path.length - 1],
+    //         ctx.ecs.player.getComponent(SpriteC).pos
+    //       ))
+    //   ) {
+    //     console.log("Nullifying goal on", ctx.entity);
+    //     combatC.goal = null;
+    //   }
+    // }
+    // if (combatC.goal) return;
 
-    if (combatC.goal) {
-      if (combatC.goal.type === _Goal.GoalType.HuntPlayer && (combatC.goal.path.length < 1 || !(0, _tilemap.isAdjacent)(combatC.goal.path[combatC.goal.path.length - 1], ctx.ecs.player.getComponent(_sprite.SpriteC).pos))) {
-        console.log("Nullifying goal on", ctx.entity);
-        combatC.goal = null;
-      }
-    }
-
-    if (combatC.goal) return;
     combatC.goal = {
       type: _Goal.GoalType.HuntPlayer,
       playerPos: ctx.ecs.player.getComponent(_sprite.SpriteC).pos,
       path: (0, _findPath.findPath)(ctx.entity.getComponent(_sprite.SpriteC).pos, ctx.ecs.player.getComponent(_sprite.SpriteC).pos, ctx.ecs)
     };
+
+    if (combatC.goal.path.length < 1) {
+      // couldn't find a path
+      combatC.goal = null;
+    }
   }
 
   getNextMoveInGoal(ctx, consume) {
-    this.populateGoal(ctx);
     const combatC = ctx.entity.getComponent(_CombatC.CombatC);
 
     if (combatC.goal) {
@@ -55312,6 +55320,7 @@ class CreateAndFollowGoal {
       };
     }
 
+    this.populateGoal(ctx);
     const nextMove = this.getNextMoveInGoal(ctx, false);
 
     if (nextMove) {
@@ -55330,6 +55339,7 @@ class CreateAndFollowGoal {
   }
 
   apply(ctx, target, doNext) {
+    this.populateGoal(ctx);
     const nextMove = this.getNextMoveInGoal(ctx, true);
     console.log("Executing next move in plan:", nextMove);
 
@@ -55343,7 +55353,7 @@ class CreateAndFollowGoal {
 }
 
 exports.CreateAndFollowGoal = CreateAndFollowGoal;
-},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008","../Goal":"30af87a48fcf0fb57744a406c9060a26","./findPath":"da952e304ac8530f7190f245d41eedbd","./PlannedWalk":"2ae6ed8ce9b5a365163b72556a4501f4","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7"}],"30af87a48fcf0fb57744a406c9060a26":[function(require,module,exports) {
+},{"../CombatState":"5ebcbb2585b4779db34c41483d6ad94f","../CombatC":"b6e902b421f06cf2a74c6c109af52761","../sprite":"488445ffc318f5d280c0d86556dce008","../Goal":"30af87a48fcf0fb57744a406c9060a26","./findPath":"da952e304ac8530f7190f245d41eedbd","./PlannedWalk":"2ae6ed8ce9b5a365163b72556a4501f4"}],"30af87a48fcf0fb57744a406c9060a26":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
