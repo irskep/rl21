@@ -56082,12 +56082,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.DIFFICULTIES = void 0;
-const DIFFICULTIES = [{
-  numThugs: 0,
-  numArmoredThugs: 1,
-  numTitanThugs: 0,
-  mapgenAlgo: "basic"
-}, {
+const DIFFICULTIES = [// {
+//   numThugs: 0,
+//   numArmoredThugs: 1,
+//   numTitanThugs: 0,
+//   mapgenAlgo: "basic",
+// },
+{
   numThugs: 3,
   numArmoredThugs: 0,
   numTitanThugs: 0,
