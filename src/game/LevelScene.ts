@@ -32,6 +32,7 @@ export class LevelScene implements GameScene {
 
   constructor(private game: GameInterface, public n: number) {
     this.gfx = new LevelSceneGfx(game, this.map);
+    (window as any).levelScene = this;
   }
 
   goToNextScene() {

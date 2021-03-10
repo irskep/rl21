@@ -6,6 +6,12 @@ export interface Difficulty {
 }
 
 export const DIFFICULTIES: Difficulty[] = [
+  // {
+  //   numThugs: 0,
+  //   numArmoredThugs: 1,
+  //   numTitanThugs: 0,
+  //   mapgenAlgo: "basic",
+  // },
   {
     numThugs: 3,
     numArmoredThugs: 0,

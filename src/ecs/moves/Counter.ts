@@ -72,6 +72,11 @@ export class Counter implements Move {
         `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch, but ${enemySpriteC.flavorName} stays up!`
       );
       combatC.becomeStunned(1, spriteC);
+
+      // not sure if I want to keep this
+      enemyCombatC.becomeStunned(1, enemySpriteC);
+
+      enemySpriteC.orientation = (enemySpriteC.orientation + 2) % 4;
       ctx.ecs.spriteSystem.cowboyUpdate();
       ctx.ecs.writeMessage(
         `${spriteC.flavorName} will take 1 turn to recover from the counter.`
