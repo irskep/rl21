@@ -5,8 +5,10 @@ import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
 import filmstrip from "./filmstrip";
 import { LevelScene } from "./game/LevelScene";
+import RNG from "./game/RNG";
 import { MenuScene } from "./MenuScene";
 import { GameScene, GameInterface } from "./types";
+import { UpgradeScene } from "./UpgradeScene";
 
 export default class Game implements GameInterface {
   app: PIXI.Application;
@@ -79,7 +81,8 @@ export default class Game implements GameInterface {
     }
 
     if (window.location.hash === "#skipmenu") {
-      this.pushScene(new LevelScene(this, 0));
+      // this.pushScene(new LevelScene(this, 0));
+      this.pushScene(new UpgradeScene(this, 0, [], new RNG(`${Date.now()}`)));
     } else {
       this.pushScene(new MenuScene(this));
     }

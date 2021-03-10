@@ -21,6 +21,7 @@ export class CombatC implements Component {
   hpMax = 10;
   hp = 10;
   goal: Goal | null = null;
+  upgrades = new Array<string>();
 
   superpunchTarget: Entity | null = null;
 
@@ -53,6 +54,10 @@ export class CombatC implements Component {
 
   hasTrait(trait: CombatTrait) {
     return this.traits.indexOf(trait) !== -1;
+  }
+
+  hasUpgrade(name: string) {
+    return this.upgrades.indexOf(name) !== -1;
   }
 
   becomeProne(turns: number, spriteC: SpriteC) {

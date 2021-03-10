@@ -15,6 +15,8 @@ import { MenuScene } from "../MenuScene";
 import { DIFFICULTIES } from "../ecs/difficulties";
 import Mousetrap from "mousetrap";
 import { LevelSceneGfx } from "./LevelSceneGfx";
+import { UpgradeScene } from "../UpgradeScene";
+import { Upgrade } from "../ecs/upgrades";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -30,14 +32,20 @@ export class LevelScene implements GameScene {
   hoveredPosDuringUpdate: Vector | null = null;
   hoveredEntity: Entity | null = null;
 
-  constructor(private game: GameInterface, public n: number) {
+  constructor(
+    private game: GameInterface,
+    public n: number,
+    private upgrades: Upgrade[]
+  ) {
     this.gfx = new LevelSceneGfx(game, this.map);
     (window as any).levelScene = this;
   }
 
   goToNextScene() {
     if (this.n < DIFFICULTIES.length - 2) {
-      this.game.replaceScenes([new LevelScene(this.game, this.n + 1)]);
+      this.game.replaceScenes([
+        new UpgradeScene(this.game, this.n + 1, this.upgrades, this.ecs.rng),
+      ]);
     } else {
       this.game.replaceScenes([new MenuScene(this.game)]);
     }
@@ -62,7 +70,8 @@ export class LevelScene implements GameScene {
         this.gfx.arena,
         this.map,
         this.gfx.writeMessage,
-        this.n
+        this.n,
+        this.upgrades
       );
       this.ecs.combatSystem.tilemap = this.map;
       this.updateTileSprites();
@@ -76,6 +85,11 @@ export class LevelScene implements GameScene {
     });
 
     this.gfx.writeMessage("Atman enters the room.");
+    if (this.upgrades) {
+      this.gfx.writeMessage(
+        `Atman's upgrades: ${this.upgrades.map((u) => u.name).join(", ")}`
+      );
+    }
   }
 
   exit() {
@@ -224,7 +238,14 @@ export class LevelScene implements GameScene {
   }
 
   updateHearts() {
-    this.gfx.updateHearts(this.ecs.player.getComponent(CombatC).hp);
+    const combatC = this.ecs.player.getComponent(CombatC);
+    this.gfx.updateHearts(combatC.hp);
+    this.gfx.heartsContainer.position.set(
+      this.gfx.messageLogBg.x -
+        (this.gfx.heartSprites[0].width * combatC.hpMax) / 2 -
+        10,
+      10
+    );
   }
 
   gameLoop = (dt: number) => {

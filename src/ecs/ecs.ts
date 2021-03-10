@@ -4,7 +4,7 @@ import { EnvIndices, SpriteIndices } from "../assets";
 import getID from "../getID";
 import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./combat/CombatS";
@@ -16,6 +16,7 @@ import { STATS } from "./stats";
 import RNG from "../game/RNG";
 import { DIFFICULTIES } from "./difficulties";
 import { getNeighbors } from "./direction";
+import { Upgrade } from "./upgrades";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -77,23 +78,7 @@ function makeTitanThug(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-export function makeECS(
-  game: GameInterface,
-  container: Container,
-  tilemap: Tilemap,
-  writeMessage: (msg: string) => void,
-  n: number
-): ECS {
-  const rng = new RNG(`${Math.random()}`);
-  console.log("Map RNG seed:", rng.seed);
-  const engine = new Engine();
-
-  const spriteSystem = new SpriteSystem(game, container);
-  const combatSystem = new CombatSystem(game);
-
-  engine.addSystems(combatSystem);
-  engine.addSystems(spriteSystem);
-
+function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
   const skipSize = 5;
   let availableCells = new Array<Vector>();
 
@@ -148,8 +133,33 @@ export function makeECS(
     }
   }
   rng.shuffle(availableCells);
+  return availableCells;
+}
+
+export function makeECS(
+  game: GameInterface,
+  container: Container,
+  tilemap: Tilemap,
+  writeMessage: (msg: string) => void,
+  n: number,
+  upgrades: Upgrade[]
+): ECS {
+  const rng = new RNG(`${Math.random()}`);
+  console.log("Map RNG seed:", rng.seed);
+  const engine = new Engine();
+
+  const spriteSystem = new SpriteSystem(game, container);
+  const combatSystem = new CombatSystem(game);
+
+  engine.addSystems(combatSystem);
+  engine.addSystems(spriteSystem);
+
+  const availableCells = generateMap(tilemap, rng);
 
   const player = makePlayer(availableCells.shift()!, 0);
+  for (const u of upgrades) {
+    u.apply(player);
+  }
   engine.addEntity(player);
 
   const difficulty = DIFFICULTIES[n];
