@@ -4,7 +4,7 @@ import { EnvIndices, SpriteIndices } from "../assets";
 import getID from "../getID";
 import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
-import { AbstractVector, Vector } from "vector2d";
+import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./CombatS";
@@ -177,6 +177,7 @@ export function makeECS(
     spriteSystem: spriteSystem,
     tilemap,
     player,
+    rng,
     writeMessage,
   };
   combatSystem.ecs = ecs;

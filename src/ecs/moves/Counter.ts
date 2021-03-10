@@ -67,20 +67,31 @@ export class Counter implements Move {
       object: enemy,
     });
 
+    const rollStun = () => {
+      if (ctx.ecs.rng.choice([0, 1]) === 0) {
+        combatC.becomeStunned(1, spriteC);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} will take 1 turn to recover from the counter. (50% chance failed.)`
+        );
+      } else {
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} recovers immediately from the counter. (50% chance succeeded.)`
+        );
+      }
+    };
+
     if (enemyCombatC.hasTrait(CombatTrait.Armored)) {
       ctx.ecs.writeMessage(
         `${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch, but ${enemySpriteC.flavorName} stays up!`
       );
-      combatC.becomeStunned(1, spriteC);
+      rollStun();
 
       // not sure if I want to keep this
       enemyCombatC.becomeStunned(1, enemySpriteC);
 
       enemySpriteC.orientation = (enemySpriteC.orientation + 2) % 4;
       ctx.ecs.spriteSystem.cowboyUpdate();
-      ctx.ecs.writeMessage(
-        `${spriteC.flavorName} will take 1 turn to recover from the counter.`
-      );
       return false;
     } else {
       ctx.ecs.combatSystem.changeHP(enemy, -STATS.COUNTER_DAMAGE);
@@ -94,11 +105,7 @@ export class Counter implements Move {
           `${enemySpriteC.flavorName} is knocked to the ground for ${enemyCombatC.recoveryTimer} turns.`
         );
 
-        combatC.becomeStunned(1, spriteC);
-        ctx.ecs.spriteSystem.cowboyUpdate();
-        ctx.ecs.writeMessage(
-          `${spriteC.flavorName} will take 1 turn to recover from the counter.`
-        );
+        rollStun();
         doNext();
       }, 500);
       return true;
