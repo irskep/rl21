@@ -48451,14 +48451,11 @@ class LevelScene {
 
     if (okMoves.length === 0) {
       firstLine = "No moves available at selected position";
-    } // const secondLine =
-    //   "Omitted: " +
-    //   notOkMoves
-    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
-    //     .join("; ");
+    }
 
+    const secondLine = "Omitted: " + notOkMoves.map(([move, result]) => `${move.name} (${result.message || "?"})`).join("; "); // const secondLine =
+    //   "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
 
-    const secondLine = "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
     this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }
 
@@ -49650,10 +49647,10 @@ exports.CombatState = CombatState;
 
 (function (CombatState) {
   CombatState["Standing"] = "Standing";
-  CombatState["PunchTelegraph"] = "PunchTelegraph";
-  CombatState["PunchFollowthrough"] = "PunchFollowthrough";
-  CombatState["SuperpunchTelegraph"] = "SuperpunchTelegraph";
-  CombatState["SuperpunchFollowthrough"] = "SuperpunchFollowthrough";
+  CombatState["PunchTelegraph"] = "Punch Windup";
+  CombatState["PunchFollowthrough"] = "Punch Followthrough";
+  CombatState["SuperpunchTelegraph"] = "Super-punch Windup";
+  CombatState["SuperpunchFollowthrough"] = "Super-punch Followthrough";
   CombatState["Prone"] = "Prone";
   CombatState["Stunned"] = "Stunned";
 })(CombatState || (exports.CombatState = CombatState = {}));
@@ -57763,7 +57760,7 @@ class UpgradeScene {
     this.container.interactive = true;
     const usedUpgradeNames = this.usedUpgrades.map(u => u.name);
     const availableUpgrades = (0, _upgrades.makeUpgradePool)().filter(u => !u.exclusive || usedUpgradeNames.indexOf(u.name) === -1);
-    rng.shuffle(usedUpgrades);
+    rng.shuffle(availableUpgrades);
     this.upgrades = availableUpgrades.slice(0, 3);
     console.log(this.upgrades);
   }
@@ -57834,6 +57831,8 @@ var _CombatC = require("./combat/CombatC");
 
 var _GroundTakedown = require("./moves/GroundTakedown");
 
+var _SuperDodge = require("./moves/SuperDodge");
+
 function makeUpgradePool() {
   return [{
     name: "Ground Takedown",
@@ -57841,6 +57840,13 @@ function makeUpgradePool() {
     description: "If an enemy is prone, knock them out immediately, regardless of their remaining hit points.",
     apply: player => {
       player.getComponent(_CombatC.CombatC).moves.push(new _GroundTakedown.GroundTakedown());
+    }
+  }, {
+    name: "Super Dodge",
+    exclusive: true,
+    description: "Leap over enemies to the space behind them.",
+    apply: player => {
+      player.getComponent(_CombatC.CombatC).moves.push(new _SuperDodge.SuperDodge());
     }
   }, {
     name: "Toughen Up",
@@ -57852,7 +57858,7 @@ function makeUpgradePool() {
     }
   }];
 }
-},{"./combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./moves/GroundTakedown":"d6c934b7c30f9254f51dd80c80f8aef9"}],"d6c934b7c30f9254f51dd80c80f8aef9":[function(require,module,exports) {
+},{"./combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./moves/GroundTakedown":"d6c934b7c30f9254f51dd80c80f8aef9","./moves/SuperDodge":"05d843ad2062a10fd65db21026a5780d"}],"d6c934b7c30f9254f51dd80c80f8aef9":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -57937,6 +57943,129 @@ class GroundTakedown {
 }
 
 exports.GroundTakedown = GroundTakedown;
-},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
+},{"../../game/input":"60d50d152119e01a0f05aa9be6432259","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../../assets":"be73c6663579275afb4521336d5df627"}],"05d843ad2062a10fd65db21026a5780d":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SuperDodge = void 0;
+
+var _vector2d = require("vector2d");
+
+var _input = require("../../game/input");
+
+var _tilemap = require("../../game/tilemap");
+
+var _CombatState = require("../combat/CombatState");
+
+var _CombatC = require("../combat/CombatC");
+
+var _helpers = require("./_helpers");
+
+var _sprite = require("../sprite");
+
+var _direction = require("../direction");
+
+var _assets = require("../../assets");
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+class SuperDodge {
+  constructor() {
+    _defineProperty(this, "action", _input.Action.X);
+
+    _defineProperty(this, "name", "Super Dodge");
+
+    _defineProperty(this, "help", "Leap over an enemy to the space behind them");
+
+    _defineProperty(this, "extraNeighbors", [new _vector2d.Vector(-2, -2), new _vector2d.Vector(-1, -2), new _vector2d.Vector(0, -2), new _vector2d.Vector(1, -2), new _vector2d.Vector(2, -2), new _vector2d.Vector(-2, 2), new _vector2d.Vector(-1, 2), new _vector2d.Vector(0, 2), new _vector2d.Vector(1, 2), new _vector2d.Vector(2, 2), new _vector2d.Vector(-2, -1), new _vector2d.Vector(-2, 0), new _vector2d.Vector(-2, 1), new _vector2d.Vector(2, -1), new _vector2d.Vector(2, -0), new _vector2d.Vector(2, 1)]);
+  }
+
+  getLeapedEnemy(pos, ctx) {
+    for (const d of _direction.DIRECTIONS) {
+      const pos2 = pos.clone().add(d[0]);
+
+      if ((0, _helpers.ensureTargetIsEnemy)(ctx, pos2).success) {
+        return ctx.ecs.spriteSystem.findCombatEntity(pos2);
+      }
+    }
+
+    return null;
+  }
+
+  getIsTargetAllowed(pos, target) {
+    for (const neighbor of this.extraNeighbors) {
+      if (pos.clone().add(neighbor).equals(target)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  check(ctx, target) {
+    const combatC = ctx.entity.getComponent(_CombatC.CombatC);
+    const spriteC = ctx.entity.getComponent(_sprite.SpriteC);
+
+    if (!this.getIsTargetAllowed(spriteC.pos, target)) {
+      return {
+        success: false,
+        message: "Target must be 2 spaces away"
+      };
+    }
+
+    if ((0, _tilemap.isAdjacent)(spriteC.pos, target) || spriteC.pos.equals(target)) {
+      return {
+        success: false,
+        message: "Must focus behind an enemy"
+      };
+    }
+
+    if (combatC.state != _CombatState.CombatState.Standing) {
+      return {
+        success: false,
+        message: "Not in the right state"
+      };
+    }
+
+    if (ctx.ecs.tilemap.getCell(target)?.index !== _assets.EnvIndices.FLOOR) {
+      return {
+        success: false,
+        message: "Target is not floor"
+      };
+    }
+
+    const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx);
+
+    if (!leapedEnemy) {
+      return {
+        success: false,
+        message: "No enemy to leap over"
+      };
+    }
+
+    return {
+      success: true
+    };
+  }
+
+  computeValue(ctx, target) {
+    return 200;
+  }
+
+  apply(ctx, target, doNext) {
+    const c = ctx.entity.getComponent(_sprite.SpriteC);
+    const posToFace = new _vector2d.Vector(Math.floor((c.pos.x + target.x) / 2), Math.floor((c.pos.y + target.y) / 2));
+    c.turnToward(posToFace);
+    c.pos = target;
+    ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.Standing, c);
+    return false;
+  }
+
+}
+
+exports.SuperDodge = SuperDodge;
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","../../game/input":"60d50d152119e01a0f05aa9be6432259","../../game/tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../combat/CombatState":"3c3af5741b84d45f18e66c70d6c9d3db","../combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","./_helpers":"3574a7b057a78c60c72a4af34ca2c56d","../sprite":"488445ffc318f5d280c0d86556dce008","../direction":"8d08baf8b9861766c30a87961a2d3da1","../../assets":"be73c6663579275afb4521336d5df627"}]},{},["2eff76d4a117d48b1c89a2ab4ab18859","bd665bee0b094abac42ce96c8f8b084d"], null)
 
 //# sourceMappingURL=rl21.52986edf.js.map
