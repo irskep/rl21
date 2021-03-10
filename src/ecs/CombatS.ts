@@ -49,7 +49,9 @@ export class CombatSystem extends System {
   ecs!: ECS;
   tilemap!: Tilemap;
 
-  STUN_TIMER = 2;
+  rng = new RNG(`${Date.now()}`);
+
+  STUN_TIMER_CHOICES = [1, 2];
 
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
@@ -180,7 +182,7 @@ export class CombatSystem extends System {
       // Add a delay between processing this entity and the next one, unless
       // there are no more, in which case process immediately (which ends the
       // loop)
-      if (this.entitiesToProcess.length > 0) {
+      if (this.entitiesToProcess.length > 0 && m.name !== "Wait") {
         setTimeout(this.processNextEntity, 200);
       } else {
         this.processNextEntity();
@@ -272,19 +274,27 @@ export class CombatSystem extends System {
             subject: attacker,
             object: defender,
           });
-          defenderCombatC.setState(
-            CombatState.Punched,
-            defender.getComponent(SpriteC)
-          );
           this.changeHP(defender, -STATS.PUNCH_DAMAGE);
-          ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}!`);
+          if (this.rng.choice([0, 1]) === 0) {
+            ecs.writeMessage(
+              `${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert.`
+            );
+          } else {
+            defenderCombatC.setState(
+              CombatState.Punched,
+              defender.getComponent(SpriteC)
+            );
+            ecs.writeMessage(
+              `${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn.`
+            );
+          }
           break;
       }
     };
     switch (state) {
       case CombatState.Stunned:
         landPunch();
-        defenderCombatC.recoveryTimer = this.STUN_TIMER; // reset
+        defenderCombatC.recoveryTimer += 1; // stay stunned longer
         defenderCombatC.updateText(defender.getComponent(SpriteC));
         break;
       case CombatState.Punched:

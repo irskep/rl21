@@ -6,7 +6,7 @@ import { SpriteC } from "../sprite";
 import { GoalType } from "../Goal";
 import { findPath } from "./findPath";
 import { PlannedWalk } from "./PlannedWalk";
-import { isAdjacent } from "../../game/tilemap";
+// import { isAdjacent } from "../../game/tilemap";
 
 export class CreateAndFollowGoal implements Move {
   name = "CreateAndFollowGoal";
