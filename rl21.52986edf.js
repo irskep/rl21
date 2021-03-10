@@ -47103,6 +47103,7 @@ class LevelScene {
     this.game = game;
     this.n = n;
     this.gfx = new _LevelSceneGfx.LevelSceneGfx(game, this.map);
+    window.levelScene = this;
   }
 
   goToNextScene() {
@@ -49290,7 +49291,10 @@ class Counter {
 
     if (enemyCombatC.hasTrait(_CombatTrait.CombatTrait.Armored)) {
       ctx.ecs.writeMessage(`${spriteC.flavorName} counters ${enemySpriteC.flavorName}’s punch, but ${enemySpriteC.flavorName} stays up!`);
-      combatC.becomeStunned(1, spriteC);
+      combatC.becomeStunned(1, spriteC); // not sure if I want to keep this
+
+      enemyCombatC.becomeStunned(1, enemySpriteC);
+      enemySpriteC.orientation = (enemySpriteC.orientation + 2) % 4;
       ctx.ecs.spriteSystem.cowboyUpdate();
       ctx.ecs.writeMessage(`${spriteC.flavorName} will take 1 turn to recover from the counter.`);
       return false;
@@ -56079,6 +56083,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.DIFFICULTIES = void 0;
 const DIFFICULTIES = [{
+  numThugs: 0,
+  numArmoredThugs: 1,
+  numTitanThugs: 0,
+  mapgenAlgo: "basic"
+}, {
   numThugs: 3,
   numArmoredThugs: 0,
   numTitanThugs: 0,
