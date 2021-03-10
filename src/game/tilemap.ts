@@ -42,6 +42,14 @@ export class Tilemap {
     if (cell) callback(cell);
   }
 
+  updateCells(callback: (cell: Cell) => void) {
+    for (let y = 0; y < this.size.y; y++) {
+      for (let x = 0; x < this.size.x; x++) {
+        callback(this.contents[y][x]);
+      }
+    }
+  }
+
   getCell(pos: AbstractVector): Cell | null {
     if (pos.x < 0 || pos.y < 0 || pos.x >= this.size.x || pos.y >= this.size.y)
       return null;
