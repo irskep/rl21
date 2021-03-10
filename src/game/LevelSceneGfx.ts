@@ -13,7 +13,10 @@ import { Tilemap } from "./tilemap";
 import { CombatC } from "../ecs/CombatC";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/sprite";
-import { AnimationHandler } from "./AnimationHandler";
+import {
+  AnimationHandler,
+  makeDriftAndFadeAnimation,
+} from "./AnimationHandler";
 import { GameInterface } from "../types";
 
 export class LevelSceneGfx {
@@ -69,6 +72,10 @@ export class LevelSceneGfx {
   exit() {
     this.app.stage.removeChild(this.container);
   }
+
+  tick = (dt: number) => {
+    this.animationHandler.tick(dt);
+  };
 
   addChildren() {
     this.container.addChild(this.gameAreaContainer);
@@ -237,6 +244,8 @@ export class LevelSceneGfx {
     }
   }
 
+  /** Stuff you can do */
+
   writeMessage = (msg: string) => {
     this.messages.push(msg);
     while (this.messages.length > 20) {
@@ -245,7 +254,36 @@ export class LevelSceneGfx {
     this.messageLog.text = this.messages.join("\n");
   };
 
-  tick = (dt: number) => {
-    this.animationHandler.tick(dt);
-  };
+  showLoss() {
+    const victorySprite = new Sprite(this.game.images["youlose"]);
+    victorySprite.anchor.set(0.5, 0.5);
+    victorySprite.position.set(
+      this.hudContainer.width / 2,
+      this.hudContainer.height / 2
+    );
+    this.hudContainer.addChild(victorySprite);
+  }
+
+  showVictory() {
+    const victorySprite = new Sprite(this.game.images["stagecomplete"]);
+    victorySprite.anchor.set(0.5, 0.5);
+    victorySprite.position.set(
+      this.hudContainer.width / 2,
+      this.hudContainer.height / 2
+    );
+    this.hudContainer.addChild(victorySprite);
+  }
+
+  showFloatingText(sourceSprite: Sprite, textValue: string, fill: string) {
+    const text = new Text(textValue, {
+      fontSize: 48,
+      fontFamily: "Barlow Condensed",
+      fill: fill,
+    });
+    text.position.set(sourceSprite.position.x, sourceSprite.position.y);
+    sourceSprite.parent.addChild(text);
+    this.animationHandler.add(
+      makeDriftAndFadeAnimation(text, 3, new Vector(-100, -100))
+    );
+  }
 }

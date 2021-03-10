@@ -80,6 +80,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     // face attacker
     enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+    ctx.ecs.spriteSystem.cowboyUpdate();
 
     setTimeout(() => {
       combatC.setState(CombatState.Standing, spriteC);

@@ -1,5 +1,5 @@
 // import Mousetrap from "mousetrap";
-import { InteractionEvent, Sprite, Text } from "pixi.js";
+import { InteractionEvent, Sprite } from "pixi.js";
 import { Vector } from "vector2d";
 import { Cell, Tilemap } from "./tilemap";
 import { makeECS } from "../ecs/ecs";
@@ -11,7 +11,6 @@ import { Action, getActionText, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/sprite";
 import { CombatEvent, CombatEventType } from "../ecs/CombatS";
-import { makeDriftAndFadeAnimation } from "./AnimationHandler";
 import { MenuScene } from "../MenuScene";
 import { DIFFICULTIES } from "../ecs/difficulties";
 import Mousetrap from "mousetrap";
@@ -125,30 +124,15 @@ export class LevelScene implements GameScene {
         if (event.subject === this.ecs.player) {
           this.updateHearts();
         }
-        const text = new Text(`${event.value}`, {
-          fontSize: 48,
-          fontFamily: "Barlow Condensed",
-          fill: "#ff6666",
-        });
-        const sourceSprite = event.subject!.getComponent(SpriteC);
-        text.position.set(
-          sourceSprite.sprite!.position.x,
-          sourceSprite.sprite!.position.y
-        );
-        sourceSprite.sprite!.parent.addChild(text);
-        this.gfx.animationHandler.add(
-          makeDriftAndFadeAnimation(text, 3, new Vector(-100, -100))
+        this.gfx.showFloatingText(
+          event.subject!.getComponent(SpriteC)!.sprite!,
+          `${event.value}`,
+          "#ff6666"
         );
         break;
       case CombatEventType.Die:
         if (event.subject === this.ecs.player) {
-          const victorySprite = new Sprite(this.game.images["youlose"]);
-          victorySprite.anchor.set(0.5, 0.5);
-          victorySprite.position.set(
-            this.gfx.hudContainer.width / 2,
-            this.gfx.hudContainer.height / 2
-          );
-          this.gfx.hudContainer.addChild(victorySprite);
+          this.gfx.showLoss();
 
           setTimeout(() => {
             this.game.replaceScenes([new MenuScene(this.game)]);
@@ -156,13 +140,7 @@ export class LevelScene implements GameScene {
         }
         break;
       case CombatEventType.AllEnemiesDead:
-        const victorySprite = new Sprite(this.game.images["stagecomplete"]);
-        victorySprite.anchor.set(0.5, 0.5);
-        victorySprite.position.set(
-          this.gfx.hudContainer.width / 2,
-          this.gfx.hudContainer.height / 2
-        );
-        this.gfx.hudContainer.addChild(victorySprite);
+        this.gfx.showVictory();
 
         setTimeout(() => {
           this.goToNextScene();
