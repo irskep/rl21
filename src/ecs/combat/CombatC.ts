@@ -1,6 +1,6 @@
 import { Component, Entity } from "@nova-engine/ecs";
-import { Move } from "./moves/_types";
-import { SpriteC } from "./sprite";
+import { Move } from "../moves/_types";
+import { SpriteC } from "../sprite";
 import {
   CombatState,
   stateToPlayerSpriteIndex,
@@ -8,7 +8,7 @@ import {
   getStateHelpText,
 } from "./CombatState";
 import { CombatTrait } from "./CombatTrait";
-import { Goal } from "./Goal";
+import { Goal } from "../Goal";
 
 export class CombatC implements Component {
   state = CombatState.Standing;

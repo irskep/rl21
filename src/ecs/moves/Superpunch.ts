@@ -1,6 +1,6 @@
 import { AbstractVector, Vector } from "vector2d";
-import { CombatState } from "../CombatState";
-import { CombatC } from "../CombatC";
+import { CombatState } from "../combat/CombatState";
+import { CombatC } from "../combat/CombatC";
 import { getDirectionVector, getOrientation } from "../direction";
 import {
   ensureStandingAndTargetIsAdjacentEnemy,
@@ -11,7 +11,7 @@ import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 import { isAdjacent } from "../../game/tilemap";
 import { STATS } from "../stats";
-import { CombatEventType } from "../CombatS";
+import { CombatEventType } from "../combat/CombatS";
 
 export class SuperpunchPrepare implements Move {
   name = "Superpunch Prepare";

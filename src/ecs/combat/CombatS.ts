@@ -6,20 +6,20 @@ import {
   System,
 } from "@nova-engine/ecs";
 import { AbstractVector } from "vector2d";
-import { EnvIndices } from "../assets";
-import { manhattanDistance, Tilemap } from "../game/tilemap";
-import { GameInterface } from "../types";
-import { getNeighbors } from "./direction";
-import { ECS } from "./ecsTypes";
-import { Move } from "./moves/_types";
-import { SpriteC, SpriteSystem } from "./sprite";
-import UnreachableCaseError from "../UnreachableCaseError";
+import { EnvIndices } from "../../assets";
+import { manhattanDistance, Tilemap } from "../../game/tilemap";
+import { GameInterface } from "../../types";
+import { getNeighbors } from "../direction";
+import { ECS } from "../ecsTypes";
+import { Move } from "../moves/_types";
+import { SpriteC, SpriteSystem } from "../sprite";
+import UnreachableCaseError from "../../UnreachableCaseError";
 import { CombatC } from "./CombatC";
 import { CombatTrait } from "./CombatTrait";
 import { CombatState } from "./CombatState";
-import KefirBus from "../KefirBus";
-import { STATS } from "./stats";
-import RNG from "../game/RNG";
+import KefirBus from "../../KefirBus";
+import { STATS } from "../stats";
+import RNG from "../../game/RNG";
 
 /**
  * These are visual events that can occur.

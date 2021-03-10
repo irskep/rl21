@@ -1,14 +1,14 @@
 import { AbstractVector, Vector } from "vector2d";
 import { Action } from "../../game/input";
 import { isAdjacent } from "../../game/tilemap";
-import { CombatState } from "../CombatState";
-import { CombatC } from "../CombatC";
+import { CombatState } from "../combat/CombatState";
+import { CombatC } from "../combat/CombatC";
 import { ensureTargetIsEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
-import { CombatEventType } from "../CombatS";
+import { CombatEventType } from "../combat/CombatS";
 import { STATS } from "../stats";
-import { CombatTrait } from "../CombatTrait";
+import { CombatTrait } from "../combat/CombatTrait";
 
 export class Counter implements Move {
   action = Action.B;

@@ -1,6 +1,6 @@
-import { SpriteIndices } from "../assets";
-import { isAdjacent } from "../game/tilemap";
-import UnreachableCaseError from "../UnreachableCaseError";
+import { SpriteIndices } from "../../assets";
+import { isAdjacent } from "../../game/tilemap";
+import UnreachableCaseError from "../../UnreachableCaseError";
 import { CombatTrait } from "./CombatTrait";
 
 export enum CombatState {

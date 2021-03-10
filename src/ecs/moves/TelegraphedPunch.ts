@@ -1,7 +1,7 @@
 import { AbstractVector, Vector } from "vector2d";
 import { isAdjacent } from "../../game/tilemap";
-import { CombatState } from "../CombatState";
-import { CombatC } from "../CombatC";
+import { CombatState } from "../combat/CombatState";
+import { CombatC } from "../combat/CombatC";
 import { getDirectionVector } from "../direction";
 import {
   ensureStandingAndTargetIsAdjacentEnemy,

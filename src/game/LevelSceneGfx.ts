@@ -10,7 +10,7 @@ import {
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "../assets";
 import { Tilemap } from "./tilemap";
-import { CombatC } from "../ecs/CombatC";
+import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/sprite";
 import {

@@ -1,8 +1,8 @@
 import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../../assets";
 import { isAdjacent } from "../../game/tilemap";
-import { CombatState } from "../CombatState";
-import { CombatC } from "../CombatC";
+import { CombatState } from "../combat/CombatState";
+import { CombatC } from "../combat/CombatC";
 import { SpriteC } from "../sprite";
 import { MoveContext, MoveCheckResult } from "./_types";
 

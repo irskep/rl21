@@ -7,10 +7,11 @@ import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
 import { SpriteIndices } from "../../assets";
 
-export class FastPunch implements Move {
+export class GroundTakedown implements Move {
   action = Action.X;
-  name = "Punch";
-  help = "Strike the enemy in the face";
+  name = "Ground Takedown";
+  help =
+    "Knock out the target immediately regardless of their remaining hit points.";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
@@ -20,12 +21,10 @@ export class FastPunch implements Move {
     const enemyState = enemy.getComponent(CombatC).state;
     switch (enemyState) {
       case CombatState.Prone:
-        return { success: false, message: "Enemy is on the ground" };
+        return { success: true };
       default:
-        break;
+        return { success: false, message: "Enemy must be prone." };
     }
-
-    return { success: true };
   }
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {
@@ -46,18 +45,21 @@ export class FastPunch implements Move {
 
       const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
       const enemySpriteC = enemy.getComponent(SpriteC);
-      // face attacker
-      enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
-      ctx.ecs.spriteSystem.cowboyUpdate();
+      const enemyCombatC = enemy.getComponent(CombatC);
+      enemyCombatC.hp = 0;
 
       setTimeout(() => {
+        spriteC.pos = enemySpriteC.pos;
         combatC.setState(
           CombatState.Standing,
           spriteC,
           SpriteIndices.BM_PUNCH_AFTER
         );
         ctx.ecs.spriteSystem.cowboyUpdate();
+
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} knocks out ${enemySpriteC.flavorName} while they're down!`
+        );
 
         setTimeout(() => {
           combatC.setState(CombatState.Standing, spriteC);

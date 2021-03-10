@@ -9,7 +9,7 @@ import {
 import { Container, Sprite, Text } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { GameInterface } from "../types";
-import { CombatC } from "./CombatC";
+import { CombatC } from "./combat/CombatC";
 import { DIRECTIONS } from "./direction";
 
 export class SpriteC implements Component {

@@ -1,8 +1,8 @@
 import { AbstractVector } from "vector2d";
 import { Action } from "../../game/input";
 import { isAdjacent } from "../../game/tilemap";
-import { CombatState } from "../CombatState";
-import { CombatC } from "../CombatC";
+import { CombatState } from "../combat/CombatState";
+import { CombatC } from "../combat/CombatC";
 import { ensureTargetClear } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
