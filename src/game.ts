@@ -78,8 +78,11 @@ export default class Game implements GameInterface {
       }
     }
 
-    // this.pushScene(new MenuScene(this));
-    this.pushScene(new LevelScene(this, 0));
+    if (window.location.hash === "#skipmenu") {
+      this.pushScene(new LevelScene(this, 0));
+    } else {
+      this.pushScene(new MenuScene(this));
+    }
   };
 
   teardown() {
