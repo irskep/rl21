@@ -48841,7 +48841,7 @@ function interpretEvent(e) {
   const mouseEvent = e.data.originalEvent;
 
   if (mouseEvent.button === 0) {
-    if (mouseEvent.shiftKey) {
+    if (mouseEvent.shiftKey || mouseEvent.altKey) {
       return Action.A;
     } else {
       return Action.X;
@@ -48853,7 +48853,7 @@ function interpretEvent(e) {
   }
 
   if (mouseEvent.button === 2) {
-    if (mouseEvent.shiftKey) {
+    if (mouseEvent.shiftKey || mouseEvent.altKey) {
       return Action.B;
     } else {
       return Action.Y;
@@ -48866,10 +48866,10 @@ function interpretEvent(e) {
 function getActionText(action) {
   switch (action) {
     case Action.A:
-      return "Shift + left click";
+      return "Shift/alt + left click";
 
     case Action.B:
-      return "Shift + right click";
+      return "Shift/alt + right click";
 
     case Action.X:
       return "Left click";
