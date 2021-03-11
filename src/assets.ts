@@ -51,6 +51,8 @@ export const EnvIndices = {
   FLOOR: 0,
   WALL: 1,
   HOVER: 8,
+  BOX: 56,
+  GUN: 57,
 };
 
 export const ALL_ASSETS: Asset[] = [

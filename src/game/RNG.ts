@@ -18,7 +18,10 @@ export default class RNG {
   }
 
   int(minInclusive: number, maxExclusive: number): number {
-    return minInclusive + Math.floor(this.getRandom() * maxExclusive);
+    return (
+      minInclusive +
+      Math.floor(this.getRandom() * (maxExclusive - minInclusive))
+    );
   }
 
   float(min: number, max: number): number {

@@ -141,8 +141,7 @@ export function makeECS(
   n: number,
   upgrades: Upgrade[]
 ): ECS {
-  const rng = new RNG(`${Math.random()}`);
-  // const rng = new RNG("0.864860870430705");
+  const rng = new RNG(`${Date.now()}`);
   console.log("Map RNG seed:", rng.seed);
   const engine = new Engine();
 
@@ -163,20 +162,41 @@ export function makeECS(
   const difficulty = DIFFICULTIES[n];
   const orientations = [0, 0.5, 1, 1, 5, 2, 2.5, 3, 3.5];
 
-  for (let i = 0; i < difficulty.numThugs; i++) {
-    engine.addEntity(
-      makeThug(availableCells.shift()!, rng.choice(orientations))
+  if (difficulty.numThugs !== 0) {
+    const numThugs = rng.int(
+      difficulty.numThugs[0],
+      difficulty.numThugs[1] + 1
     );
+    console.log(difficulty, numThugs);
+    for (let i = 0; i < numThugs; i++) {
+      engine.addEntity(
+        makeThug(availableCells.shift()!, rng.choice(orientations))
+      );
+    }
   }
-  for (let i = 0; i < difficulty.numArmoredThugs; i++) {
-    engine.addEntity(
-      makeArmoredThug(availableCells.shift()!, rng.choice(orientations))
+
+  if (difficulty.numArmoredThugs !== 0) {
+    const numThugs = rng.int(
+      difficulty.numArmoredThugs[0],
+      difficulty.numArmoredThugs[1] + 1
     );
+    for (let i = 0; i < numThugs; i++) {
+      engine.addEntity(
+        makeArmoredThug(availableCells.shift()!, rng.choice(orientations))
+      );
+    }
   }
-  for (let i = 0; i < difficulty.numTitanThugs; i++) {
-    engine.addEntity(
-      makeTitanThug(availableCells.shift()!, rng.choice(orientations))
+
+  if (difficulty.numTitanThugs !== 0) {
+    const numThugs = rng.int(
+      difficulty.numTitanThugs[0],
+      difficulty.numTitanThugs[1] + 1
     );
+    for (let i = 0; i < numThugs; i++) {
+      engine.addEntity(
+        makeTitanThug(availableCells.shift()!, rng.choice(orientations))
+      );
+    }
   }
 
   const ecs = {
