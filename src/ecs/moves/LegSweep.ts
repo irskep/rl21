@@ -4,7 +4,6 @@ import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC, SpriteSystem } from "../sprite";
-import { SpriteIndices } from "../../assets";
 import { DIRECTIONS } from "../direction";
 import { Entity } from "@nova-engine/ecs";
 import { CombatEventType } from "../combat/CombatS";
@@ -51,14 +50,25 @@ export class LegSweep implements Move {
     const combatC = ctx.entity.getComponent(CombatC);
     const pos = spriteC.pos;
     const adjacentEnemies = this.getAdjacentEnemies(ctx.ecs.spriteSystem, pos);
+    const numEnemies = adjacentEnemies.length;
+    const numHP = Math.floor(combatC.hp / 2);
 
     const process = () => {
       if (!adjacentEnemies.length) {
-        ctx.ecs.combatSystem.changeHP(ctx.entity, -Math.floor(combatC.hp / 2));
+        ctx.ecs.combatSystem.changeHP(ctx.entity, -numHP);
         ctx.ecs.combatSystem.events.emit({
           type: CombatEventType.Punch,
           object: ctx.entity,
         });
+
+        const enemiesString =
+          numEnemies === 1 ? "1 enemy" : `${numEnemies} enemies`;
+        const hpString = numHP === 1 ? "1 hit point" : `${numHP} hit points`;
+
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} knocks down ${enemiesString}, but loses ${hpString}!`
+        );
+
         doNext();
         return;
       }

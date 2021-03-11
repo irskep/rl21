@@ -11,5 +11,6 @@
     ".cache": true,
     ".parcel-cache": true
   },
-  "explorerExclude.backup": null
+  "explorerExclude.backup": null,
+  "editor.formatOnSave": true
 }

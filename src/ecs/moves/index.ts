@@ -16,13 +16,9 @@ import {
 } from "./Superpunch";
 import { CreateAndFollowGoal } from "./CreateAndFollowGoal";
 
-export const BM_MOVES: Move[] = [
-  new Wait(),
-  new Walk(),
-  new FastPunch(),
-  new Counter(),
-  new Stun(),
-];
+export function makePlayerMoves(): Move[] {
+  return [new Wait(), new Walk(), new FastPunch(), new Counter(), new Stun()];
+}
 
 export const HENCHMAN_MOVES: Move[] = [
   new CreateAndFollowGoal(),

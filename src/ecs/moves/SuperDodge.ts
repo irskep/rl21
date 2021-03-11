@@ -87,6 +87,10 @@ export class SuperDodge implements Move {
       return { success: false, message: "Target is not floor" };
     }
 
+    if (ensureTargetIsEnemy(ctx, target).success) {
+      return { success: false, message: "Target is occupied" };
+    }
+
     const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx, target);
     if (!leapedEnemy) {
       return { success: false, message: "No enemy to leap over" };
@@ -119,7 +123,10 @@ export class SuperDodge implements Move {
       }!`
     );
 
-    if (ctx.ecs.rng.choice([0, 1]) === 0) {
+    if (
+      ctx.ecs.rng.choice([0, 1]) === 0 &&
+      leapedEnemy.getComponent(CombatC).state === CombatState.Standing
+    ) {
       ctx.ecs.combatSystem.changeHP(ctx.entity, -1);
       ctx.ecs.writeMessage(
         `${

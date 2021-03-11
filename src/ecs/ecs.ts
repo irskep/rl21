@@ -6,7 +6,7 @@ import { SpriteSystem, SpriteC } from "./sprite";
 import { GameInterface } from "../types";
 import { AbstractVector, Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
-import { BM_MOVES, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
+import { makePlayerMoves, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./combat/CombatS";
 import { CombatC } from "./combat/CombatC";
 import { CombatTrait } from "./combat/CombatTrait";
@@ -34,7 +34,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     SpriteIndices.BM_STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
-  e.putComponent(CombatC).build(10, new Array<Move>(...BM_MOVES), []);
+  e.putComponent(CombatC).build(10, makePlayerMoves(), []);
   e.getComponent(CombatC).isPlayer = true;
 
   return e;
