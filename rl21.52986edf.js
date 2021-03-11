@@ -57985,12 +57985,16 @@ class SuperDodge {
     _defineProperty(this, "extraNeighbors", [new _vector2d.Vector(-2, -2), new _vector2d.Vector(-1, -2), new _vector2d.Vector(0, -2), new _vector2d.Vector(1, -2), new _vector2d.Vector(2, -2), new _vector2d.Vector(-2, 2), new _vector2d.Vector(-1, 2), new _vector2d.Vector(0, 2), new _vector2d.Vector(1, 2), new _vector2d.Vector(2, 2), new _vector2d.Vector(-2, -1), new _vector2d.Vector(-2, 0), new _vector2d.Vector(-2, 1), new _vector2d.Vector(2, -1), new _vector2d.Vector(2, -0), new _vector2d.Vector(2, 1)]);
   }
 
-  getLeapedEnemy(pos, ctx) {
+  getLeapedEnemy(pos, ctx, target) {
     for (const d of _direction.DIRECTIONS) {
       const pos2 = pos.clone().add(d[0]);
 
       if ((0, _helpers.ensureTargetIsEnemy)(ctx, pos2).success) {
-        return ctx.ecs.spriteSystem.findCombatEntity(pos2);
+        const entity = ctx.ecs.spriteSystem.findCombatEntity(pos2);
+
+        if (entity && (0, _tilemap.isAdjacent)(entity.getComponent(_sprite.SpriteC).pos, target)) {
+          return entity;
+        }
       }
     }
 
@@ -58039,7 +58043,7 @@ class SuperDodge {
       };
     }
 
-    const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx);
+    const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx, target);
 
     if (!leapedEnemy) {
       return {
