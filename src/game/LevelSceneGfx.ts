@@ -13,7 +13,7 @@ import { EnvIndices } from "../assets";
 import { Tilemap } from "./tilemap";
 import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
-import { SpriteC } from "../ecs/sprite";
+import { SpriteC } from "../ecs/SpriteC";
 import {
   AnimationManager,
   makeDriftAndFadeAnimation,
@@ -213,9 +213,9 @@ export class LevelSceneGfx {
 
     const gfx = this.mouseoverBg;
 
-    const text = `${e.getComponent(SpriteC).hoverText}\n\n${
-      e.getComponent(CombatC).hoverText
-    }`;
+    let text = e.getComponent(SpriteC).hoverText;
+    if (e.hasComponent(CombatC))
+      text += `\n\n${e.getComponent(CombatC).hoverText}`;
     this.mouseoverText.text = text;
     this.mouseoverText.position.set(4, 4);
 

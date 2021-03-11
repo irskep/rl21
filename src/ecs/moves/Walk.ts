@@ -5,7 +5,7 @@ import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
 import { ensureTargetClear } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import UnreachableCaseError from "../../UnreachableCaseError";
 
 export class Walk implements Move {

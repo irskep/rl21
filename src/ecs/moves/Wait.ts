@@ -3,7 +3,7 @@ import { Action } from "../../game/input";
 import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 
 export class Wait implements Move {
   name = "Wait";

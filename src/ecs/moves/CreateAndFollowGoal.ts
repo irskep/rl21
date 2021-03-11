@@ -2,7 +2,7 @@ import { AbstractVector } from "vector2d";
 import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import { GoalType } from "../Goal";
 import { findPath } from "./findPath";
 import { PlannedWalk } from "./PlannedWalk";

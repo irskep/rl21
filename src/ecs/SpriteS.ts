@@ -1,79 +1,16 @@
 import {
   Engine,
-  Component,
   System,
   FamilyBuilder,
   Family,
   Entity,
 } from "@nova-engine/ecs";
 import { Container, Sprite, Text } from "pixi.js";
-import { AbstractVector, Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { GameInterface } from "../types";
 import { CombatC } from "./combat/CombatC";
-import { DIRECTIONS } from "./direction";
-
-export class SpriteC implements Component {
-  pos: AbstractVector = new Vector(0, 0);
-  orientation = 0; // clockwise from up
-  private _spriteIndex = 0;
-  needsTextureReplacement = false;
-  private _label = "";
-  needsLabelUpdate = false;
-  sprite?: Sprite;
-  tint = 0xffffff;
-  text: Text | null = null;
-
-  flavorName = ""; // sprites have names too, why not
-  flavorDesc = "";
-
-  build(
-    flavorName: string,
-    flavorDesc: string,
-    pos: AbstractVector,
-    spriteIndex: number
-  ): SpriteC {
-    this.flavorName = flavorName;
-    this.flavorDesc = flavorDesc;
-    this.pos = pos;
-    this.spriteIndex = spriteIndex;
-    return this;
-  }
-
-  get spriteIndex(): number {
-    return this._spriteIndex;
-  }
-  set spriteIndex(value: number) {
-    this._spriteIndex = value;
-    this.needsTextureReplacement = true;
-  }
-
-  get label(): string {
-    return this._label;
-  }
-  set label(value: string) {
-    this._label = value;
-    this.needsLabelUpdate = true;
-  }
-
-  get hoverText(): string {
-    return this.flavorName + "\n\n" + this.flavorDesc;
-  }
-
-  turnToward(target: AbstractVector) {
-    const direction = target.clone().subtract(this.pos);
-    for (const d2 of DIRECTIONS) {
-      if (d2[0].equals(direction)) {
-        this.orientation = d2[1];
-        break;
-      }
-    }
-  }
-
-  teardown() {
-    if (!this.sprite) return;
-    this.sprite.parent.removeChild(this.sprite);
-  }
-}
+import { ItemC } from "./ItemC";
+import { SpriteC } from "./SpriteC";
 
 export class SpriteSystem extends System {
   family!: Family;
@@ -103,9 +40,10 @@ export class SpriteSystem extends System {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
       if (!spriteC.sprite) {
-        spriteC.sprite = new Sprite(
-          this.game.filmstrips.sprites[spriteC.spriteIndex]
-        );
+        const texture = this.game.filmstrips[spriteC.spriteSheet][
+          spriteC.spriteIndex
+        ];
+        spriteC.sprite = new Sprite(texture);
         spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
@@ -119,7 +57,7 @@ export class SpriteSystem extends System {
 
       if (spriteC.needsTextureReplacement) {
         spriteC.needsTextureReplacement = false;
-        spriteC.sprite.texture = this.game.filmstrips.sprites[
+        spriteC.sprite.texture = this.game.filmstrips[spriteC.spriteSheet][
           spriteC.spriteIndex
         ];
       }
@@ -149,11 +87,22 @@ export class SpriteSystem extends System {
   findCombatEntity(pos: AbstractVector): Entity | null {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
-      if (spriteC.pos.equals(pos) && entity.getComponent(CombatC)) {
+      if (spriteC.pos.equals(pos) && entity.hasComponent(CombatC)) {
         return entity;
       }
     }
     return null;
+  }
+
+  findInterestingObjects(): Entity[] {
+    return this.family.entities.filter((e) => e.hasComponent(ItemC));
+  }
+
+  findInterestingObject(pos: AbstractVector): Entity | null {
+    const objects = this.findInterestingObjects().filter((o) =>
+      o.getComponent(SpriteC).pos.equals(pos)
+    );
+    return objects.length ? objects[0] : null;
   }
 }
 

@@ -9,7 +9,7 @@ import { GameScene, GameInterface } from "../types";
 import { Move, MoveCheckResult } from "../ecs/moves/_types";
 import { Action, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
-import { SpriteC } from "../ecs/sprite";
+import { SpriteC } from "../ecs/SpriteC";
 import { CombatEvent, CombatEventType } from "../ecs/combat/CombatS";
 import { MenuScene } from "../MenuScene";
 import { DIFFICULTIES } from "../ecs/difficulties";
@@ -217,7 +217,9 @@ export class LevelScene implements GameScene {
 
     if (pos) {
       this.gfx.updateHoveredEntity(
-        this.ecs.spriteSystem.findCombatEntity(pos) || null
+        this.ecs.spriteSystem.findCombatEntity(pos) ||
+          this.ecs.spriteSystem.findInterestingObject(pos) ||
+          null
       );
     } else {
       this.gfx.updateHoveredEntity(null);

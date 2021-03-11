@@ -2,7 +2,7 @@ import { Engine, Entity } from "@nova-engine/ecs";
 import RNG from "../game/RNG";
 import { Tilemap } from "../game/tilemap";
 import { CombatSystem } from "./combat/CombatS";
-import { SpriteSystem } from "./sprite";
+import { SpriteSystem } from "./SpriteS";
 
 export interface ECS {
   engine: Engine;

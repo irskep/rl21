@@ -8,7 +8,7 @@ import {
   ensureTargetExists,
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import { isAdjacent } from "../../game/tilemap";
 import { STATS } from "../stats";
 import { CombatEventType } from "../combat/CombatS";

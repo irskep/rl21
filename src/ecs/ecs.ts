@@ -2,9 +2,10 @@ import { Engine, Entity } from "@nova-engine/ecs";
 import { Container } from "pixi.js";
 import { EnvIndices, SpriteIndices } from "../assets";
 import getID from "../getID";
-import { SpriteSystem, SpriteC } from "./sprite";
+import { SpriteSystem } from "./SpriteS";
+import { SpriteC } from "./SpriteC";
 import { GameInterface } from "../types";
-import { AbstractVector, Vector } from "vector2d";
+import { Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { makePlayerMoves, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./combat/CombatS";
@@ -17,7 +18,7 @@ import RNG from "../game/RNG";
 import { DIFFICULTIES } from "./difficulties";
 import { getNeighbors } from "./direction";
 import { Upgrade } from "./upgrades";
-import { Move } from "./moves/_types";
+import { ItemC } from "./ItemC";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -31,6 +32,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     "Atman",
     "The caped crusader",
     pos,
+    "sprites",
     SpriteIndices.BM_STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
@@ -46,6 +48,7 @@ function makeThug(pos: Vector, orientation: number): Entity {
     `${getHenchmanName()} (Thug)`,
     "A henchman of average strength and ill health.",
     pos,
+    "sprites",
     SpriteIndices.STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
@@ -72,6 +75,21 @@ function makeTitanThug(pos: Vector, orientation: number): Entity {
   e.getComponent(SpriteC).tint = 0xff6666;
   e.getComponent(SpriteC).flavorName = `${getHenchmanName()} (Titan Thug)`;
   e.getComponent(SpriteC).flavorDesc = "A henchman of immense strength.";
+  return e;
+}
+
+function makeGun(pos: Vector): Entity {
+  const e = makeEntity();
+  e.putComponent(SpriteC).build(
+    "Gun",
+    "Henchmen can use it to shoot you. You can't use guns because Atman doesn't kill people; he only grievously injures them.",
+    pos,
+    "env",
+    EnvIndices.GUN
+  );
+  e.getComponent(SpriteC).flavorName = "Gun";
+  e.putComponent(ItemC);
+  console.log("Gun at", pos);
   return e;
 }
 
@@ -196,6 +214,13 @@ export function makeECS(
       engine.addEntity(
         makeTitanThug(availableCells.shift()!, rng.choice(orientations))
       );
+    }
+  }
+
+  if (difficulty.numGuns !== 0) {
+    const numGuns = rng.int(difficulty.numGuns[0], difficulty.numGuns[1] + 1);
+    for (let i = 0; i < numGuns; i++) {
+      engine.addEntity(makeGun(availableCells.shift()!));
     }
   }
 

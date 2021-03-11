@@ -3,7 +3,7 @@ import { EnvIndices } from "../../assets";
 import { isAdjacent } from "../../game/tilemap";
 import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import { MoveContext, MoveCheckResult } from "./_types";
 
 export function ensureTargetClear(

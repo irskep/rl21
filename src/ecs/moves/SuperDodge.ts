@@ -5,7 +5,7 @@ import { CombatState } from "../combat/CombatState";
 import { CombatC } from "../combat/CombatC";
 import { ensureTargetIsEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import { Entity } from "@nova-engine/ecs";
 import { DIRECTIONS } from "../direction";
 import { EnvIndices } from "../../assets";

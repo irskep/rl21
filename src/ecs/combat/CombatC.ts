@@ -1,6 +1,6 @@
 import { Component, Entity } from "@nova-engine/ecs";
 import { Move } from "../moves/_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import {
   CombatState,
   stateToPlayerSpriteIndex,

@@ -10,7 +10,7 @@ import {
   ensureTargetIsEnemy,
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
-import { SpriteC } from "../sprite";
+import { SpriteC } from "../SpriteC";
 import { CombatEventType } from "../combat/CombatS";
 
 export class TelegraphedPunchPrepare implements Move {
