@@ -32,9 +32,9 @@ export function interpretEvent(e: InteractionEvent): Action | null {
 export function getActionText(action: Action): string {
   switch (action) {
     case Action.A:
-      return "Shift/alt + left click";
+      return "Alt + left click";
     case Action.B:
-      return "Shift/alt + right click";
+      return "Alt + right click";
     case Action.X:
       return "Left click";
     case Action.Y:

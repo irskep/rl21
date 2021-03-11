@@ -114,7 +114,6 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
       };
     }
 
-    // TODO: allow punching allies?
     return ensureTargetClear(ctx, target);
   }
 
@@ -128,7 +127,9 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     // stumble forward
     combatC.setState(CombatState.PunchFollowthrough, spriteC); // ok
     spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
+    ctx.ecs.writeMessage(
+      `${spriteC.flavorName} swings at nothing but air and stumbles forward!`
+    );
     ctx.ecs.spriteSystem.cowboyUpdate();
 
     setTimeout(() => {

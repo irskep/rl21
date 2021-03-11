@@ -17,6 +17,7 @@ import RNG from "../game/RNG";
 import { DIFFICULTIES } from "./difficulties";
 import { getNeighbors } from "./direction";
 import { Upgrade } from "./upgrades";
+import { Move } from "./moves/_types";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -26,10 +27,6 @@ function makeEntity(): Entity {
 
 function makePlayer(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
-  // if (e.id != 0) {
-  //   throw new Error("player should always be 0");
-  // }
-
   e.putComponent(SpriteC).build(
     "Atman",
     "The caped crusader",
@@ -37,7 +34,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
     SpriteIndices.BM_STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
-  e.putComponent(CombatC).build(10, BM_MOVES, []);
+  e.putComponent(CombatC).build(10, new Array<Move>(...BM_MOVES), []);
   e.getComponent(CombatC).isPlayer = true;
 
   return e;
@@ -84,6 +81,7 @@ function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
 
   let needsUpdate = true;
   while (needsUpdate) {
+    availableCells = new Array<Vector>();
     for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
       for (
         let skipY = 0;
@@ -145,6 +143,7 @@ export function makeECS(
   upgrades: Upgrade[]
 ): ECS {
   const rng = new RNG(`${Math.random()}`);
+  // const rng = new RNG("0.864860870430705");
   console.log("Map RNG seed:", rng.seed);
   const engine = new Engine();
 

@@ -108,6 +108,16 @@ export class SuperDodge implements Move {
     c.pos = target;
 
     ctx.entity.getComponent(CombatC).setState(CombatState.Standing, c);
+
+    const leapedEnemy = this.getLeapedEnemy(c.pos, ctx, target);
+    if (leapedEnemy) {
+      ctx.ecs.writeMessage(
+        `${c.flavorName} leaps over ${
+          leapedEnemy.getComponent(SpriteC).flavorName
+        }!`
+      );
+    }
+
     return false;
   }
 }
