@@ -439,11 +439,9 @@ var _assets = require("./assets");
 
 var _filmstrip = _interopRequireDefault(require("./filmstrip"));
 
-var _RNG = _interopRequireDefault(require("./game/RNG"));
+var _LevelScene = require("./game/LevelScene");
 
 var _MenuScene = require("./MenuScene");
-
-var _UpgradeScene = require("./UpgradeScene");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -485,8 +483,7 @@ class Game {
       }
 
       if (window.location.hash === "#skipmenu") {
-        // this.pushScene(new LevelScene(this, 0));
-        this.pushScene(new _UpgradeScene.UpgradeScene(this, 0, [], new _RNG.default(`${Date.now()}`)));
+        this.pushScene(new _LevelScene.LevelScene(this, 0, [])); // this.pushScene(new UpgradeScene(this, 0, [], new RNG(`${Date.now()}`)));
       } else {
         this.pushScene(new _MenuScene.MenuScene(this));
       }
@@ -557,7 +554,7 @@ class Game {
 }
 
 exports.default = Game;
-},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","./UpgradeScene":"c0960333d972f732087ce2f7ba56a88b","./game/RNG":"e2e767bdcbb3fbc301711f9c0ddedc0e"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
+},{"pixi.js":"909fe3070cb962c9dc718f3184b9fd4c","webfontloader":"ef53f8efcb8121fde62f49fd1a1dc043","./assets":"be73c6663579275afb4521336d5df627","./filmstrip":"aa243c19245f4a17bb4ebcec9369275f","vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","./game/LevelScene":"84dd184ecea3d468eeaab1eb358565eb"}],"909fe3070cb962c9dc718f3184b9fd4c":[function(require,module,exports) {
 /*!
  * pixi.js - v6.0.0
  * Compiled Tue, 02 Mar 2021 21:45:03 UTC
@@ -48695,6 +48692,8 @@ function generateMap(tilemap, rng) {
   let needsUpdate = true;
 
   while (needsUpdate) {
+    availableCells = new Array();
+
     for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
       for (let skipY = 0; skipY + skipSize <= tilemap.size.y; skipY += skipSize) {
         const areaCells = new Array();
@@ -48754,7 +48753,8 @@ function generateMap(tilemap, rng) {
 }
 
 function makeECS(game, container, tilemap, writeMessage, n, upgrades) {
-  const rng = new _RNG.default(`${Math.random()}`);
+  // const rng = new RNG(`${Math.random()}`);
+  const rng = new _RNG.default("0.864860870430705");
   console.log("Map RNG seed:", rng.seed);
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
@@ -49957,10 +49957,10 @@ function interpretEvent(e) {
 function getActionText(action) {
   switch (action) {
     case Action.A:
-      return "Shift/alt + left click";
+      return "Alt + left click";
 
     case Action.B:
-      return "Shift/alt + right click";
+      return "Alt + right click";
 
     case Action.X:
       return "Left click";
@@ -50277,8 +50277,7 @@ class TelegraphedPunchFollowthroughMiss {
         success: false,
         message: "Momentum is in a different direction"
       };
-    } // TODO: allow punching allies?
-
+    }
 
     return (0, _helpers.ensureTargetClear)(ctx, target);
   }
@@ -50294,7 +50293,7 @@ class TelegraphedPunchFollowthroughMiss {
     combatC.setState(_CombatState.CombatState.PunchFollowthrough, spriteC); // ok
 
     spriteC.pos = spriteC.pos.add((0, _direction.getDirectionVector)(spriteC.orientation));
-    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
+    ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air and stumbles forward!`);
     ctx.ecs.spriteSystem.cowboyUpdate();
     setTimeout(() => {
       combatC.becomeStunned(1, spriteC);
