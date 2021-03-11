@@ -23,6 +23,7 @@
     "build": "parcel build index.html"
   },
   "devDependencies": {
+    "@parcel/transformer-typescript-tsc": "^2.0.0-beta.1",
     "@types/howler": "^2.2.1",
     "@types/kefir": "^3.8.5",
     "@types/mousetrap": "^1.6.5",

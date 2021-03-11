@@ -1,6 +1,7 @@
 import { Entity } from "@nova-engine/ecs";
 import { CombatC } from "./combat/CombatC";
 import { GroundTakedown } from "./moves/GroundTakedown";
+import { LegSweep } from "./moves/LegSweep";
 import { SuperDodge } from "./moves/SuperDodge";
 
 export interface Upgrade {
@@ -12,6 +13,15 @@ export interface Upgrade {
 
 export function makeUpgradePool(): Upgrade[] {
   return [
+    {
+      name: "Leg Sweep",
+      exclusive: true,
+      description:
+        "Knock adjacent enemies prone, but lose half your remaining hit points.",
+      apply: (player: Entity) => {
+        player.getComponent(CombatC).moves.push(new LegSweep());
+      },
+    }
     {
       name: "Ground Takedown",
       exclusive: true,

@@ -43,7 +43,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
 function makeThug(pos: Vector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
-    `${getHenchmanName()} the Thug`,
+    `${getHenchmanName()} (Thug)`,
     "A henchman of average strength and ill health.",
     pos,
     SpriteIndices.STAND
@@ -58,7 +58,7 @@ function makeArmoredThug(pos: Vector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).traits.push(CombatTrait.Armored);
   e.getComponent(SpriteC).tint = 0xffff66;
-  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Armored Thug`;
+  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} (Armored Thug)`;
   e.getComponent(SpriteC).flavorDesc =
     "A henchman of average strength, wearing armor that blocks punches.";
   return e;
@@ -70,7 +70,7 @@ function makeTitanThug(pos: Vector, orientation: number): Entity {
   e.getComponent(CombatC).hp = STATS.HIGH_HP;
   e.getComponent(CombatC).hpMax = STATS.HIGH_HP;
   e.getComponent(SpriteC).tint = 0xff6666;
-  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} the Titan Thug`;
+  e.getComponent(SpriteC).flavorName = `${getHenchmanName()} (Titan Thug)`;
   e.getComponent(SpriteC).flavorDesc = "A henchman of immense strength.";
   return e;
 }
@@ -110,14 +110,13 @@ function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
 
     needsUpdate = false;
     for (const pos of availableCells) {
-      let hasOpening = false;
+      let numFreeNeighbors = 0;
       for (const adjacentPos of getNeighbors(pos)) {
         if (tilemap.getCell(adjacentPos)?.index === EnvIndices.FLOOR) {
-          hasOpening = true;
-          break;
+          numFreeNeighbors += 1;
         }
       }
-      if (!hasOpening) {
+      if (numFreeNeighbors < 2) {
         needsUpdate = true;
         for (let y = 0; y < tilemap.size.y; y++) {
           for (let x = 0; x < tilemap.size.x; x++) {
