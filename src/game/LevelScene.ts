@@ -55,6 +55,7 @@ export class LevelScene implements GameScene {
 
   private isInitialized = false;
   enter() {
+    SoundManager.shared.init();
     console.log("enter", this);
     Mousetrap.bind(["n"], () => this.goToNextScene());
     this.game.app.ticker.add(this.gameLoop);

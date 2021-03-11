@@ -11,8 +11,8 @@ const soundNames: string[] = [
 ];
 
 const musicNames: string[] = [
-  "dramatic_background_theme_1_looped",
-  "dramatic_background_theme_3_looped",
+  "dramatic_bg_theme_1_looped",
+  "dramatic_bg_theme_3_looped",
 ];
 
 export class SoundManager {

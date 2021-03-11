@@ -3,3 +3,4 @@ node_modules
 .cache
 dist
 art/*.mp3
+art/**/*.mp3
