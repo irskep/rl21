@@ -13,6 +13,10 @@ const soundNames: string[] = [
 const musicNames: string[] = [
   "dramatic_bg_theme_1_looped",
   "dramatic_bg_theme_3_looped",
+  "rise_of_the_fallen_looped",
+  "dramatic_pulsing_theme_2_looped",
+  "dramatic_pulsing_theme_8_looped",
+  "dramatic_pulsing_theme_9_looped",
 ];
 
 export class SoundManager {
@@ -66,6 +70,7 @@ export class SoundManager {
   };
 
   playNextMusic() {
+    if (localStorage.disableMusic) return;
     this.playingMusic?.stop();
     this.playingMusic = this.musics[this.musicTrack];
     this.musicTrack += 1;

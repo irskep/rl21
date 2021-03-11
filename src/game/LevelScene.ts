@@ -58,6 +58,9 @@ export class LevelScene implements GameScene {
     SoundManager.shared.init();
     console.log("enter", this);
     Mousetrap.bind(["n"], () => this.goToNextScene());
+    Mousetrap.bind(["space"], () =>
+      this.handleClick(this.ecs.player.getComponent(SpriteC).pos, Action.X)
+    );
     this.game.app.ticker.add(this.gameLoop);
 
     this.gfx.enter();
@@ -251,7 +254,13 @@ export class LevelScene implements GameScene {
     let firstLine =
       "Possible moves: " +
       okMoves
-        .map(([move]) => `${move.name} (${getActionText(move.action!)})`) // (${move.help})`)
+        .map(([move]) => {
+          if (move.name === "Wait") {
+            return "Wait (Left click self or press Space)";
+          } else {
+            return `${move.name} (${getActionText(move.action!)})`;
+          }
+        })
         .join("; ");
     if (okMoves.length === 0) {
       firstLine = "No moves available at selected position";
@@ -296,7 +305,7 @@ export class LevelScene implements GameScene {
     this.ecs.engine.update(1);
   };
 
-  handleClick(pos: Vector, action: Action) {
+  handleClick(pos: AbstractVector, action: Action) {
     this.hoveredPos = pos;
     this.updatePossibleMoves();
     const actionMoves = this.possibleMoves.filter(
