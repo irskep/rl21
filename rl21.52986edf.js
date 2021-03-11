@@ -48655,7 +48655,7 @@ function makePlayer(pos, orientation) {
   const e = makeEntity();
   e.putComponent(_sprite.SpriteC).build("Atman", "The caped crusader", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_CombatC.CombatC).build(10, [].concat(_moves.BM_MOVES), []);
+  e.putComponent(_CombatC.CombatC).build(10, new Array(..._moves.BM_MOVES), []);
   e.getComponent(_CombatC.CombatC).isPlayer = true;
   return e;
 }
