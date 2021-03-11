@@ -48753,8 +48753,8 @@ function generateMap(tilemap, rng) {
 }
 
 function makeECS(game, container, tilemap, writeMessage, n, upgrades) {
-  // const rng = new RNG(`${Math.random()}`);
-  const rng = new _RNG.default("0.864860870430705");
+  const rng = new _RNG.default(`${Math.random()}`); // const rng = new RNG("0.864860870430705");
+
   console.log("Map RNG seed:", rng.seed);
   const engine = new _ecs.Engine();
   const spriteSystem = new _sprite.SpriteSystem(game, container);
