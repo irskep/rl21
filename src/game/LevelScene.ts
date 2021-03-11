@@ -1,13 +1,13 @@
 // import Mousetrap from "mousetrap";
 import { InteractionEvent, Sprite } from "pixi.js";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { Cell, Tilemap } from "./tilemap";
 import { makeECS } from "../ecs/ecs";
 import { CombatC } from "../ecs/combat/CombatC";
 import { ECS } from "../ecs/ecsTypes";
 import { GameScene, GameInterface } from "../types";
 import { Move, MoveCheckResult } from "../ecs/moves/_types";
-import { Action, getActionText, interpretEvent } from "./input";
+import { Action, interpretEvent } from "./input";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/sprite";
 import { CombatEvent, CombatEventType } from "../ecs/combat/CombatS";
@@ -30,8 +30,8 @@ export class LevelScene implements GameScene {
   possibleMoves: [Move, MoveCheckResult][] = [];
 
   // display
-  hoveredPos: Vector | null = null;
-  hoveredPosDuringUpdate: Vector | null = null;
+  hoveredPos: AbstractVector | null = null;
+  hoveredPosDuringUpdate: AbstractVector | null = null;
   hoveredEntity: Entity | null = null;
 
   constructor(
@@ -92,8 +92,10 @@ export class LevelScene implements GameScene {
       this.handleCombatEvent(event);
     });
 
+    this.gfx.dbgText.text = `Stage ${this.n + 1}`;
+    this.gfx.writeMessage("Newest messages are at the top.");
     this.gfx.writeMessage("Atman enters the room.");
-    if (this.upgrades) {
+    if (this.upgrades.length) {
       this.gfx.writeMessage(
         `Atman's upgrades: ${this.upgrades.map((u) => u.name).join(", ")}`
       );
@@ -197,7 +199,7 @@ export class LevelScene implements GameScene {
     }
   }
 
-  updateHoverCell(pos: Vector | null) {
+  updateHoverCell(pos: AbstractVector | null) {
     this.hoveredPos = pos;
     this.updatePossibleMoves();
     this.updateHUDText();
@@ -249,32 +251,7 @@ export class LevelScene implements GameScene {
 
   updateHUDText() {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
-    const notOkMoves = this.possibleMoves.filter((x) => !x[1].success);
-    this.gfx.dbgText.text = `${this.hoveredPos || "(no selection)"}\n`;
-    let firstLine =
-      "Possible moves: " +
-      okMoves
-        .map(([move]) => {
-          if (move.name === "Wait") {
-            return "Wait (Left click self or press Space)";
-          } else {
-            return `${move.name} (${getActionText(move.action!)})`;
-          }
-        })
-        .join("; ");
-    if (okMoves.length === 0) {
-      firstLine = "No moves available at selected position";
-    }
-
-    // const secondLine =
-    //   "Omitted: " +
-    //   notOkMoves
-    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
-    //     .join("; ");
-    const secondLine =
-      "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
-
-    this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
+    this.gfx.showPossibleMoves(okMoves.map((m) => m[0]));
   }
 
   updateHearts() {

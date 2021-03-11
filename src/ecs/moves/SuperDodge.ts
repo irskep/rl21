@@ -9,6 +9,7 @@ import { SpriteC } from "../sprite";
 import { Entity } from "@nova-engine/ecs";
 import { DIRECTIONS } from "../direction";
 import { EnvIndices } from "../../assets";
+import { CombatEventType } from "../combat/CombatS";
 
 export class SuperDodge implements Move {
   action = Action.X;
@@ -127,6 +128,11 @@ export class SuperDodge implements Move {
           c.flavorName
         } during the leap. (50% chance)`
       );
+      ctx.ecs.combatSystem.events.emit({
+        type: CombatEventType.Punch,
+        subject: leapedEnemy,
+        object: ctx.entity,
+      });
     }
 
     return false;

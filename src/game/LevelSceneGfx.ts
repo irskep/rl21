@@ -6,6 +6,7 @@ import {
   ITextStyle,
   Graphics,
   Application,
+  Texture,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "../assets";
@@ -18,6 +19,17 @@ import {
   makeDriftAndFadeAnimation,
 } from "./AnimationManager";
 import { GameInterface } from "../types";
+import { Move } from "../ecs/moves/_types";
+import { Action, getActionText } from "./input";
+
+const consoleStyle: Partial<ITextStyle> = {
+  fontSize: 18,
+  fontFamily: "Barlow Condensed",
+  fill: "white",
+  align: "left",
+  wordWrap: true,
+  wordWrapWidth: 320,
+};
 
 export class LevelSceneGfx {
   /* pixi stuff */
@@ -32,6 +44,7 @@ export class LevelSceneGfx {
   hoverSprite = new Sprite();
   dbgText = new Text("");
   inputHintText = new Text("");
+  possibleActionsContainer = new Container();
   messageLogBg = new Graphics();
   messageLog = new Text("");
   messages = new Array<string>();
@@ -94,20 +107,12 @@ export class LevelSceneGfx {
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
 
-    const consoleStyle: Partial<ITextStyle> = {
-      fontSize: 18,
-      fontFamily: "Barlow Condensed",
-      fill: "white",
-      align: "left",
-      wordWrap: true,
-      wordWrapWidth: 320,
-    };
-
     this.dbgText.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.dbgText);
 
     this.inputHintText.style = new TextStyle(consoleStyle);
     this.hudContainer.addChild(this.inputHintText);
+    this.hudContainer.addChild(this.possibleActionsContainer);
 
     this.hudContainer.addChild(this.heartsContainer);
 
@@ -139,37 +144,48 @@ export class LevelSceneGfx {
 
   private layoutScreenElements() {
     /* set up whole-screen layout */
+
+    // game area
     const gameAreaMask = new Graphics();
     gameAreaMask.beginFill(0xffffff);
-    gameAreaMask.drawRect(
-      0,
-      0,
-      this.screenSize.x - 320,
-      this.screenSize.y - 60
-    );
+    gameAreaMask.drawRect(0, 0, this.screenSize.x - 320, this.screenSize.y);
     gameAreaMask.endFill();
     this.gameAreaContainer.mask = gameAreaMask;
     this.gameAreaContainer.position.set(0, 30);
 
+    // debug text
     this.dbgText.position.set(10, 10);
-    this.inputHintText.position.set(
-      10,
-      this.gameAreaContainer.position.y + this.gameAreaContainer.height
+
+    // input area
+    this.inputHintText.position.set(this.gameAreaContainer.width, 10);
+    this.inputHintText.anchor.set(0, 0);
+    this.inputHintText.style.wordWrapWidth = 320;
+    this.possibleActionsContainer.position.set(
+      this.gameAreaContainer.width,
+      40
     );
-    this.inputHintText.style.wordWrapWidth = this.screenSize.x;
-    this.messageLogBg.position.set(this.gameAreaContainer.width, 0);
+
+    // message log
+    this.messageLogBg.position.set(this.gameAreaContainer.width, 178);
+    const messageLogHeight =
+      this.gameAreaContainer.height - this.messageLogBg.position.y;
     this.messageLog.position.set(10, 10);
     this.messageLogBg.beginFill(0x333366);
-    this.messageLogBg.drawRect(
-      0,
-      0,
-      this.screenSize.x - this.gameAreaContainer.width,
-      this.gameAreaContainer.height + this.gameAreaContainer.position.y
-    );
+    this.messageLogBg.drawRect(0, 0, 320, messageLogHeight);
     this.messageLogBg.endFill();
 
-    this.messageLog.style.wordWrapWidth =
-      this.screenSize.x - this.gameAreaContainer.width - 10;
+    this.messageLog.style.wordWrapWidth = 320 - 20;
+
+    const messageLogMask = new Graphics();
+    messageLogMask.beginFill(0xffffff);
+    messageLogMask.drawRect(
+      this.messageLogBg.x,
+      this.messageLogBg.y,
+      320,
+      messageLogHeight
+    );
+    messageLogMask.endFill();
+    this.messageLog.mask = messageLogMask;
 
     this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
   }
@@ -189,13 +205,13 @@ export class LevelSceneGfx {
       return;
     }
 
-    const tilePos = e.getComponent(SpriteC).pos;
-    const pos = new Vector(
-      (tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10,
-      tilePos.y * this.game.tileSize * this.arena.scale.y
+    this.mouseoverText.style.wordWrapWidth = 220;
+    const size = new Vector(
+      this.mouseoverText.style.wordWrapWidth + 8,
+      Math.max(this.mouseoverText.height + 8, 190)
     );
-    this.mouseoverContainer.position.set(pos.x, pos.y);
-    this.mouseoverContainer.visible = true;
+
+    const gfx = this.mouseoverBg;
 
     const text = `${e.getComponent(SpriteC).hoverText}\n\n${
       e.getComponent(CombatC).hoverText
@@ -203,12 +219,18 @@ export class LevelSceneGfx {
     this.mouseoverText.text = text;
     this.mouseoverText.position.set(4, 4);
 
-    const size = new Vector(
-      this.mouseoverText.width + 8,
-      this.mouseoverText.height + 8
+    const tilePos = e.getComponent(SpriteC).pos;
+    const pos = new Vector(
+      (tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10,
+      tilePos.y * this.game.tileSize * this.arena.scale.y
     );
-
-    const gfx = this.mouseoverBg;
+    if (tilePos.x > 5) {
+      pos.x -= size.x + this.game.tileSize * 1.5 * this.arena.scale.x + 20;
+    } else {
+      pos.x += this.game.tileSize * 0.5 * this.arena.scale.x;
+    }
+    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.visible = true;
 
     gfx.clear();
     gfx.width = size.x;
@@ -247,12 +269,57 @@ export class LevelSceneGfx {
   /** Stuff you can do */
 
   writeMessage = (msg: string) => {
-    this.messages.push(msg);
+    this.messages.unshift(msg);
     while (this.messages.length > 20) {
-      this.messages.shift();
+      this.messages.pop();
     }
     this.messageLog.text = this.messages.join("\n");
   };
+
+  showPossibleMoves(moves: Move[]) {
+    if (moves.length === 0) {
+      this.inputHintText.text =
+        "No moves available at selected position. Try moving your mouse around. Sometimes you need to click yourself.";
+    } else {
+      this.inputHintText.text = "Possible moves:";
+    }
+
+    this.possibleActionsContainer.removeChildren(
+      0,
+      this.possibleActionsContainer.children.length
+    );
+    for (let i = 0; i < moves.length; i++) {
+      const m = moves[i];
+      let texture!: Texture;
+      switch (m.action) {
+        case Action.X:
+          texture = this.game.filmstrips["input"][0];
+          break;
+        case Action.Y:
+          texture = this.game.filmstrips["input"][1];
+          break;
+        case Action.A:
+          texture = this.game.filmstrips["input"][2];
+          break;
+        case Action.B:
+          texture = this.game.filmstrips["input"][3];
+          break;
+      }
+      if (!texture) throw new Error("?");
+      const inputSprite = new Sprite(texture);
+      inputSprite.position.set(10, i * 32);
+      const moveText =
+        m.name === "Wait" ? "Wait (you can also press Space)" : m.name;
+      const inputText = new Text(moveText, {
+        ...consoleStyle,
+        wordWrap: false,
+      });
+      inputText.position.set(20 + texture.width, i * 32 + 16);
+      inputText.anchor.set(0, 0.5);
+      this.possibleActionsContainer.addChild(inputSprite);
+      this.possibleActionsContainer.addChild(inputText);
+    }
+  }
 
   showLoss() {
     const victorySprite = new Sprite(this.game.images["youlose"]);

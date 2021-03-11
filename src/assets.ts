@@ -62,6 +62,12 @@ export const ALL_ASSETS: Asset[] = [
     isFilmstrip: true,
     cellSize: new Vector(21, 18),
   },
+  {
+    name: "input",
+    url: "input.png",
+    isFilmstrip: true,
+    cellSize: new Vector(80, 32),
+  },
   { name: "stagecomplete", url: "stagecomplete.png" },
   { name: "youlose", url: "youlose.png" },
 ];
