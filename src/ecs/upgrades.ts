@@ -1,5 +1,6 @@
 import { Entity } from "@nova-engine/ecs";
 import { CombatC } from "./combat/CombatC";
+import { Atarangs } from "./moves/Atarangs";
 import { GroundTakedown } from "./moves/GroundTakedown";
 import { LegSweep } from "./moves/LegSweep";
 import { SuperDodge } from "./moves/SuperDodge";
@@ -14,6 +15,15 @@ export interface Upgrade {
 export function makeUpgradePool(): Upgrade[] {
   return [
     {
+      name: "Atarangs",
+      exclusive: true,
+      description:
+        "Up to 3 times per stage, throw an Atarang at a distant enemy to damage and stun them.",
+      apply: (player: Entity) => {
+        player.getComponent(CombatC).moves.push(new Atarangs());
+      },
+    },
+    {
       name: "Leg Sweep",
       exclusive: true,
       description:
@@ -21,7 +31,7 @@ export function makeUpgradePool(): Upgrade[] {
       apply: (player: Entity) => {
         player.getComponent(CombatC).moves.push(new LegSweep());
       },
-    }
+    },
     {
       name: "Ground Takedown",
       exclusive: true,

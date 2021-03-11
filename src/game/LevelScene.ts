@@ -19,6 +19,7 @@ import { UpgradeScene } from "../UpgradeScene";
 import { Upgrade } from "../ecs/upgrades";
 import UnreachableCaseError from "../UnreachableCaseError";
 import { SoundManager } from "../SoundManager";
+import { Atarangs } from "../ecs/moves/Atarangs";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -252,6 +253,18 @@ export class LevelScene implements GameScene {
   updateHUDText() {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
     this.gfx.showPossibleMoves(okMoves.map((m) => m[0]));
+    const atarangMove = this.ecs.player
+      .getComponent(CombatC)
+      .moves.find((m) => m.name === "Throw Atarang") as Atarangs;
+    let statusText = `Stage ${this.n + 1}`;
+    for (const m of this.ecs.player.getComponent(CombatC).moves) {
+      if (!m.getStatusText) continue;
+      const moveText = m.getStatusText();
+      if (moveText) {
+        statusText += `    ${moveText}`;
+      }
+    }
+    this.gfx.dbgText.text = statusText;
   }
 
   updateHearts() {
