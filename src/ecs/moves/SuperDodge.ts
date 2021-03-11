@@ -37,11 +37,18 @@ export class SuperDodge implements Move {
     new Vector(2, 1),
   ];
 
-  private getLeapedEnemy(pos: AbstractVector, ctx: MoveContext): Entity | null {
+  private getLeapedEnemy(
+    pos: AbstractVector,
+    ctx: MoveContext,
+    target: AbstractVector
+  ): Entity | null {
     for (const d of DIRECTIONS) {
       const pos2 = pos.clone().add(d[0]);
       if (ensureTargetIsEnemy(ctx, pos2).success) {
-        return ctx.ecs.spriteSystem.findCombatEntity(pos2)!;
+        const entity = ctx.ecs.spriteSystem.findCombatEntity(pos2)!;
+        if (entity && isAdjacent(entity.getComponent(SpriteC).pos, target)) {
+          return entity;
+        }
       }
     }
     return null;
@@ -79,7 +86,7 @@ export class SuperDodge implements Move {
       return { success: false, message: "Target is not floor" };
     }
 
-    const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx);
+    const leapedEnemy = this.getLeapedEnemy(spriteC.pos, ctx, target);
     if (!leapedEnemy) {
       return { success: false, message: "No enemy to leap over" };
     }

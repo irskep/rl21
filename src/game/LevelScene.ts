@@ -226,13 +226,13 @@ export class LevelScene implements GameScene {
       firstLine = "No moves available at selected position";
     }
 
-    const secondLine =
-      "Omitted: " +
-      notOkMoves
-        .map(([move, result]) => `${move.name} (${result.message || "?"})`)
-        .join("; ");
     // const secondLine =
-    //   "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
+    //   "Omitted: " +
+    //   notOkMoves
+    //     .map(([move, result]) => `${move.name} (${result.message || "?"})`)
+    //     .join("; ");
+    const secondLine =
+      "If no moves are available, try moving your mouse around. Sometimes you need to click yourself.";
 
     this.gfx.inputHintText.text = firstLine + "\n\n" + secondLine;
   }
