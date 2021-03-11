@@ -48652,13 +48652,10 @@ function makeEntity() {
 }
 
 function makePlayer(pos, orientation) {
-  const e = makeEntity(); // if (e.id != 0) {
-  //   throw new Error("player should always be 0");
-  // }
-
+  const e = makeEntity();
   e.putComponent(_sprite.SpriteC).build("Atman", "The caped crusader", pos, _assets.SpriteIndices.BM_STAND);
   e.getComponent(_sprite.SpriteC).orientation = orientation;
-  e.putComponent(_CombatC.CombatC).build(10, _moves.BM_MOVES, []);
+  e.putComponent(_CombatC.CombatC).build(10, [].concat(_moves.BM_MOVES), []);
   e.getComponent(_CombatC.CombatC).isPlayer = true;
   return e;
 }
@@ -50826,11 +50823,11 @@ class CombatSystem extends _ecs.System {
           });
           this.changeHP(defender, -_stats.STATS.PUNCH_DAMAGE);
 
-          if (this.rng.choice([0, 1]) === 0) {
-            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert. (50% chance to stun failed.)`);
+          if (this.rng.choice([0, 0, 1]) === 0) {
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert. (33% chance to stun failed.)`);
           } else {
             defenderCombatC.becomeStunned(1, defender.getComponent(_sprite.SpriteC));
-            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn. (50% chance to stun succeeded.)`);
+            ecs.writeMessage(`${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn. (33% chance to stun succeeded.)`);
           }
 
           break;
@@ -58067,6 +58064,12 @@ class SuperDodge {
     c.turnToward(posToFace);
     c.pos = target;
     ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.Standing, c);
+    const leapedEnemy = this.getLeapedEnemy(c.pos, ctx, target);
+
+    if (leapedEnemy) {
+      ctx.ecs.writeMessage(`${c.flavorName} leaps over ${leapedEnemy.getComponent(_sprite.SpriteC).flavorName}!`);
+    }
+
     return false;
   }
 
