@@ -33,6 +33,7 @@ export enum CombatEventType {
   Stun = "Stun",
   Die = "Die",
   AllEnemiesDead = "AllEnemiesDead",
+  MissedPunch = "MissedPunch",
 }
 
 export interface CombatEvent {

@@ -17,6 +17,8 @@ import Mousetrap from "mousetrap";
 import { LevelSceneGfx } from "./LevelSceneGfx";
 import { UpgradeScene } from "../UpgradeScene";
 import { Upgrade } from "../ecs/upgrades";
+import UnreachableCaseError from "../UnreachableCaseError";
+import { SoundManager } from "../SoundManager";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -59,6 +61,8 @@ export class LevelScene implements GameScene {
 
     this.gfx.enter();
 
+    SoundManager.shared.playNextMusic();
+
     if (!this.isInitialized) {
       this.isInitialized = true;
       this.map.updateCells((cell) => {
@@ -97,6 +101,7 @@ export class LevelScene implements GameScene {
     this.game.app.ticker.remove(this.gameLoop);
     this.gfx.exit();
     Mousetrap.unbind(["n"]);
+    SoundManager.shared.stopMusic();
   }
 
   bindCellEvents(cell: Cell, cellSprite: Sprite) {
@@ -160,6 +165,31 @@ export class LevelScene implements GameScene {
         setTimeout(() => {
           this.goToNextScene();
         }, 2000);
+        break;
+      case CombatEventType.BlockedPunch:
+        SoundManager.shared.play("blocked_punch");
+        break;
+      case CombatEventType.Counter:
+        SoundManager.shared.play("counter");
+        break;
+      case CombatEventType.Punch:
+        if (event.object === this.ecs.player) {
+          SoundManager.shared.play("bm_punched");
+        } else {
+          SoundManager.shared.play("punch");
+        }
+        break;
+      case CombatEventType.Stun:
+        SoundManager.shared.play("stun");
+        break;
+      case CombatEventType.Superpunch:
+        SoundManager.shared.play("superpunch");
+        break;
+      case CombatEventType.MissedPunch:
+        SoundManager.shared.play("miss");
+        break;
+      default:
+        throw new UnreachableCaseError(event.type);
     }
   }
 

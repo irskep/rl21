@@ -11,6 +11,7 @@ import {
 } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../sprite";
+import { CombatEventType } from "../combat/CombatS";
 
 export class TelegraphedPunchPrepare implements Move {
   name = "Telegraphed Punch Prepare";
@@ -131,6 +132,11 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
       `${spriteC.flavorName} swings at nothing but air and stumbles forward!`
     );
     ctx.ecs.spriteSystem.cowboyUpdate();
+
+    ctx.ecs.combatSystem.events.emit({
+      type: CombatEventType.MissedPunch,
+      subject: ctx.entity,
+    });
 
     setTimeout(() => {
       combatC.becomeStunned(1, spriteC);

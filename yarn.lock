@@ -2028,6 +2028,11 @@
   resolved "https://registry.yarnpkg.com/@types/earcut/-/earcut-2.1.1.tgz#573a0af609f17005c751f6f4ffec49cfe358ea51"
   integrity sha512-w8oigUCDjElRHRRrMvn/spybSMyX8MTkKA5Dv+tS1IE/TgmNZPqUYtvYBXGY8cieSE66gm+szeK+bnbxC2xHTQ==
 
+"@types/howler@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@types/howler/-/howler-2.2.1.tgz#c95314724a8e970b1b29a731861975f39987b9ca"
+  integrity sha512-1MiSldngr+eAO4lDPtjzl4Nf2GmRh8VDHIpNBIkyd25L22JExVlI6w3fjSM7+FNc1e1WZAPNq7/flkw685byfg==
+
 "@types/kefir@^3.8.5":
   version "3.8.5"
   resolved "https://registry.yarnpkg.com/@types/kefir/-/kefir-3.8.5.tgz#dea5421b93f1c7b0547605c753fc24441a38362b"
@@ -3800,6 +3805,11 @@ hmac-drbg@^1.0.1:
     hash.js "^1.0.3"
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
+
+howler@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/howler/-/howler-2.2.1.tgz#a521a9b495841e8bb9aa12e651bebba0affc179e"
+  integrity sha512-0iIXvuBO/81CcrQ/HSSweYmbT50fT2mIc9XMFb+kxIfk2pW/iKzDbX1n3fZmDXMEIpYvyyfrB+gXwPYSDqUxIQ==
 
 hsl-regex@^1.0.0:
   version "1.0.0"

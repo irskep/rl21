@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "@nova-engine/ecs": "^1.1.1",
+    "howler": "^2.2.1",
     "kefir": "^3.8.8",
     "mousetrap": "^1.6.5",
     "pixi-game-camera": "^1.0.2",
@@ -15,11 +16,14 @@
     "webfontloader": "^1.6.28"
   },
   "scripts": {
-    "deploy": "parcel build index.html --public-url /rl21/ && gh-pages -d dist",
+    "clean": "rm -rf dist/*",
+    "copyfiles": "rsync -avzh static/ dist/",
+    "deploy": "yarn clean && yarn copyfiles && parcel build index.html --public-url /rl21/ && gh-pages -d dist",
     "watch": "parcel serve index.html",
     "build": "parcel build index.html"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.1",
     "@types/kefir": "^3.8.5",
     "@types/mousetrap": "^1.6.5",
     "@types/pixi.js": "^5.0.0",

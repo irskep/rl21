@@ -14,9 +14,9 @@ import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/sprite";
 import {
-  AnimationHandler,
+  AnimationManager,
   makeDriftAndFadeAnimation,
-} from "./AnimationHandler";
+} from "./AnimationManager";
 import { GameInterface } from "../types";
 
 export class LevelSceneGfx {
@@ -44,7 +44,7 @@ export class LevelSceneGfx {
   heartSprites: Sprite[] = [];
 
   app: Application;
-  animationHandler = new AnimationHandler();
+  animationHandler = new AnimationManager();
 
   constructor(private game: GameInterface, private map: Tilemap) {
     this.app = game.app;

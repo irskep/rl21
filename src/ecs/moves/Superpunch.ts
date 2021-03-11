@@ -152,6 +152,12 @@ export class SuperpunchFollowthroughMiss implements Move {
     combatC.setState(CombatState.PunchFollowthrough, spriteC); // ok
     spriteC.pos = spriteC.pos.add(getDirectionVector(spriteC.orientation));
     ctx.ecs.writeMessage(`${spriteC.flavorName} swings at nothing but air!`);
+
+    ctx.ecs.combatSystem.events.emit({
+      type: CombatEventType.MissedPunch,
+      subject: ctx.entity,
+    });
+
     return false;
   }
 }
