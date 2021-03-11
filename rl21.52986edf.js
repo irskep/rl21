@@ -48245,6 +48245,8 @@ var _LevelSceneGfx = require("./LevelSceneGfx");
 
 var _UpgradeScene = require("../UpgradeScene");
 
+var _UnreachableCaseError = _interopRequireDefault(require("../UnreachableCaseError"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -48394,6 +48396,18 @@ class LevelScene {
         setTimeout(() => {
           this.goToNextScene();
         }, 2000);
+        break;
+
+      case _CombatS.CombatEventType.BlockedPunch:
+      case _CombatS.CombatEventType.Counter:
+      case _CombatS.CombatEventType.Punch:
+      case _CombatS.CombatEventType.Stun:
+      case _CombatS.CombatEventType.Superpunch:
+        // play sound
+        break;
+
+      default:
+        throw new _UnreachableCaseError.default(event.type);
     }
   }
 
@@ -48495,7 +48509,7 @@ class LevelScene {
 }
 
 exports.LevelScene = LevelScene;
-},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87","./LevelSceneGfx":"3455fb2a563c046f1f6dc8946c2f2715","../ecs/combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","../ecs/combat/CombatS":"2871d32e219d5c0342ae2d41268918ee","../UpgradeScene":"c0960333d972f732087ce2f7ba56a88b"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
+},{"vector2d":"202cb5f40ee75eccf8beb54e83abb47c","./tilemap":"be3181fd4e582f0ee8c9155b5b6d68f7","../ecs/ecs":"7e9c77cd2979f2959c520616dcbe2768","./input":"60d50d152119e01a0f05aa9be6432259","../ecs/sprite":"488445ffc318f5d280c0d86556dce008","../MenuScene":"3d2e89863f09a0b02a84cdeaa16aee37","../ecs/difficulties":"7239331cdf35d95f398eb1e7aba31779","mousetrap":"4c5780164a035c90cc9be975eec0ed87","./LevelSceneGfx":"3455fb2a563c046f1f6dc8946c2f2715","../ecs/combat/CombatC":"54e3c7e3cc7b7efbf98dcccfb2b84044","../ecs/combat/CombatS":"2871d32e219d5c0342ae2d41268918ee","../UpgradeScene":"c0960333d972f732087ce2f7ba56a88b","../UnreachableCaseError":"3add87e37894a9d9803dcf3bbb445654"}],"be3181fd4e582f0ee8c9155b5b6d68f7":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -58062,11 +58076,15 @@ class SuperDodge {
     const posToFace = new _vector2d.Vector(Math.floor((c.pos.x + target.x) / 2), Math.floor((c.pos.y + target.y) / 2));
     c.turnToward(posToFace);
     c.pos = target;
+    ctx.ecs.spriteSystem.cowboyUpdate();
     ctx.entity.getComponent(_CombatC.CombatC).setState(_CombatState.CombatState.Standing, c);
     const leapedEnemy = this.getLeapedEnemy(c.pos, ctx, target);
+    if (!leapedEnemy) return false;
+    ctx.ecs.writeMessage(`${c.flavorName} leaps over ${leapedEnemy.getComponent(_sprite.SpriteC).flavorName}!`);
 
-    if (leapedEnemy) {
-      ctx.ecs.writeMessage(`${c.flavorName} leaps over ${leapedEnemy.getComponent(_sprite.SpriteC).flavorName}!`);
+    if (ctx.ecs.rng.choice([0, 1]) === 0) {
+      ctx.ecs.combatSystem.changeHP(ctx.entity, -1);
+      ctx.ecs.writeMessage(`${leapedEnemy.getComponent(_sprite.SpriteC).flavorName} lands a glancing blow on ${c.flavorName} during the leap. (50% chance)`);
     }
 
     return false;
