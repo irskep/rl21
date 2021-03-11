@@ -106,15 +106,26 @@ export class SuperDodge implements Move {
     );
     c.turnToward(posToFace);
     c.pos = target;
+    ctx.ecs.spriteSystem.cowboyUpdate();
 
     ctx.entity.getComponent(CombatC).setState(CombatState.Standing, c);
 
     const leapedEnemy = this.getLeapedEnemy(c.pos, ctx, target);
-    if (leapedEnemy) {
+    if (!leapedEnemy) return false;
+    ctx.ecs.writeMessage(
+      `${c.flavorName} leaps over ${
+        leapedEnemy.getComponent(SpriteC).flavorName
+      }!`
+    );
+
+    if (ctx.ecs.rng.choice([0, 1]) === 0) {
+      ctx.ecs.combatSystem.changeHP(ctx.entity, -1);
       ctx.ecs.writeMessage(
-        `${c.flavorName} leaps over ${
+        `${
           leapedEnemy.getComponent(SpriteC).flavorName
-        }!`
+        } lands a glancing blow on ${
+          c.flavorName
+        } during the leap. (50% chance)`
       );
     }
 
