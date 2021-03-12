@@ -95,7 +95,7 @@ export class UpgradeScene implements GameScene {
 
     const title = new Text("Choose an upgrade");
     title.style = new TextStyle({
-      fontSize: (this.game.app.screen.width / margin) * 2,
+      fontSize: (this.screenSize.x / 20) * 2,
       fontFamily: "Barlow Condensed",
       fill: "white",
       align: "center",

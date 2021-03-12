@@ -8,6 +8,7 @@ const soundNames: string[] = [
   "stun",
   "superpunch",
   "miss",
+  "shoot",
 ];
 
 const musicNames: string[] = [

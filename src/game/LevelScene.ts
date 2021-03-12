@@ -189,6 +189,9 @@ export class LevelScene implements GameScene {
       case CombatEventType.Stun:
         SoundManager.shared.play("stun");
         break;
+      case CombatEventType.Shoot:
+        SoundManager.shared.play("shoot");
+        break;
       case CombatEventType.Superpunch:
         SoundManager.shared.play("superpunch");
         break;

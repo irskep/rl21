@@ -5,7 +5,7 @@ import {
   Family,
   Entity,
 } from "@nova-engine/ecs";
-import { Container, Sprite, Text } from "pixi.js";
+import { Container, DisplayObject, Sprite, Text } from "pixi.js";
 import { AbstractVector } from "vector2d";
 import { GameInterface } from "../types";
 import { CombatC } from "./combat/CombatC";
@@ -37,6 +37,13 @@ export class SpriteSystem extends System {
     this.update(this.engines[0], 0);
   }
 
+  setPosition(obj: DisplayObject, pos: AbstractVector) {
+    obj.position.set(
+      pos.x * this.game.tileSize + this.game.tileSize / 2,
+      pos.y * this.game.tileSize + this.game.tileSize / 2
+    );
+  }
+
   update(engine: Engine, delta: number) {
     for (let entity of this.family.entities) {
       const spriteC = entity.getComponent(SpriteC);
@@ -51,10 +58,7 @@ export class SpriteSystem extends System {
         this.container.addChild(spriteC.sprite);
       }
 
-      spriteC.sprite.position.set(
-        spriteC.pos.x * this.game.tileSize + this.game.tileSize / 2,
-        spriteC.pos.y * this.game.tileSize + this.game.tileSize / 2
-      );
+      this.setPosition(spriteC.sprite, spriteC.pos);
       spriteC.sprite.angle = 90 * spriteC.orientation;
 
       if (spriteC.needsTextureReplacement) {

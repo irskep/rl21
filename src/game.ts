@@ -5,10 +5,8 @@ import webfontloader from "webfontloader";
 import { ALL_ASSETS } from "./assets";
 import filmstrip from "./filmstrip";
 import { LevelScene } from "./game/LevelScene";
-import RNG from "./game/RNG";
 import { MenuScene } from "./MenuScene";
 import { GameScene, GameInterface } from "./types";
-import { UpgradeScene } from "./UpgradeScene";
 
 export default class Game implements GameInterface {
   app: PIXI.Application;
@@ -17,6 +15,8 @@ export default class Game implements GameInterface {
   filmstrips: Record<string, Texture[]> = {};
   images: Record<string, Texture> = {};
   tileSize = 128;
+
+  static shared: Game;
 
   constructor() {
     let pathname = location.pathname;
@@ -47,6 +47,8 @@ export default class Game implements GameInterface {
     this.app.loader.add(ALL_ASSETS.map((asset) => asset)).load(this.setup);
 
     this.app.view.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    Game.shared = this;
 
     // window.addEventListener("resize", this.handleResize);
   }

@@ -83,6 +83,11 @@ export class CombatC implements Component {
     }
   }
 
+  addTrait(trait: CombatTrait, spriteC: SpriteC) {
+    this.traits.push(trait);
+    this.updateSpriteIndex(spriteC);
+  }
+
   setState(
     newState: CombatState,
     spriteC: SpriteC,
@@ -95,10 +100,14 @@ export class CombatC implements Component {
       return;
     }
 
+    this.updateSpriteIndex(spriteC);
+  }
+
+  private updateSpriteIndex(spriteC: SpriteC) {
     if (this.isPlayer) {
-      spriteC.spriteIndex = stateToPlayerSpriteIndex(newState);
+      spriteC.spriteIndex = stateToPlayerSpriteIndex(this.state);
     } else {
-      spriteC.spriteIndex = stateToHenchmanSpriteIndex(newState);
+      spriteC.spriteIndex = stateToHenchmanSpriteIndex(this.state, this.traits);
     }
   }
 }

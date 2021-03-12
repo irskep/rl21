@@ -7,14 +7,14 @@ export interface Difficulty {
 }
 
 export const DIFFICULTIES: Difficulty[] = [
-  {
-    // delete me
-    numThugs: [2, 4],
-    numArmoredThugs: 0,
-    numTitanThugs: 0,
-    mapgenAlgo: "basic",
-    numGuns: [1, 1],
-  },
+  // {
+  //   // delete me
+  //   numThugs: [2, 4],
+  //   numArmoredThugs: 0,
+  //   numTitanThugs: 0,
+  //   mapgenAlgo: "basic",
+  //   numGuns: [1, 1],
+  // },
   {
     numThugs: [3, 5],
     numArmoredThugs: 0,

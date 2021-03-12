@@ -68,10 +68,17 @@ export function stateToPlayerSpriteIndex(state: CombatState): number {
   }
 }
 
-export function stateToHenchmanSpriteIndex(state: CombatState): number {
+export function stateToHenchmanSpriteIndex(
+  state: CombatState,
+  traits: CombatTrait[]
+): number {
   switch (state) {
     case CombatState.Standing:
-      return SpriteIndices.STAND;
+      if (traits.indexOf(CombatTrait.WieldingGun) !== -1) {
+        return SpriteIndices.SHOOT_BEFORE;
+      } else {
+        return SpriteIndices.STAND;
+      }
     case CombatState.PunchTelegraph:
       return SpriteIndices.PUNCH_BEFORE;
     case CombatState.PunchFollowthrough:

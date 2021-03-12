@@ -233,6 +233,12 @@ export function makeECS(
     rng,
     addGun: (pos: AbstractVector) => engine.addEntity(makeGun(pos)),
     remove: (e: Entity) => {
+      if (e.hasComponent(SpriteC)) {
+        const spriteC = e.getComponent(SpriteC);
+        if (spriteC.sprite) {
+          spriteC.sprite.parent.removeChild(spriteC.sprite);
+        }
+      }
       engine.removeEntity(e);
     },
     writeMessage,
