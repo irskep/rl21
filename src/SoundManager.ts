@@ -61,7 +61,11 @@ export class SoundManager {
   }
 
   play(name: string) {
-    this.sounds[name].play();
+    if (this.sounds[name]) {
+      this.sounds[name].play();
+    } else {
+      console.warn("Missing sound:", name);
+    }
   }
 
   onload = () => {
