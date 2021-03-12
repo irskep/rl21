@@ -27,7 +27,7 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
           }
         }
         rng.shuffle(areaCells);
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 8; i++) {
           const wallPos = areaCells.shift()!;
           const cell = tilemap.getCell(wallPos)!;
           cell.tag = CellTag.Wall;

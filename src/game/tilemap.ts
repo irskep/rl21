@@ -65,6 +65,7 @@ export class Tilemap {
   }
 
   getDefaultTag(pos: Vector): CellTag {
+    return CellTag.Floor;
     return pos.x === 0 ||
       pos.y === 0 ||
       pos.x === this.size.x - 1 ||
