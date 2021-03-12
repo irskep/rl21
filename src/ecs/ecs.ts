@@ -48,7 +48,7 @@ function makePlayer(pos: AbstractVector, orientation: number): Entity {
   return e;
 }
 
-function makeThug(pos: AbstractVector, orientation: number): Entity {
+export function makeThug(pos: AbstractVector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     `${getHenchmanName()} (Thug)`,
@@ -65,7 +65,10 @@ function makeThug(pos: AbstractVector, orientation: number): Entity {
   return e;
 }
 
-function makeArmoredThug(pos: AbstractVector, orientation: number): Entity {
+export function makeArmoredThug(
+  pos: AbstractVector,
+  orientation: number
+): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).traits.push(CombatTrait.Armored);
   e.getComponent(SpriteC).tint = 0xffff66;
@@ -75,7 +78,10 @@ function makeArmoredThug(pos: AbstractVector, orientation: number): Entity {
   return e;
 }
 
-function makeTitanThug(pos: AbstractVector, orientation: number): Entity {
+export function makeTitanThug(
+  pos: AbstractVector,
+  orientation: number
+): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).moves = makeTitanMoves();
   e.getComponent(CombatC).hp = STATS.HIGH_HP;
@@ -87,7 +93,7 @@ function makeTitanThug(pos: AbstractVector, orientation: number): Entity {
   return e;
 }
 
-function makeBoss(pos: AbstractVector, orientation: number): Entity {
+export function makeBoss(pos: AbstractVector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     "Mr. Yendor",

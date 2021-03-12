@@ -9,7 +9,7 @@ import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../../assets";
 import { manhattanDistance, Tilemap } from "../../game/tilemap";
 import { GameInterface } from "../../types";
-import { getNeighbors } from "../direction";
+import { DIRECTIONS, getNeighbors } from "../direction";
 import { ECS } from "../ecsTypes";
 import { Move } from "../moves/_types";
 import { SpriteSystem } from "../SpriteS";
@@ -21,6 +21,7 @@ import { CombatState } from "./CombatState";
 import KefirBus from "../../KefirBus";
 import { STATS } from "../stats";
 import RNG from "../../game/RNG";
+import { makeArmoredThug, makeThug, makeTitanThug } from "../ecs";
 
 /**
  * These are visual events that can occur.
@@ -56,6 +57,9 @@ export class CombatSystem extends System {
 
   STUN_TIMER_NORMAL = 1;
   STUN_TIMER_ARMORED = 2;
+
+  SPAWN_TIMER_START = 8;
+  spawnTimer = 12;
 
   entitiesToProcess: Entity[] = [];
   // LevelScene may set this
@@ -103,6 +107,36 @@ export class CombatSystem extends System {
       });
 
       return; // never say processing is finished, so LevelScene doesn't allow more events
+    }
+
+    this.spawnTimer -= 1;
+    if (this.spawnTimer <= 0) {
+      this.spawnTimer = this.SPAWN_TIMER_START;
+      const doors = this.tilemap.getCells((c) => c.index === EnvIndices.DOOR);
+      if (doors.length) {
+        const door = this.rng.choice(doors);
+        for (const d of DIRECTIONS) {
+          const neighborPos = d[0].clone().add(door.pos);
+          const neighborCell = this.tilemap.getCell(neighborPos);
+          if (!neighborCell || neighborCell.index !== EnvIndices.FLOOR) {
+            continue;
+          }
+          if (this.ecs.spriteSystem.findCombatEntity(neighborPos)) {
+            continue;
+          }
+          switch (this.rng.choice([0, 0, 1, 2])) {
+            case 0:
+              this.ecs.engine.addEntity(makeThug(neighborPos, 0));
+              break;
+            case 1:
+              this.ecs.engine.addEntity(makeArmoredThug(neighborPos, 0));
+              break;
+            case 2:
+              this.ecs.engine.addEntity(makeTitanThug(neighborPos, 0));
+              break;
+          }
+        }
+      }
     }
 
     if (this.onProcessingFinished) {
