@@ -100,10 +100,6 @@ export class LevelSceneGfx {
 
     this.tilemapContainer.interactive = true;
 
-    this.tilemapContainer.setTransform(undefined, undefined, 0.5, 0.5);
-    this.arena.setTransform(undefined, undefined, 0.5, 0.5);
-    this.overlayContainer.setTransform(undefined, undefined, 0.5, 0.5);
-
     this.hoverSprite.texture = this.game.filmstrips.env[EnvIndices.HOVER];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
@@ -142,8 +138,8 @@ export class LevelSceneGfx {
       }
     }
 
-    this.layoutScreenElements();
     this.updateTileSprites();
+    this.layoutScreenElements();
   }
 
   private layoutScreenElements() {
@@ -155,7 +151,15 @@ export class LevelSceneGfx {
     // gameAreaMask.drawRect(0, 0, this.screenSize.x - METRICS.sidebarWidth, this.screenSize.y);
     // gameAreaMask.endFill();
     // this.gameAreaContainer.mask = gameAreaMask;
-    this.gameAreaContainer.position.set(0, METRICS.topbarHeight);
+    const availableGameSpace = new Vector(
+      this.game.app.screen.width - METRICS.sidebarWidth,
+      this.game.app.screen.height - METRICS.topbarHeight
+    );
+    const mapWidth = TILE_SIZE * this.map.size.x;
+    const scale = availableGameSpace.x / mapWidth;
+    console.log(scale);
+
+    this.gameAreaContainer.setTransform(0, METRICS.topbarHeight, scale, scale);
 
     const sidebarX = this.screenSize.x - METRICS.sidebarWidth;
 
@@ -230,14 +234,15 @@ export class LevelSceneGfx {
     this.mouseoverText.position.set(4, 4);
 
     const tilePos = e.getComponent(SpriteC).pos;
+    const scale = this.gameAreaContainer.scale;
     const pos = new Vector(
-      (tilePos.x + 1) * TILE_SIZE * this.arena.scale.x + 10,
-      tilePos.y * TILE_SIZE * this.arena.scale.y
+      (tilePos.x + 1) * TILE_SIZE * scale.x + 10,
+      tilePos.y * TILE_SIZE * scale.y
     );
     if (tilePos.x > 5) {
-      pos.x -= size.x + TILE_SIZE * 1.5 * this.arena.scale.x + 20;
+      pos.x -= size.x + TILE_SIZE * 1.5 * scale.x + 20;
     } else {
-      pos.x += TILE_SIZE * 0.5 * this.arena.scale.x;
+      pos.x += TILE_SIZE * 0.5 * scale.x;
     }
     this.mouseoverContainer.position.set(pos.x, pos.y);
     this.mouseoverContainer.visible = true;
