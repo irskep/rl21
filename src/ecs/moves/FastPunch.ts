@@ -12,6 +12,7 @@ import { SpriteC } from "../SpriteC";
 import { EnvIndices, SpriteIndices } from "../../assets";
 import { DIRECTIONS } from "../direction";
 import { isAdjacent, manhattanDistance } from "../../game/tilemap";
+import { GroundTakedown } from "./GroundTakedown";
 
 export class FastPunch implements Move {
   action = Action.X;
@@ -21,6 +22,10 @@ export class FastPunch implements Move {
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
+
+    const groundTakedownCheck = new GroundTakedown().check(ctx, target);
+    if (groundTakedownCheck.success)
+      return { success: false, message: "Conflicts with Ground Takdown" };
 
     return { success: true };
   }

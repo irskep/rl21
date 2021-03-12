@@ -131,6 +131,7 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     ctx.ecs.writeMessage(
       `${spriteC.flavorName} swings at nothing but air and stumbles forward!`
     );
+
     ctx.ecs.spriteSystem.cowboyUpdate();
 
     ctx.ecs.combatSystem.events.emit({
@@ -139,7 +140,15 @@ export class TelegraphedPunchFollowthroughMiss implements Move {
     });
 
     setTimeout(() => {
-      combatC.becomeStunned(1, spriteC);
+      if (ctx.ecs.rng.choice([0, 0, 1]) === 1) {
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} loses their balance and falls to the ground! (33% chance)`
+        );
+        combatC.becomeProne(2, spriteC);
+      } else {
+        combatC.becomeStunned(1, spriteC);
+      }
+
       ctx.ecs.spriteSystem.cowboyUpdate();
       doNext();
     }, 300);

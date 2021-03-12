@@ -145,7 +145,7 @@ export class SuperpunchFollowthroughMiss implements Move {
     return 100;
   }
 
-  apply(ctx: MoveContext): boolean {
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
     // stumble forward
@@ -158,6 +158,18 @@ export class SuperpunchFollowthroughMiss implements Move {
       subject: ctx.entity,
     });
 
-    return false;
+    if (ctx.ecs.rng.choice([0, 0, 1]) === 1) {
+      setTimeout(() => {
+        ctx.ecs.writeMessage(
+          `${spriteC.flavorName} loses their balance and falls to the ground! (33% chance)`
+        );
+        combatC.becomeProne(2, spriteC);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+        doNext();
+      }, 300);
+      return true;
+    } else {
+      return false;
+    }
   }
 }
