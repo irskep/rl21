@@ -7,7 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { AbstractVector } from "vector2d";
 import { EnvIndices } from "../../assets";
-import { manhattanDistance, Tilemap } from "../../game/tilemap";
+import { CellTag, manhattanDistance, Tilemap } from "../../game/tilemap";
 import { GameInterface } from "../../types";
 import { DIRECTIONS, getNeighbors } from "../direction";
 import { ECS } from "../ecsTypes";
@@ -112,13 +112,13 @@ export class CombatSystem extends System {
     this.spawnTimer -= 1;
     if (this.spawnTimer <= 0) {
       this.spawnTimer = this.SPAWN_TIMER_START;
-      const doors = this.tilemap.getCells((c) => c.index === EnvIndices.DOOR);
+      const doors = this.tilemap.getCells((c) => c.tag === CellTag.Door);
       if (doors.length) {
         const door = this.rng.choice(doors);
         for (const d of DIRECTIONS) {
           const neighborPos = d[0].clone().add(door.pos);
           const neighborCell = this.tilemap.getCell(neighborPos);
-          if (!neighborCell || neighborCell.index !== EnvIndices.FLOOR) {
+          if (!neighborCell || neighborCell.isFloor !== true) {
             continue;
           }
           if (this.ecs.spriteSystem.findCombatEntity(neighborPos)) {
@@ -258,10 +258,7 @@ export class CombatSystem extends System {
 
   private resolveConflict(e: Entity, occupant: Entity, pos: AbstractVector) {
     const freeFloorCells = this.tilemap.getCells((cell) => {
-      return (
-        cell.index === EnvIndices.FLOOR &&
-        !SpriteSystem.default.findCombatEntity(cell.pos)
-      );
+      return cell.isFloor && !SpriteSystem.default.findCombatEntity(cell.pos);
     });
     new RNG(`${Math.random()}`).shuffle(freeFloorCells);
 
@@ -283,7 +280,12 @@ export class CombatSystem extends System {
     }
   }
 
-  applyPunch(attacker: Entity, defender: Entity, ecs: ECS) {
+  applyPunch(
+    attacker: Entity,
+    defender: Entity,
+    ecs: ECS,
+    amt: number = STATS.PUNCH_DAMAGE
+  ) {
     const defenderCombatC = defender.getComponent(CombatC);
     const attackerName = attacker.getComponent(SpriteC).flavorName;
     const defenderName = defender.getComponent(SpriteC).flavorName;
@@ -295,7 +297,7 @@ export class CombatSystem extends System {
         case CombatState.Prone:
           // don't change state; enemy remains stunned
           defenderCombatC.needsToMove = false;
-          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
+          this.changeHP(defender, -amt);
           this.events.emit({
             type: CombatEventType.Punch,
             subject: attacker,
@@ -309,7 +311,7 @@ export class CombatSystem extends System {
             subject: attacker,
             object: defender,
           });
-          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
+          this.changeHP(defender, -amt);
           ecs.writeMessage(
             `${attackerName} lands a punch on ${defenderName}, but they are unfazed.`
           );
@@ -320,7 +322,7 @@ export class CombatSystem extends System {
             subject: attacker,
             object: defender,
           });
-          this.changeHP(defender, -STATS.PUNCH_DAMAGE);
+          this.changeHP(defender, -amt);
           if (this.rng.choice([0, 0, 1]) === 0) {
             ecs.writeMessage(
               `${attackerName} lands a punch on ${defenderName}! ${defenderName} remains alert. (33% chance to stun failed.)`
@@ -337,7 +339,6 @@ export class CombatSystem extends System {
     switch (state) {
       case CombatState.Stunned:
         landPunch();
-        // defenderCombatC.recoveryTimer += 1; // stay stunned longer
         defenderCombatC.updateText(defender.getComponent(SpriteC));
         break;
       // case CombatState.Punched:
@@ -414,7 +415,7 @@ export class CombatSystem extends System {
     newPosD = newPosD.clone().add(delta);
     let i = 0;
     while (
-      ecs.tilemap.getCell(newPosD)?.index === EnvIndices.FLOOR &&
+      ecs.tilemap.getCell(newPosD)?.isFloor &&
       i < n &&
       ecs.spriteSystem.findCombatEntity(newPosD) === null
     ) {

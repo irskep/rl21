@@ -11,7 +11,7 @@ export function ensureTargetClear(
   target: AbstractVector
 ): MoveCheckResult {
   const cell = ctx.ecs.tilemap.getCell(target);
-  if (!cell || cell.index !== EnvIndices.FLOOR)
+  if (!cell || cell.isFloor !== true)
     return { success: false, message: "Target is not floor" };
   if (ctx.ecs.spriteSystem.findCombatEntity(target) !== null)
     return { success: false, message: "Target is occupied" };
@@ -23,7 +23,7 @@ export function ensureTargetIsEnemy(
   target: AbstractVector
 ): MoveCheckResult {
   const cell = ctx.ecs.tilemap.getCell(target);
-  if (!cell || cell.index !== EnvIndices.FLOOR)
+  if (!cell || cell.isFloor !== true)
     return { success: false, message: "Target is not floor" };
   const targetEntity = ctx.ecs.spriteSystem.findCombatEntity(target);
   if (!targetEntity) {
@@ -40,7 +40,7 @@ export function ensureTargetExists(
   target: AbstractVector
 ): MoveCheckResult {
   const cell = ctx.ecs.tilemap.getCell(target);
-  if (!cell || cell.index !== EnvIndices.FLOOR)
+  if (!cell || cell.isFloor !== true)
     return { success: false, message: "Target is not floor" };
   const targetEntity = ctx.ecs.spriteSystem.findCombatEntity(target);
   if (!targetEntity) {

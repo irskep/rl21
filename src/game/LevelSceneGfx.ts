@@ -31,6 +31,12 @@ const consoleStyle: Partial<ITextStyle> = {
   wordWrapWidth: 320,
 };
 
+const METRICS = {
+  topbarHeight: 30,
+  sidebarWidth: 320,
+  inputHintHeight: 178,
+};
+
 export class LevelSceneGfx {
   /* pixi stuff */
   container = new Container();
@@ -43,6 +49,7 @@ export class LevelSceneGfx {
 
   hoverSprite = new Sprite();
   dbgText = new Text("");
+  inputHintBg = new Graphics();
   inputHintText = new Text("");
   possibleActionsContainer = new Container();
   messageLogBg = new Graphics();
@@ -65,13 +72,7 @@ export class LevelSceneGfx {
   }
 
   get screenSize(): AbstractVector {
-    let width = this.app.screen.width;
-    let height = width * (3 / 4);
-    if (height > this.app.screen.height) {
-      height = this.app.screen.height;
-      width = height * (4 / 3);
-    }
-    return new Vector(width, height);
+    return new Vector(this.app.screen.width, this.app.screen.height);
   }
 
   enter() {
@@ -111,6 +112,7 @@ export class LevelSceneGfx {
     this.hudContainer.addChild(this.dbgText);
 
     this.inputHintText.style = new TextStyle(consoleStyle);
+    this.hudContainer.addChild(this.inputHintBg);
     this.hudContainer.addChild(this.inputHintText);
     this.hudContainer.addChild(this.possibleActionsContainer);
 
@@ -130,7 +132,9 @@ export class LevelSceneGfx {
       for (let x = 0; x < this.map.size.x; x++) {
         const cellSprite = new Sprite();
         const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.filmstrips.env[cell.index];
+        cellSprite.texture = this.game.filmstrips[cell.spriteSheet][
+          cell.spriteIndex
+        ];
         cell.sprite = cellSprite;
         cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
         cellSprite.interactive = true;
@@ -146,29 +150,33 @@ export class LevelSceneGfx {
     /* set up whole-screen layout */
 
     // game area
-    const gameAreaMask = new Graphics();
-    gameAreaMask.beginFill(0xffffff);
-    gameAreaMask.drawRect(0, 0, this.screenSize.x - 320, this.screenSize.y);
-    gameAreaMask.endFill();
-    this.gameAreaContainer.mask = gameAreaMask;
-    this.gameAreaContainer.position.set(0, 30);
+    // const gameAreaMask = new Graphics();
+    // gameAreaMask.beginFill(0xffffff);
+    // gameAreaMask.drawRect(0, 0, this.screenSize.x - METRICS.sidebarWidth, this.screenSize.y);
+    // gameAreaMask.endFill();
+    // this.gameAreaContainer.mask = gameAreaMask;
+    this.gameAreaContainer.position.set(0, METRICS.topbarHeight);
+
+    const sidebarX = this.screenSize.x - METRICS.sidebarWidth;
 
     // debug text
     this.dbgText.position.set(10, 10);
 
     // input area
-    this.inputHintText.position.set(this.gameAreaContainer.width, 10);
+
+    this.inputHintText.position.set(sidebarX + 10, 10);
     this.inputHintText.anchor.set(0, 0);
-    this.inputHintText.style.wordWrapWidth = 320;
-    this.possibleActionsContainer.position.set(
-      this.gameAreaContainer.width,
-      40
-    );
+    this.inputHintText.style.wordWrapWidth = METRICS.sidebarWidth - 20;
+    this.possibleActionsContainer.position.set(sidebarX + 10, 40);
+
+    this.inputHintBg.position.set(sidebarX, 0);
+    this.inputHintBg.beginFill(0x444477);
+    this.inputHintBg.drawRect(0, 0, 320, METRICS.inputHintHeight);
+    this.inputHintBg.endFill();
 
     // message log
-    this.messageLogBg.position.set(this.gameAreaContainer.width, 178);
-    const messageLogHeight =
-      this.gameAreaContainer.height - this.messageLogBg.position.y;
+    this.messageLogBg.position.set(sidebarX, 178);
+    const messageLogHeight = this.screenSize.y - this.messageLogBg.position.y;
     this.messageLog.position.set(10, 10);
     this.messageLogBg.beginFill(0x333366);
     this.messageLogBg.drawRect(0, 0, 320, messageLogHeight);
@@ -194,7 +202,9 @@ export class LevelSceneGfx {
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
         const cell = this.map.contents[y][x];
-        cell.sprite!.texture = this.game.filmstrips.env[cell.index];
+        cell.sprite!.texture = this.game.filmstrips[cell.spriteSheet][
+          cell.spriteIndex
+        ];
       }
     }
   }

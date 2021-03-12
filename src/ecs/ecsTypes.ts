@@ -3,10 +3,12 @@ import { AbstractVector } from "vector2d";
 import RNG from "../game/RNG";
 import { Tilemap } from "../game/tilemap";
 import { CombatSystem } from "./combat/CombatS";
+import { Difficulty } from "./difficulties";
 import { SpriteSystem } from "./SpriteS";
 
 export interface ECS {
   engine: Engine;
+  difficulty: Difficulty;
   combatSystem: CombatSystem;
   spriteSystem: SpriteSystem;
   player: Entity;

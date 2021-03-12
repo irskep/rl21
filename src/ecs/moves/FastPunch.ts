@@ -19,8 +19,6 @@ export class FastPunch implements Move {
   name = "Punch";
   help = "Strike the enemy in the face";
 
-  log = true;
-
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
@@ -89,7 +87,7 @@ export class LungePunch implements Move {
       const pos = src.clone().add(d[0]);
       if (!isAdjacent(pos, target)) continue;
       if (!ensureTargetClear(ctx, pos).success) continue;
-      if (ctx.ecs.tilemap.getCell(pos)?.index !== EnvIndices.FLOOR) continue;
+      if (ctx.ecs.tilemap.getCell(pos)?.isFloor !== true) continue;
 
       const totalManhattan =
         manhattanDistance(src.clone().subtract(pos)) +
@@ -140,7 +138,7 @@ export class LungePunch implements Move {
       const enemySpriteC = enemy.getComponent(SpriteC);
       // face attacker
       enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
-      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
+      ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs, 2);
       ctx.ecs.spriteSystem.cowboyUpdate();
 
       setTimeout(() => {

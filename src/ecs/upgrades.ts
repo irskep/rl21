@@ -27,7 +27,7 @@ export function makeUpgradePool(): Upgrade[] {
       name: "Atarangs",
       exclusive: true,
       description:
-        "Up to 3 times per stage, throw an Atarang at a distant enemy to damage and stun them.",
+        "Up to 6 times per stage, throw an Atarang at a distant enemy to damage and stun them.",
       apply: (player: Entity) => {
         player.getComponent(CombatC).moves.push(new Atarangs());
       },

@@ -83,7 +83,7 @@ export class SuperDodge implements Move {
       return { success: false, message: "Not in the right state" };
     }
 
-    if (ctx.ecs.tilemap.getCell(target)?.index !== EnvIndices.FLOOR) {
+    if (ctx.ecs.tilemap.getCell(target)?.isFloor !== true) {
       return { success: false, message: "Target is not floor" };
     }
 

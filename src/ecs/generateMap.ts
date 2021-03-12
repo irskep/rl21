@@ -1,6 +1,6 @@
 import { EnvIndices } from "../assets";
 import { Vector } from "vector2d";
-import { Tilemap } from "../game/tilemap";
+import { Tilemap, CellTag } from "../game/tilemap";
 import RNG from "../game/RNG";
 import { getNeighbors } from "./direction";
 
@@ -21,7 +21,7 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
         for (let x = skipX; x < skipX + skipSize; x++) {
           for (let y = skipY; y < skipY + skipSize; y++) {
             const cellPos = new Vector(x, y);
-            if (tilemap.getCell(cellPos)?.index === EnvIndices.FLOOR) {
+            if (tilemap.getCell(cellPos)?.isFloor) {
               areaCells.push(cellPos);
             }
           }
@@ -30,7 +30,7 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
         for (let i = 0; i < 4; i++) {
           const wallPos = areaCells.shift()!;
           const cell = tilemap.getCell(wallPos)!;
-          cell.index = EnvIndices.WALL;
+          cell.tag = CellTag.Wall;
         }
 
         availableCells = availableCells.concat(areaCells);
@@ -41,7 +41,7 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
     for (const pos of availableCells) {
       let numFreeNeighbors = 0;
       for (const adjacentPos of getNeighbors(pos)) {
-        if (tilemap.getCell(adjacentPos)?.index === EnvIndices.FLOOR) {
+        if (tilemap.getCell(adjacentPos)?.isFloor) {
           numFreeNeighbors += 1;
         }
       }
@@ -50,7 +50,7 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
         for (let y = 0; y < tilemap.size.y; y++) {
           for (let x = 0; x < tilemap.size.x; x++) {
             const cell = tilemap.getCell(new Vector(x, y))!;
-            cell.index = tilemap.getDefaultIndex(cell.pos);
+            cell.tag = tilemap.getDefaultTag(cell.pos);
           }
         }
         console.warn("Regenerating map due to enclosed space");

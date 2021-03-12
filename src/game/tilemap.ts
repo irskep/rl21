@@ -2,13 +2,49 @@ import { Sprite } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "../assets";
 
+export enum CellTag {
+  Wall = "Wall",
+  Floor = "Floor",
+  Door = "Door",
+  Pit = "Pit",
+}
+
 export class Cell {
   sprite: Sprite | null = null;
-  index: number = 0;
-  pos: Vector;
-  constructor(pos: Vector, index: number) {
-    this.index = index;
-    this.pos = pos;
+  spriteSheet: string = "env";
+  spriteIndex: number = 0;
+  constructor(public pos: Vector, private _tag: CellTag = CellTag.Wall) {
+    this.updateSprite();
+  }
+
+  get isFloor(): boolean {
+    return this.tag === CellTag.Floor;
+  }
+
+  get tag(): CellTag {
+    return this._tag;
+  }
+
+  set tag(value: CellTag) {
+    this._tag = value;
+    this.updateSprite();
+  }
+
+  updateSprite() {
+    switch (this.tag) {
+      case CellTag.Wall:
+        this.spriteIndex = EnvIndices.WALL;
+        break;
+      case CellTag.Floor:
+        this.spriteIndex = EnvIndices.FLOOR;
+        break;
+      case CellTag.Door:
+        this.spriteIndex = EnvIndices.DOOR;
+        break;
+      case CellTag.Pit:
+        this.spriteIndex = EnvIndices.PIT;
+        break;
+    }
   }
 }
 
@@ -23,18 +59,18 @@ export class Tilemap {
       this.contents[y] = new Array(size.x);
       for (let x = 0; x < size.x; x++) {
         const pos = new Vector(x, y);
-        this.contents[y][x] = new Cell(pos, this.getDefaultIndex(pos));
+        this.contents[y][x] = new Cell(pos, this.getDefaultTag(pos));
       }
     }
   }
 
-  getDefaultIndex(pos: Vector) {
+  getDefaultTag(pos: Vector): CellTag {
     return pos.x === 0 ||
       pos.y === 0 ||
       pos.x === this.size.x - 1 ||
       pos.y === this.size.y - 1
-      ? EnvIndices.WALL
-      : EnvIndices.FLOOR;
+      ? CellTag.Wall
+      : CellTag.Floor;
   }
 
   updateCell(pos: AbstractVector, callback: (cell: Cell) => void) {

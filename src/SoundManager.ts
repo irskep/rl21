@@ -79,8 +79,9 @@ export class SoundManager {
     this.playingMusic?.stop();
     this.playingMusic = this.musics[this.musicTrack];
     this.musicTrack += 1;
-    this.playingMusic.play();
-    console.log(this.playingMusic);
+    try {
+      this.playingMusic.play();
+    }
   }
 
   stopMusic() {

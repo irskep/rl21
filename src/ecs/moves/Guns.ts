@@ -12,6 +12,7 @@ import Game from "../../game";
 import { CombatEventType } from "../combat/CombatS";
 import { ensureStandingAndTargetIsAdjacentEnemy } from "./_helpers";
 import { Action } from "../../game/input";
+import { CellTag } from "../../game/tilemap";
 
 export class PickUpGun implements Move {
   name = "PickUpGun";
@@ -80,8 +81,8 @@ export class ShootGun implements Move {
       if (ctx.ecs.spriteSystem.findCombatEntity(p) !== null) {
         return []; // not empty
       }
-      const index = ctx.ecs.tilemap.getCell(p)?.index;
-      if (index !== EnvIndices.FLOOR && index !== EnvIndices.PIT) {
+      const tag = ctx.ecs.tilemap.getCell(p)?.tag;
+      if (tag !== CellTag.Floor && tag !== CellTag.Pit) {
         return []; // tile is wall
       }
     }

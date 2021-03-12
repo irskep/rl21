@@ -36,6 +36,7 @@ export class LevelScene implements GameScene {
   hoveredPos: AbstractVector | null = null;
   hoveredPosDuringUpdate: AbstractVector | null = null;
   hoveredEntity: Entity | null = null;
+  isOver = false;
 
   constructor(
     private game: GameInterface,
@@ -85,7 +86,7 @@ export class LevelScene implements GameScene {
         this.upgrades
       );
       this.ecs.combatSystem.tilemap = this.map;
-      this.updateTileSprites();
+      this.gfx.updateTileSprites();
       this.ecs.engine.update(1);
       this.updateHUDText();
       this.updateHearts();
@@ -137,15 +138,6 @@ export class LevelScene implements GameScene {
     });
   }
 
-  updateTileSprites() {
-    for (let y = 0; y < this.map.size.y; y++) {
-      for (let x = 0; x < this.map.size.x; x++) {
-        const cell = this.map.contents[y][x];
-        cell.sprite!.texture = this.game.filmstrips.env[cell.index];
-      }
-    }
-  }
-
   handleCombatEvent(event: CombatEvent) {
     console.log("Combat event:", event);
     switch (event.type) {
@@ -161,6 +153,7 @@ export class LevelScene implements GameScene {
         break;
       case CombatEventType.Die:
         if (event.subject === this.ecs.player) {
+          this.isOver = true;
           this.gfx.showLoss();
 
           setTimeout(() => {
@@ -172,6 +165,7 @@ export class LevelScene implements GameScene {
             ?.getComponent(CombatC)
             .hasTrait(CombatTrait.KillingMeBeatsLevel)
         ) {
+          this.isOver = true;
           this.gfx.showVictory();
           setTimeout(() => {
             this.goToNextScene();
@@ -179,6 +173,7 @@ export class LevelScene implements GameScene {
         }
         break;
       case CombatEventType.AllEnemiesDead:
+        this.isOver = true;
         this.gfx.showVictory();
 
         setTimeout(() => {
@@ -318,6 +313,7 @@ export class LevelScene implements GameScene {
   };
 
   handleClick(pos: AbstractVector, action: Action) {
+    if (this.isOver) return;
     this.hoveredPos = pos;
     this.updatePossibleMoves();
     const actionMoves = this.possibleMoves.filter(
