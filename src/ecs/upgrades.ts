@@ -1,6 +1,7 @@
 import { Entity } from "@nova-engine/ecs";
 import { CombatC } from "./combat/CombatC";
 import { Atarangs } from "./moves/Atarangs";
+import { LungePunch } from "./moves/FastPunch";
 import { GroundTakedown } from "./moves/GroundTakedown";
 import { LegSweep } from "./moves/LegSweep";
 import { SuperDodge } from "./moves/SuperDodge";
@@ -14,6 +15,14 @@ export interface Upgrade {
 
 export function makeUpgradePool(): Upgrade[] {
   return [
+    {
+      name: "Lunge Punch",
+      exclusive: true,
+      description: "Punch an enemy 2 tiles away for 2 hit points.",
+      apply: (player: Entity) => {
+        player.getComponent(CombatC).moves.push(new LungePunch());
+      },
+    },
     {
       name: "Atarangs",
       exclusive: true,

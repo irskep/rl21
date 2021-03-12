@@ -62,8 +62,8 @@ export class SpriteC implements Component {
     return this.flavorName + "\n\n" + this.flavorDesc;
   }
 
-  turnToward(target: AbstractVector) {
-    const direction = target.clone().subtract(this.pos);
+  turnToward(target: AbstractVector, from: AbstractVector | null = null) {
+    const direction = target.clone().subtract(from || this.pos);
     for (const d2 of DIRECTIONS) {
       if (d2[0].equals(direction)) {
         this.orientation = d2[1];

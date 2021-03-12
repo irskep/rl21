@@ -49,6 +49,20 @@ export function ensureTargetExists(
   return { success: true };
 }
 
+export function ensureStandingAndTargetIsEnemy(
+  ctx: MoveContext,
+  target: AbstractVector
+): MoveCheckResult {
+  const combatC = ctx.entity.getComponent(CombatC);
+  const spriteC = ctx.entity.getComponent(SpriteC);
+  if (combatC.state != CombatState.Standing) {
+    return { success: false, message: "Not in the right state" };
+  }
+  const checkResult = ensureTargetIsEnemy(ctx, target);
+  if (!checkResult.success) return checkResult;
+  return { success: true };
+}
+
 export function ensureStandingAndTargetIsAdjacentEnemy(
   ctx: MoveContext,
   target: AbstractVector
