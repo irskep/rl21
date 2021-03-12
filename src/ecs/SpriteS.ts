@@ -7,7 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { Container, DisplayObject, Sprite, Text } from "pixi.js";
 import { AbstractVector } from "vector2d";
-import { GameInterface } from "../types";
+import { GameInterface, TILE_SIZE } from "../types";
 import { CombatC } from "./combat/CombatC";
 import { ItemC } from "./ItemC";
 import { SpriteC } from "./SpriteC";
@@ -37,10 +37,10 @@ export class SpriteSystem extends System {
     this.update(this.engines[0], 0);
   }
 
-  setPosition(obj: DisplayObject, pos: AbstractVector) {
+  setPosition(obj: Sprite, pos: AbstractVector) {
     obj.position.set(
-      pos.x * this.game.tileSize + this.game.tileSize / 2,
-      pos.y * this.game.tileSize + this.game.tileSize / 2
+      pos.x * obj.width + TILE_SIZE / 2,
+      pos.y * obj.height + TILE_SIZE / 2
     );
   }
 

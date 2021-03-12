@@ -215,15 +215,10 @@ export class LevelScene implements GameScene {
     this.updatePossibleMoves();
     this.updateHUDText();
 
-    if (this.possibleMoves.filter(([m, r]) => r.success).length > 0) {
-      this.gfx.hoverSprite.visible = true;
-      this.gfx.hoverSprite.position.set(
-        this.hoveredPos!.x * this.game.tileSize,
-        this.hoveredPos!.y * this.game.tileSize
-      );
-    } else {
-      this.gfx.hoverSprite.visible = false;
-    }
+    this.gfx.showHideHoverSprite(
+      pos,
+      this.possibleMoves.filter(([m, r]) => r.success).length > 0
+    );
 
     if (pos) {
       this.gfx.updateHoveredEntity(

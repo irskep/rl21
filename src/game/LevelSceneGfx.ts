@@ -18,7 +18,7 @@ import {
   AnimationManager,
   makeDriftAndFadeAnimation,
 } from "./AnimationManager";
-import { GameInterface } from "../types";
+import { GameInterface, TILE_SIZE } from "../types";
 import { Move } from "../ecs/moves/_types";
 import { Action, getActionText } from "./input";
 
@@ -136,7 +136,7 @@ export class LevelSceneGfx {
           cell.spriteIndex
         ];
         cell.sprite = cellSprite;
-        cellSprite.position.set(x * this.game.tileSize, y * this.game.tileSize);
+        cellSprite.position.set(x * cellSprite.width, y * cellSprite.height);
         cellSprite.interactive = true;
         this.tilemapContainer.addChild(cellSprite);
       }
@@ -231,13 +231,13 @@ export class LevelSceneGfx {
 
     const tilePos = e.getComponent(SpriteC).pos;
     const pos = new Vector(
-      (tilePos.x + 1) * this.game.tileSize * this.arena.scale.x + 10,
-      tilePos.y * this.game.tileSize * this.arena.scale.y
+      (tilePos.x + 1) * TILE_SIZE * this.arena.scale.x + 10,
+      tilePos.y * TILE_SIZE * this.arena.scale.y
     );
     if (tilePos.x > 5) {
-      pos.x -= size.x + this.game.tileSize * 1.5 * this.arena.scale.x + 20;
+      pos.x -= size.x + TILE_SIZE * 1.5 * this.arena.scale.x + 20;
     } else {
-      pos.x += this.game.tileSize * 0.5 * this.arena.scale.x;
+      pos.x += TILE_SIZE * 0.5 * this.arena.scale.x;
     }
     this.mouseoverContainer.position.set(pos.x, pos.y);
     this.mouseoverContainer.visible = true;
@@ -249,6 +249,15 @@ export class LevelSceneGfx {
     gfx.beginFill(0x000000);
     gfx.drawRect(0, 0, size.x, size.y - 2);
     gfx.endFill();
+  }
+
+  showHideHoverSprite(pos: AbstractVector | null, shouldShow: boolean) {
+    if (pos && shouldShow) {
+      this.hoverSprite.visible = true;
+      this.hoverSprite.position.set(pos.x * TILE_SIZE, pos.y * TILE_SIZE);
+    } else {
+      this.hoverSprite.visible = false;
+    }
   }
 
   updateHearts(hp: number) {

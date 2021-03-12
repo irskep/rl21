@@ -3,8 +3,8 @@ import { AbstractVector, Vector } from "vector2d";
 export interface Asset {
   name: string;
   url: string;
-  cellSize?: AbstractVector;
-  isFilmstrip?: boolean;
+  cellSize: AbstractVector;
+  isFilmstrip: boolean;
 }
 
 export const SpriteIndices = {
@@ -57,9 +57,21 @@ export const EnvIndices = {
   GUN: 57,
 };
 
+const noSize = new Vector(-1, -1);
+
 export const ALL_ASSETS: Asset[] = [
-  { name: "sprites", url: "sprites.png", isFilmstrip: true },
-  { name: "env", url: "env.png", isFilmstrip: true },
+  {
+    name: "sprites",
+    url: "sprites.png",
+    isFilmstrip: true,
+    cellSize: new Vector(128, 128),
+  },
+  {
+    name: "env",
+    url: "env.png",
+    isFilmstrip: true,
+    cellSize: new Vector(128, 128),
+  },
   {
     name: "heart",
     url: "heart.png",
@@ -72,6 +84,11 @@ export const ALL_ASSETS: Asset[] = [
     isFilmstrip: true,
     cellSize: new Vector(80, 32),
   },
-  { name: "stagecomplete", url: "stagecomplete.png" },
-  { name: "youlose", url: "youlose.png" },
+  {
+    name: "stagecomplete",
+    url: "stagecomplete.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
+  { name: "youlose", url: "youlose.png", isFilmstrip: false, cellSize: noSize },
 ];

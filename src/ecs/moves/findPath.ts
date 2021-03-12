@@ -19,7 +19,7 @@ export function findPath(
       ecs.spriteSystem.findCombatEntity(dest),
     ];
     return (
-      ecs.combatSystem.tilemap.getCell(vector)?.isFloor &&
+      ecs.combatSystem.tilemap.getCell(vector)?.isFloor === true &&
       allowedEntities.indexOf(ecs.spriteSystem.findCombatEntity(vector)) !== -1
     );
   };

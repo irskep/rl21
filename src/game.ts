@@ -14,7 +14,6 @@ export default class Game implements GameInterface {
   isFontLoaded = false;
   filmstrips: Record<string, Texture[]> = {};
   images: Record<string, Texture> = {};
-  tileSize = 128;
 
   static shared: Game;
 
@@ -72,10 +71,7 @@ export default class Game implements GameInterface {
 
     for (const asset of ALL_ASSETS) {
       if (asset.isFilmstrip) {
-        this.filmstrips[asset.name] = loadFilmstrip(
-          asset.name,
-          asset.cellSize || new Vector(this.tileSize, this.tileSize)
-        );
+        this.filmstrips[asset.name] = loadFilmstrip(asset.name, asset.cellSize);
       } else if (asset.url.endsWith(".png")) {
         this.images[asset.name] = (this.app.loader.resources[asset.name] as any)
           ?.texture as Texture;

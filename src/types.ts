@@ -13,5 +13,6 @@ export interface GameInterface {
   replaceScenes: (scenes: GameScene[]) => void;
   filmstrips: Record<string, Texture[]>;
   images: Record<string, Texture>;
-  tileSize: number;
 }
+
+export const TILE_SIZE = 128;

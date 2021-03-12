@@ -16,7 +16,7 @@ import {
 import { CombatSystem } from "./combat/CombatS";
 import { CombatC } from "./combat/CombatC";
 import { CombatTrait } from "./combat/CombatTrait";
-import { Tilemap } from "../game/tilemap";
+import { CellTag, Tilemap } from "../game/tilemap";
 import getHenchmanName from "../prose/henchmanName";
 import { STATS } from "./stats";
 import RNG from "../game/RNG";
@@ -155,16 +155,16 @@ function makePrefab1Map(
       const cell = tilemap.getCell(p)!;
       switch (plan[y][x]) {
         case "X":
-          cell.index = EnvIndices.WALL;
+          cell.tag = CellTag.Wall;
           break;
         case "D":
-          cell.index = EnvIndices.DOOR;
+          cell.tag = CellTag.Door;
           break;
         case "_":
-          cell.index = EnvIndices.PIT;
+          cell.tag = CellTag.Pit;
           break;
         case ".":
-          cell.index = EnvIndices.FLOOR;
+          cell.tag = CellTag.Floor;
           if (!p.equals(bossPos) && !p.equals(playerPos)) {
             freeCells.push(p);
           }
