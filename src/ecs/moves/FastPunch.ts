@@ -16,14 +16,14 @@ export class FastPunch implements Move {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
 
-    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
-    const enemyState = enemy.getComponent(CombatC).state;
-    switch (enemyState) {
-      case CombatState.Prone:
-        return { success: false, message: "Enemy is on the ground" };
-      default:
-        break;
-    }
+    // const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
+    // const enemyState = enemy.getComponent(CombatC).state;
+    // switch (enemyState) {
+    //   case CombatState.Prone:
+    //     return { success: false, message: "Enemy is on the ground" };
+    //   default:
+    //     break;
+    // }
 
     return { success: true };
   }
@@ -38,7 +38,7 @@ export class FastPunch implements Move {
     ctx.entity
       .getComponent(CombatC)
       .setState(CombatState.PunchTelegraph, spriteC);
-    ctx.ecs.spriteSystem.update(ctx.ecs.engine, 0);
+    ctx.ecs.spriteSystem.cowboyUpdate();
 
     setTimeout(() => {
       const combatC = ctx.entity.getComponent(CombatC);

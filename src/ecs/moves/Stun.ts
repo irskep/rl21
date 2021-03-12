@@ -6,6 +6,7 @@ import { ensureStandingAndTargetIsAdjacentEnemy } from "./_helpers";
 import { MoveContext, MoveCheckResult, Move } from "./_types";
 import { SpriteC } from "../SpriteC";
 import { SpriteIndices } from "../../assets";
+import { Disarm } from "./Guns";
 
 export class Stun implements Move {
   action = Action.Y;
@@ -13,6 +14,10 @@ export class Stun implements Move {
   help = "If an enemy is about to strike, counter their move";
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
+    const disarmResult = new Disarm().check(ctx, target);
+    if (disarmResult.success) {
+      return { success: false, message: "Disarm instead" };
+    }
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
     if (
@@ -50,7 +55,14 @@ export class Stun implements Move {
         spriteC,
         SpriteIndices.BM_STUN_AFTER
       );
-      doNext();
+      ctx.ecs.spriteSystem.cowboyUpdate();
+
+      setTimeout(() => {
+        combatC.setState(CombatState.Standing, spriteC);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+
+        doNext();
+      }, 300);
     }, 300);
 
     return true;

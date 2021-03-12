@@ -89,6 +89,11 @@ export class CombatC implements Component {
     this.updateSpriteIndex(spriteC);
   }
 
+  removeTrait(trait: CombatTrait, spriteC: SpriteC) {
+    this.traits = this.traits.filter((t) => t !== trait);
+    this.updateSpriteIndex(spriteC);
+  }
+
   setState(
     newState: CombatState,
     spriteC: SpriteC,

@@ -52,7 +52,7 @@ export class LegSweep implements Move {
     const pos = spriteC.pos;
     const adjacentEnemies = this.getAdjacentEnemies(ctx.ecs.spriteSystem, pos);
     const numEnemies = adjacentEnemies.length;
-    const numHP = Math.floor(combatC.hp / 2);
+    const numHP = Math.min(Math.floor(combatC.hp / 2), 3);
 
     const process = () => {
       if (!adjacentEnemies.length) {

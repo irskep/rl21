@@ -10,6 +10,8 @@ import { Sprite } from "@pixi/sprite";
 import { EnvIndices, SpriteIndices } from "../../assets";
 import Game from "../../game";
 import { CombatEventType } from "../combat/CombatS";
+import { ensureStandingAndTargetIsAdjacentEnemy } from "./_helpers";
+import { Action } from "../../game/input";
 
 export class PickUpGun implements Move {
   name = "PickUpGun";
@@ -165,5 +167,76 @@ export class ShootGun implements Move {
 
   computeValue(ctx: MoveContext, target: AbstractVector): number {
     return 300; // henchmen love guns
+  }
+}
+
+export class Disarm implements Move {
+  action = Action.Y;
+  name = "Disarm";
+  help = "Take enemy's weapon and break it so no one else can use it";
+
+  check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
+    if (ctx.entity.getComponent(CombatC).state !== CombatState.Standing) {
+      return { success: false, message: "Must be standing" };
+    }
+
+    const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
+    if (!checkResult.success) return checkResult;
+
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
+    if (!enemy.getComponent(CombatC).hasTrait(CombatTrait.WieldingGun)) {
+      return { success: false, message: "Enemy does not have a weapon" };
+    }
+    if (enemy.getComponent(CombatC).state !== CombatState.Stunned) {
+      return { success: false, message: "Enemy must be stunned" };
+    }
+
+    return { success: true };
+  }
+
+  computeValue(ctx: MoveContext, target: AbstractVector): number {
+    return 200;
+  }
+
+  apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
+    const spriteC = ctx.entity.getComponent(SpriteC);
+    spriteC.turnToward(target);
+    const combatC = ctx.entity.getComponent(CombatC);
+    combatC.setState(
+      CombatState.Standing,
+      spriteC,
+      SpriteIndices.BM_TAKING_WEAPON
+    );
+
+    const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
+    const enemyCombatC = enemy.getComponent(CombatC);
+    const enemySpriteC = enemy.getComponent(SpriteC);
+    enemyCombatC.removeTrait(
+      CombatTrait.WieldingGun,
+      enemy.getComponent(SpriteC)
+    );
+
+    ctx.ecs.spriteSystem.cowboyUpdate();
+
+    ctx.ecs.writeMessage(
+      `${spriteC.flavorName} breaks ${enemySpriteC.flavorName}'s gun.`
+    );
+
+    setTimeout(() => {
+      combatC.setState(
+        CombatState.Standing,
+        spriteC,
+        SpriteIndices.BM_DISABLING_WEAPON
+      );
+      ctx.ecs.spriteSystem.cowboyUpdate();
+
+      setTimeout(() => {
+        combatC.setState(CombatState.Standing, spriteC);
+        ctx.ecs.spriteSystem.cowboyUpdate();
+        doNext();
+      }, 300);
+    }, 300);
+
+    return true;
   }
 }

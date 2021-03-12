@@ -15,10 +15,17 @@ import {
   SuperpunchPrepare,
 } from "./Superpunch";
 import { CreateAndFollowGoal } from "./CreateAndFollowGoal";
-import { PickUpGun, ShootGun } from "./Guns";
+import { Disarm, PickUpGun, ShootGun } from "./Guns";
 
 export function makePlayerMoves(): Move[] {
-  return [new Wait(), new Walk(), new FastPunch(), new Counter(), new Stun()];
+  return [
+    new Wait(),
+    new Walk(),
+    new FastPunch(),
+    new Counter(),
+    new Stun(),
+    new Disarm(),
+  ];
 }
 
 export const HENCHMAN_MOVES: Move[] = [

@@ -20,7 +20,6 @@ export class CreateAndFollowGoal implements Move {
     // Always reset goal, even though it's a lot of wasted work
 
     const gunPos = this.findClosestGunPos(ctx);
-    console.log("The closest gun is at", gunPos);
     if (gunPos && this.amIClosestToTheGun(ctx, gunPos)) {
       combatC.goal = {
         type: GoalType.GetGun,
