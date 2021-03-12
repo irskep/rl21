@@ -32,6 +32,7 @@ export default class Game implements GameInterface {
       // width: window.innerWidth,
       // height: window.innerHeight,
     });
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.app.ticker.autoStart = true;
     this.app.loader.baseUrl = `//${location.host}/${pathname}`;
 

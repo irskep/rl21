@@ -159,6 +159,7 @@ export class LevelSceneGfx {
     const scale = availableGameSpace.x / mapWidth;
     console.log(scale);
 
+    this.gameAreaContainer;
     this.gameAreaContainer.setTransform(0, METRICS.topbarHeight, scale, scale);
 
     const sidebarX = this.screenSize.x - METRICS.sidebarWidth;
