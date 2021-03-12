@@ -4,4 +4,5 @@ export enum CombatTrait {
   MayUseEquipment = "MayUseEquipment",
   WieldingGun = "WieldingGun",
   ReloadsSlowly = "ReloadsSlowly",
+  KillingMeBeatsLevel = "KillingMeBeatsLevel",
 }

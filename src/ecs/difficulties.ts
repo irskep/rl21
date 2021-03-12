@@ -5,6 +5,7 @@ export interface Difficulty {
   mapgenAlgo: "basic" | "prefab1";
   numGuns: [number, number] | 0;
   isBoss?: boolean;
+  winCondition?: "boss";
 }
 
 export const DIFFICULTIES: Difficulty[] = [
@@ -16,14 +17,6 @@ export const DIFFICULTIES: Difficulty[] = [
   //   mapgenAlgo: "basic",
   //   numGuns: [1, 1],
   // },
-  {
-    isBoss: true,
-    numThugs: [2, 2],
-    numArmoredThugs: 0,
-    numTitanThugs: 0,
-    numGuns: 0,
-    mapgenAlgo: "prefab1",
-  },
   {
     numThugs: [3, 5],
     numArmoredThugs: 0,
@@ -65,5 +58,14 @@ export const DIFFICULTIES: Difficulty[] = [
     numTitanThugs: [4, 6],
     mapgenAlgo: "basic",
     numGuns: 0,
+  },
+  {
+    isBoss: true,
+    numThugs: [2, 2],
+    numArmoredThugs: 0,
+    numTitanThugs: 0,
+    numGuns: 0,
+    mapgenAlgo: "prefab1",
+    winCondition: "boss",
   },
 ];

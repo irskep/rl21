@@ -20,6 +20,8 @@ import { Upgrade } from "../ecs/upgrades";
 import UnreachableCaseError from "../UnreachableCaseError";
 import { SoundManager } from "../SoundManager";
 import { Atarangs } from "../ecs/moves/Atarangs";
+import { WinScene } from "../WinScene";
+import { CombatTrait } from "../ecs/combat/CombatTrait";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -45,12 +47,12 @@ export class LevelScene implements GameScene {
   }
 
   goToNextScene() {
-    if (this.n < DIFFICULTIES.length - 2) {
+    if (this.n < DIFFICULTIES.length - 1) {
       this.game.replaceScenes([
         new UpgradeScene(this.game, this.n + 1, this.upgrades, this.ecs.rng),
       ]);
     } else {
-      this.game.replaceScenes([new MenuScene(this.game)]);
+      this.game.replaceScenes([new WinScene(this.game)]);
     }
   }
 
@@ -163,6 +165,16 @@ export class LevelScene implements GameScene {
 
           setTimeout(() => {
             this.game.replaceScenes([new MenuScene(this.game)]);
+          }, 2000);
+        }
+        if (
+          event.subject
+            ?.getComponent(CombatC)
+            .hasTrait(CombatTrait.KillingMeBeatsLevel)
+        ) {
+          this.gfx.showVictory();
+          setTimeout(() => {
+            this.goToNextScene();
           }, 2000);
         }
         break;

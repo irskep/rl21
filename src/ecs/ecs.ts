@@ -104,8 +104,10 @@ export function makeBoss(pos: AbstractVector, orientation: number): Entity {
   );
   e.getComponent(SpriteC).orientation = orientation;
   e.getComponent(SpriteC).tint = 0xff88ff;
-  e.putComponent(CombatC).build(STATS.HIGH_HP, makeBossMoves(), [
+  e.putComponent(CombatC).build(STATS.BOSS_HP, makeBossMoves(), [
     CombatTrait.WieldingGun,
+    CombatTrait.ReloadsSlowly,
+    CombatTrait.KillingMeBeatsLevel,
   ]);
   return e;
 }
@@ -279,6 +281,7 @@ export function makeECS(
     tilemap,
     player,
     rng,
+    difficulty,
     addGun: (pos: AbstractVector) => engine.addEntity(makeGun(pos)),
     remove: (e: Entity) => {
       if (e.hasComponent(SpriteC)) {

@@ -124,7 +124,7 @@ export class ShootGun implements Move {
 
     spriteC.turnToward(path[0]);
     if (combatC.hasTrait(CombatTrait.ReloadsSlowly)) {
-      combatC.gunCooldown = 5;
+      combatC.gunCooldown = 8;
     } else {
       combatC.gunCooldown = 3;
     }

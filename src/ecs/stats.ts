@@ -5,4 +5,5 @@ export const STATS = {
 
   LOW_HP: 4,
   HIGH_HP: 8,
+  BOSS_HP: 12,
 };

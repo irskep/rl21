@@ -14,7 +14,7 @@ export class Atarangs implements Move {
   name = "Throw Atarang";
   help = "Stun and damage a faraway enemy, up to 3 times per stage.";
 
-  atarangsRemaining = 3;
+  atarangsRemaining = 6;
 
   getStatusText(): string | null {
     return `Atarangs remaining: ${this.atarangsRemaining}`;
