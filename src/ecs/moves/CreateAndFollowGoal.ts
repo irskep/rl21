@@ -8,6 +8,7 @@ import { findPath } from "./findPath";
 import { PlannedWalk } from "./PlannedWalk";
 import { ItemC, ItemType } from "../ItemC";
 import { manhattanDistance } from "../../game/tilemap";
+import { CombatTrait } from "../combat/CombatTrait";
 // import { isAdjacent } from "../../game/tilemap";
 
 export class CreateAndFollowGoal implements Move {
@@ -48,6 +49,12 @@ export class CreateAndFollowGoal implements Move {
   }
 
   private findClosestGunPos(ctx: MoveContext): AbstractVector | null {
+    if (
+      !ctx.entity.getComponent(CombatC).hasTrait(CombatTrait.MayUseEquipment)
+    ) {
+      return null; // no guns found, cannot use them!
+    }
+
     const myPos = ctx.entity.getComponent(SpriteC).pos;
     const guns = ctx.ecs.spriteSystem
       .findInterestingObjects()
