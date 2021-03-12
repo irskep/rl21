@@ -151,6 +151,9 @@ export class CombatSystem extends System {
     const entity = this.entitiesToProcess.shift()!;
     const combatC = entity.getComponent(CombatC);
     if (combatC.isPlayer) return this.processNextEntity();
+
+    combatC.gunCooldown = Math.max(0, combatC.gunCooldown - 1);
+
     if (!combatC.needsToMove) return this.processNextEntity();
 
     combatC.needsToMove = false;

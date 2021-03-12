@@ -56,8 +56,6 @@ export class ShootGun implements Move {
   name = "ShootGun";
   help = "?";
 
-  cooldown = 0;
-
   getPathToEnemy(ctx: MoveContext): AbstractVector[] {
     const myPos = ctx.entity.getComponent(SpriteC).pos;
     // assume this is AI-only
@@ -89,9 +87,8 @@ export class ShootGun implements Move {
   }
 
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
-    if (this.cooldown > 0) {
-      // hack: rely on this only being called once per turn
-      this.cooldown -= 1;
+    const combatC = ctx.entity.getComponent(CombatC);
+    if (combatC.gunCooldown > 0) {
       return { success: false, message: "Waiting on cooldown" };
     }
 
@@ -99,7 +96,6 @@ export class ShootGun implements Move {
       return { success: false, message: "Only applies to self" };
     }
 
-    const combatC = ctx.entity.getComponent(CombatC);
     if (combatC.state !== CombatState.Standing) {
       return { success: false, message: "Must be standing" };
     }
@@ -124,7 +120,7 @@ export class ShootGun implements Move {
     const path = this.getPathToEnemy(ctx);
 
     spriteC.turnToward(path[0]);
-    this.cooldown = 2;
+    combatC.gunCooldown = 3;
 
     const displays: DisplayObject[] = path.map((p) => {
       const sprite = new Sprite(Game.shared.filmstrips.env[EnvIndices.HOVER]);
