@@ -35,8 +35,7 @@ export function makeUpgradePool(): Upgrade[] {
     {
       name: "Leg Sweep",
       exclusive: true,
-      description:
-        "Knock adjacent enemies prone, but the lesser of half your remaining hit points or 3 hit points.",
+      description: "Knock adjacent enemies prone, but take lots of damage.",
       apply: (player: Entity) => {
         player.getComponent(CombatC).moves.push(new LegSweep());
       },
