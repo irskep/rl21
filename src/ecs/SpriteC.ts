@@ -14,6 +14,7 @@ export class SpriteC implements Component {
   sprite?: Sprite;
   tint = 0xffffff;
   text: Text | null = null;
+  zIndex = 0;
 
   flavorName = ""; // sprites have names too, why not
   flavorDesc = "";

@@ -8,6 +8,7 @@ export interface Difficulty {
 
 export const DIFFICULTIES: Difficulty[] = [
   {
+    // delete me
     numThugs: [2, 4],
     numArmoredThugs: 0,
     numTitanThugs: 0,

@@ -23,6 +23,7 @@ export class SpriteSystem extends System {
     super();
     this.game = game;
     this.container = container;
+    this.container.sortableChildren = true;
 
     SpriteSystem.default = this;
   }
@@ -44,6 +45,7 @@ export class SpriteSystem extends System {
           spriteC.spriteIndex
         ];
         spriteC.sprite = new Sprite(texture);
+        spriteC.sprite.zIndex = spriteC.zIndex;
         spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
@@ -80,6 +82,7 @@ export class SpriteSystem extends System {
         spriteC.text.angle = 90 * (4 - spriteC.orientation);
       }
     }
+    this.container.sortChildren();
   }
 
   /* helpers */

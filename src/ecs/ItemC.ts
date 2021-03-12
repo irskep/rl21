@@ -1,7 +1,7 @@
 import { Component } from "@nova-engine/ecs";
 
 export enum ItemType {
-  Gun = "Gun";
+  Gun = "Gun",
 }
 
 export class ItemC implements Component {

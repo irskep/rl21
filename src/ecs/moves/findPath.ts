@@ -7,7 +7,8 @@ import { Entity } from "@nova-engine/ecs";
 export function findPath(
   src: AbstractVector,
   dest: AbstractVector,
-  ecs: ECS
+  ecs: ECS,
+  omitLast: boolean = true
 ): AbstractVector[] {
   const results = new Array<AbstractVector>();
   const isFree = (x: number, y: number) => {
@@ -24,6 +25,11 @@ export function findPath(
   };
   const astar = new AStar(dest.x, dest.y, isFree, { topology: 8 });
   astar.compute(src.x, src.y, (x, y) => results.push(new Vector(x, y)));
-  // omit first and last elements in path
-  return results.slice(1, results.length - 1);
+  if (omitLast) {
+    // omit first and last elements in path
+    return results.slice(1, results.length - 1);
+  } else {
+    // omit first element in path
+    return results.slice(1, results.length);
+  }
 }

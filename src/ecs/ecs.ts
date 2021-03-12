@@ -5,7 +5,7 @@ import getID from "../getID";
 import { SpriteSystem } from "./SpriteS";
 import { SpriteC } from "./SpriteC";
 import { GameInterface } from "../types";
-import { Vector } from "vector2d";
+import { AbstractVector, Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
 import { makePlayerMoves, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
 import { CombatSystem } from "./combat/CombatS";
@@ -26,7 +26,7 @@ function makeEntity(): Entity {
   return e;
 }
 
-function makePlayer(pos: Vector, orientation: number): Entity {
+function makePlayer(pos: AbstractVector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     "Atman",
@@ -42,7 +42,7 @@ function makePlayer(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-function makeThug(pos: Vector, orientation: number): Entity {
+function makeThug(pos: AbstractVector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     `${getHenchmanName()} (Thug)`,
@@ -57,7 +57,7 @@ function makeThug(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-function makeArmoredThug(pos: Vector, orientation: number): Entity {
+function makeArmoredThug(pos: AbstractVector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).traits.push(CombatTrait.Armored);
   e.getComponent(SpriteC).tint = 0xffff66;
@@ -67,7 +67,7 @@ function makeArmoredThug(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-function makeTitanThug(pos: Vector, orientation: number): Entity {
+function makeTitanThug(pos: AbstractVector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
   e.getComponent(CombatC).moves = TITAN_MOVES;
   e.getComponent(CombatC).hp = STATS.HIGH_HP;
@@ -78,7 +78,7 @@ function makeTitanThug(pos: Vector, orientation: number): Entity {
   return e;
 }
 
-function makeGun(pos: Vector): Entity {
+function makeGun(pos: AbstractVector): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     "Gun",
@@ -88,8 +88,8 @@ function makeGun(pos: Vector): Entity {
     EnvIndices.GUN
   );
   e.getComponent(SpriteC).flavorName = "Gun";
+  e.getComponent(SpriteC).zIndex = -1;
   e.putComponent(ItemC);
-  console.log("Gun at", pos);
   return e;
 }
 
@@ -231,6 +231,10 @@ export function makeECS(
     tilemap,
     player,
     rng,
+    addGun: (pos: AbstractVector) => engine.addEntity(makeGun(pos)),
+    remove: (e: Entity) => {
+      engine.removeEntity(e);
+    },
     writeMessage,
   };
   combatSystem.ecs = ecs;
