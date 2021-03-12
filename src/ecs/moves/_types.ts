@@ -12,6 +12,7 @@ export interface Move {
   name: string;
   help: string;
   action?: Action;
+  log?: boolean;
   extraNeighbors?: AbstractVector[];
   getStatusText?(): string | null;
   check: (ctx: MoveContext, target: AbstractVector) => MoveCheckResult;

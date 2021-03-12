@@ -19,12 +19,17 @@ export class FastPunch implements Move {
   name = "Punch";
   help = "Strike the enemy in the face";
 
+  log = true;
+
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
     const checkResult = ensureStandingAndTargetIsAdjacentEnemy(ctx, target);
     if (!checkResult.success) return checkResult;
 
+    const hasGroundTakedown = ctx.entity
+      .getComponent(CombatC)
+      .moves.find((m) => m.name === "Ground Takedown");
     const groundTakedownCheck = new GroundTakedown().check(ctx, target);
-    if (groundTakedownCheck.success)
+    if (hasGroundTakedown && groundTakedownCheck.success)
       return { success: false, message: "Conflicts with Ground Takdown" };
 
     return { success: true };

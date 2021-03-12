@@ -80,7 +80,8 @@ export class ShootGun implements Move {
       if (ctx.ecs.spriteSystem.findCombatEntity(p) !== null) {
         return []; // not empty
       }
-      if (ctx.ecs.tilemap.getCell(p)?.index !== EnvIndices.FLOOR) {
+      const index = ctx.ecs.tilemap.getCell(p)?.index;
+      if (index !== EnvIndices.FLOOR && index !== EnvIndices.PIT) {
         return []; // tile is wall
       }
     }
@@ -122,7 +123,11 @@ export class ShootGun implements Move {
     const path = this.getPathToEnemy(ctx);
 
     spriteC.turnToward(path[0]);
-    combatC.gunCooldown = 3;
+    if (combatC.hasTrait(CombatTrait.ReloadsSlowly)) {
+      combatC.gunCooldown = 5;
+    } else {
+      combatC.gunCooldown = 3;
+    }
 
     const displays: DisplayObject[] = path.map((p) => {
       const sprite = new Sprite(Game.shared.filmstrips.env[EnvIndices.HOVER]);

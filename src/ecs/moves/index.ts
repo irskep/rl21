@@ -28,20 +28,28 @@ export function makePlayerMoves(): Move[] {
   ];
 }
 
-export const HENCHMAN_MOVES: Move[] = [
-  new CreateAndFollowGoal(),
-  new PickUpGun(),
-  new ShootGun(),
-  new TelegraphedPunchPrepare(),
-  new TelegraphedPunchFollowthroughHit(),
-  new TelegraphedPunchFollowthroughMiss(),
-  new Wait(),
-];
+export function makeHenchmanMoves(): Move[] {
+  return [
+    new CreateAndFollowGoal(),
+    new PickUpGun(),
+    new ShootGun(),
+    new TelegraphedPunchPrepare(),
+    new TelegraphedPunchFollowthroughHit(),
+    new TelegraphedPunchFollowthroughMiss(),
+    new Wait(),
+  ];
+}
 
-export const TITAN_MOVES: Move[] = [
-  new CreateAndFollowGoal(),
-  new SuperpunchPrepare(),
-  new SuperpunchFollowthroughHit(),
-  new SuperpunchFollowthroughMiss(),
-  new Wait(),
-];
+export function makeBossMoves(): Move[] {
+  return [new ShootGun(), new Wait()];
+}
+
+export function makeTitanMoves(): Move[] {
+  return [
+    new CreateAndFollowGoal(),
+    new SuperpunchPrepare(),
+    new SuperpunchFollowthroughHit(),
+    new SuperpunchFollowthroughMiss(),
+    new Wait(),
+  ];
+}

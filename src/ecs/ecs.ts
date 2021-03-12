@@ -7,7 +7,12 @@ import { SpriteC } from "./SpriteC";
 import { GameInterface } from "../types";
 import { AbstractVector, Vector } from "vector2d";
 import { ECS } from "./ecsTypes";
-import { makePlayerMoves, HENCHMAN_MOVES, TITAN_MOVES } from "./moves";
+import {
+  makePlayerMoves,
+  makeHenchmanMoves,
+  makeTitanMoves,
+  makeBossMoves,
+} from "./moves";
 import { CombatSystem } from "./combat/CombatS";
 import { CombatC } from "./combat/CombatC";
 import { CombatTrait } from "./combat/CombatTrait";
@@ -16,9 +21,10 @@ import getHenchmanName from "../prose/henchmanName";
 import { STATS } from "./stats";
 import RNG from "../game/RNG";
 import { DIFFICULTIES } from "./difficulties";
-import { getNeighbors } from "./direction";
 import { Upgrade } from "./upgrades";
 import { ItemC } from "./ItemC";
+import UnreachableCaseError from "../UnreachableCaseError";
+import { generateMap } from "./generateMap";
 
 function makeEntity(): Entity {
   const e = new Entity();
@@ -53,7 +59,9 @@ function makeThug(pos: AbstractVector, orientation: number): Entity {
   );
   e.getComponent(SpriteC).orientation = orientation;
   e.getComponent(SpriteC).tint = 0x8888ff;
-  e.putComponent(CombatC).build(STATS.LOW_HP, HENCHMAN_MOVES, []);
+  e.putComponent(CombatC).build(STATS.LOW_HP, makeHenchmanMoves(), [
+    CombatTrait.MayUseEquipment,
+  ]);
   return e;
 }
 
@@ -69,12 +77,30 @@ function makeArmoredThug(pos: AbstractVector, orientation: number): Entity {
 
 function makeTitanThug(pos: AbstractVector, orientation: number): Entity {
   const e = makeThug(pos, orientation);
-  e.getComponent(CombatC).moves = TITAN_MOVES;
+  e.getComponent(CombatC).moves = makeTitanMoves();
   e.getComponent(CombatC).hp = STATS.HIGH_HP;
   e.getComponent(CombatC).hpMax = STATS.HIGH_HP;
+  e.getComponent(CombatC).removeTrait(CombatTrait.MayUseEquipment);
   e.getComponent(SpriteC).tint = 0xff6666;
   e.getComponent(SpriteC).flavorName = `${getHenchmanName()} (Titan Thug)`;
   e.getComponent(SpriteC).flavorDesc = "A henchman of immense strength.";
+  return e;
+}
+
+function makeBoss(pos: AbstractVector, orientation: number): Entity {
+  const e = makeEntity();
+  e.putComponent(SpriteC).build(
+    "Mr. Yendor",
+    "The crime boss you came to defeat.",
+    pos,
+    "sprites",
+    SpriteIndices.STAND
+  );
+  e.getComponent(SpriteC).orientation = orientation;
+  e.getComponent(SpriteC).tint = 0xff88ff;
+  e.putComponent(CombatC).build(STATS.HIGH_HP, makeBossMoves(), [
+    CombatTrait.WieldingGun,
+  ]);
   return e;
 }
 
@@ -93,62 +119,58 @@ function makeGun(pos: AbstractVector): Entity {
   return e;
 }
 
-function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
-  const skipSize = 5;
-  let availableCells = new Array<Vector>();
-
-  let needsUpdate = true;
-  while (needsUpdate) {
-    availableCells = new Array<Vector>();
-    for (let skipX = 0; skipX + skipSize <= tilemap.size.x; skipX += skipSize) {
-      for (
-        let skipY = 0;
-        skipY + skipSize <= tilemap.size.y;
-        skipY += skipSize
-      ) {
-        const areaCells = new Array<Vector>();
-        for (let x = skipX; x < skipX + skipSize; x++) {
-          for (let y = skipY; y < skipY + skipSize; y++) {
-            const cellPos = new Vector(x, y);
-            if (tilemap.getCell(cellPos)?.index === EnvIndices.FLOOR) {
-              areaCells.push(cellPos);
-            }
-          }
-        }
-        rng.shuffle(areaCells);
-        for (let i = 0; i < 4; i++) {
-          const wallPos = areaCells.shift()!;
-          const cell = tilemap.getCell(wallPos)!;
+function makePrefab1Map(
+  tilemap: Tilemap
+): {
+  bossPos: AbstractVector;
+  playerPos: AbstractVector;
+  freeCells: AbstractVector[];
+} {
+  const plan = [
+    "....X....D",
+    ".._.X.__X.",
+    ".._.X...X.",
+    ".._.___.X.",
+    "..X._..._.",
+    "..X._._._.",
+    "..X.___X_.",
+    "..X.X...X.",
+    ".__..X..X.",
+    "D_..XXX...",
+  ];
+  const freeCells = new Array<AbstractVector>();
+  const bossPos = new Vector(5, 5);
+  const playerPos = new Vector(0, 8);
+  for (let y = 0; y < tilemap.size.y; y++) {
+    for (let x = 0; x < tilemap.size.x; x++) {
+      const p = new Vector(x, y);
+      const cell = tilemap.getCell(p)!;
+      switch (plan[y][x]) {
+        case "X":
           cell.index = EnvIndices.WALL;
-        }
-
-        availableCells = availableCells.concat(areaCells);
-      }
-    }
-
-    needsUpdate = false;
-    for (const pos of availableCells) {
-      let numFreeNeighbors = 0;
-      for (const adjacentPos of getNeighbors(pos)) {
-        if (tilemap.getCell(adjacentPos)?.index === EnvIndices.FLOOR) {
-          numFreeNeighbors += 1;
-        }
-      }
-      if (numFreeNeighbors < 2) {
-        needsUpdate = true;
-        for (let y = 0; y < tilemap.size.y; y++) {
-          for (let x = 0; x < tilemap.size.x; x++) {
-            const cell = tilemap.getCell(new Vector(x, y))!;
-            cell.index = tilemap.getDefaultIndex(cell.pos);
+          break;
+        case "D":
+          cell.index = EnvIndices.DOOR;
+          break;
+        case "_":
+          cell.index = EnvIndices.PIT;
+          break;
+        case ".":
+          cell.index = EnvIndices.FLOOR;
+          if (!p.equals(bossPos) && !p.equals(playerPos)) {
+            freeCells.push(p);
           }
-        }
-        console.warn("Regenerating map due to enclosed space");
-        break;
+          break;
+        default:
+          throw new Error(`Unknown character: ${plan[y][x]}`);
       }
     }
   }
-  rng.shuffle(availableCells);
-  return availableCells;
+  return {
+    bossPos,
+    playerPos,
+    freeCells,
+  };
 }
 
 export function makeECS(
@@ -169,16 +191,32 @@ export function makeECS(
   engine.addSystems(combatSystem);
   engine.addSystems(spriteSystem);
 
-  const availableCells = generateMap(tilemap, rng);
+  const difficulty = DIFFICULTIES[n];
+  const orientations = [0, 0.5, 1, 1, 5, 2, 2.5, 3, 3.5];
 
-  const player = makePlayer(availableCells.shift()!, 0);
+  let availableCells: AbstractVector[] = [];
+  let playerPos: AbstractVector = new Vector(-1, -1);
+  let bossPos: AbstractVector = new Vector(-1, -1);
+  switch (difficulty.mapgenAlgo) {
+    case "basic":
+      availableCells = generateMap(tilemap, rng);
+      playerPos = availableCells.shift()!;
+      break;
+    case "prefab1":
+      const result = makePrefab1Map(tilemap);
+      availableCells = result.freeCells;
+      playerPos = result.playerPos;
+      bossPos = result.bossPos;
+      break;
+    default:
+      throw new UnreachableCaseError(difficulty.mapgenAlgo);
+  }
+
+  const player = makePlayer(playerPos, 0);
   for (const u of upgrades) {
     u.apply(player);
   }
   engine.addEntity(player);
-
-  const difficulty = DIFFICULTIES[n];
-  const orientations = [0, 0.5, 1, 1, 5, 2, 2.5, 3, 3.5];
 
   if (difficulty.numThugs !== 0) {
     const numThugs = rng.int(
@@ -222,6 +260,10 @@ export function makeECS(
     for (let i = 0; i < numGuns; i++) {
       engine.addEntity(makeGun(availableCells.shift()!));
     }
+  }
+
+  if (difficulty.isBoss) {
+    engine.addEntity(makeBoss(bossPos, rng.choice(orientations)));
   }
 
   const ecs = {

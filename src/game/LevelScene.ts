@@ -237,12 +237,17 @@ export class LevelScene implements GameScene {
       return;
     }
 
+    const checkMove = (m: Move, p: AbstractVector) => {
+      const result = m.check({ ecs: this.ecs, entity: this.ecs.player }, p);
+      if (m.log) {
+        console.log(m, result);
+      }
+      return result;
+    };
+
     this.possibleMoves = this.ecs.player
       .getComponent(CombatC)
-      .moves.map((m) => [
-        m,
-        m.check({ ecs: this.ecs, entity: this.ecs.player }, this.hoveredPos!),
-      ]);
+      .moves.map((m) => [m, checkMove(m, this.hoveredPos!)]);
 
     this.possibleMoves.sort(([moveA, resultA], [moveB, resultB]) => {
       if (resultA.success == resultB.success) {

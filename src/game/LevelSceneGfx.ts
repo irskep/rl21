@@ -208,7 +208,7 @@ export class LevelSceneGfx {
     this.mouseoverText.style.wordWrapWidth = 220;
     const size = new Vector(
       this.mouseoverText.style.wordWrapWidth + 8,
-      Math.max(this.mouseoverText.height + 8, 190)
+      Math.max(this.mouseoverText.height + 8, 220)
     );
 
     const gfx = this.mouseoverBg;

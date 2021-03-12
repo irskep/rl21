@@ -49,7 +49,11 @@ export class CombatC implements Component {
     }
     text += "\n" + getStateHelpText(this.state, this.traits);
     text += "\n\n";
-    text += traitsText;
+    // text += traitsText;
+
+    if (this.hasTrait(CombatTrait.WieldingGun)) {
+      text += `Turns until gun reload: ${this.gunCooldown}`;
+    }
     return text;
   }
 
@@ -89,9 +93,9 @@ export class CombatC implements Component {
     this.updateSpriteIndex(spriteC);
   }
 
-  removeTrait(trait: CombatTrait, spriteC: SpriteC) {
+  removeTrait(trait: CombatTrait, spriteC?: SpriteC) {
     this.traits = this.traits.filter((t) => t !== trait);
-    this.updateSpriteIndex(spriteC);
+    if (spriteC) this.updateSpriteIndex(spriteC);
   }
 
   setState(

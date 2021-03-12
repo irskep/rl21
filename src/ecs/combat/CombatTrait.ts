@@ -3,6 +3,5 @@ export enum CombatTrait {
   Fluid = "Fluid",
   MayUseEquipment = "MayUseEquipment",
   WieldingGun = "WieldingGun",
-  WieldingShield = "WieldingShield",
-  WieldingShockBaton = "WieldingShockBaton",
+  ReloadsSlowly = "ReloadsSlowly",
 }
