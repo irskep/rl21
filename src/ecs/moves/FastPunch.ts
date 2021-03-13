@@ -89,10 +89,10 @@ export class LungePunch implements Move {
       if (!ensureTargetClear(ctx, pos).success) continue;
       if (ctx.ecs.tilemap.getCell(pos)?.isFloor !== true) continue;
 
-      const totalManhattan =
-        manhattanDistance(src.clone().subtract(pos)) +
-        manhattanDistance(target.clone().subtract(pos));
-      if (totalManhattan > 3) continue;
+      // const totalManhattan =
+      //   manhattanDistance(src.clone().subtract(pos)) +
+      //   manhattanDistance(target.clone().subtract(pos));
+      // if (totalManhattan > 3) continue;
 
       results.push(pos);
     }

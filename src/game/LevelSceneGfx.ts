@@ -246,6 +246,9 @@ export class LevelSceneGfx {
         20 * 1 + 10 + 7,
         20 * 1 + 10 + 8,
         20 * 1 + 10 + 9,
+        20 * 2 + 10 + 3,
+        20 * 2 + 10 + 4,
+        20 * 2 + 10 + 5,
       ]);
       return this.game.filmstrips.env[index];
     };

@@ -88,7 +88,7 @@ export const EnvIndices = {
   PIT: 4,
   HOVER: 8,
   BOX: 56,
-  GUN: 20 * 2 + 10 + 6,
+  GUN: 20 * 2 + 10 + 7,
 };
 
 const noSize = new Vector(-1, -1);
