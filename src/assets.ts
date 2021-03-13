@@ -161,4 +161,10 @@ export const ALL_ASSETS: Asset[] = [
     cellSize: noSize,
   },
   { name: "youlose", url: "youlose.png", isFilmstrip: false, cellSize: noSize },
+  {
+    name: "instructions",
+    url: "instructions.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
 ];

@@ -36,7 +36,7 @@ function makePlayer(pos: AbstractVector, orientation: number): Entity {
   const e = makeEntity();
   e.putComponent(SpriteC).build(
     "Atman",
-    "The caped crusader",
+    "The Vigil@nte",
     pos,
     "sprites",
     SpriteIndices.BM_STAND_S

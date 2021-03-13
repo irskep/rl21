@@ -1,6 +1,6 @@
 import Mousetrap from "mousetrap";
 import * as PIXI from "pixi.js";
-import { LevelScene } from "./game/LevelScene";
+import { InstructionsScene } from "./InstructionsScene";
 import { SoundManager } from "./SoundManager";
 import { GameScene, GameInterface } from "./types";
 export class MenuScene implements GameScene {
@@ -67,11 +67,11 @@ export class MenuScene implements GameScene {
 
   handleTouchStart = () => {
     SoundManager.shared.init();
-    this.game.replaceScenes([new LevelScene(this.game, 0, [])]);
+    this.game.replaceScenes([new InstructionsScene(this.game)]);
   };
 
   handleKeyPress = () => {
     SoundManager.shared.init();
-    this.game.replaceScenes([new LevelScene(this.game, 0, [])]);
+    this.game.replaceScenes([new InstructionsScene(this.game)]);
   };
 }
