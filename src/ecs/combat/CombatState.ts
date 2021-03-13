@@ -87,8 +87,6 @@ export function stateToHenchmanSpriteIndex(
       return SpriteIndices.SUPERPUNCH_BEFORE;
     case CombatState.SuperpunchFollowthrough:
       return SpriteIndices.SUPERPUNCH_AFTER;
-    // case CombatState.Punched:
-    //   return SpriteIndices.STUMBLING;
     case CombatState.Prone:
       return SpriteIndices.PRONE;
     case CombatState.Stunned:

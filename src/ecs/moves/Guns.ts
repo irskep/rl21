@@ -129,6 +129,9 @@ export class ShootGun implements Move {
       combatC.gunCooldown = 3;
     }
 
+    combatC.setState(CombatState.Standing, spriteC, SpriteIndices.SHOOT_AFTER);
+    ctx.ecs.spriteSystem.cowboyUpdate();
+
     const displays: DisplayObject[] = path.map((p) => {
       const sprite = new Sprite(Game.shared.images.hover);
       sprite.anchor.set(0.5, 0.5);
@@ -138,11 +141,6 @@ export class ShootGun implements Move {
     });
 
     setTimeout(() => {
-      combatC.setState(
-        CombatState.Standing,
-        spriteC,
-        SpriteIndices.SHOOT_AFTER
-      );
       ctx.ecs.combatSystem.events.emit({
         type: CombatEventType.Shoot,
         subject: ctx.entity,
