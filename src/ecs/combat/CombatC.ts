@@ -106,6 +106,7 @@ export class CombatC implements Component {
     spriteIndexOverride?: number
   ) {
     this.state = newState;
+    spriteC.combatState = this.state;
 
     if (spriteIndexOverride) {
       spriteC.spriteIndex = spriteIndexOverride;
@@ -117,7 +118,10 @@ export class CombatC implements Component {
 
   private updateSpriteIndex(spriteC: SpriteC) {
     if (this.isPlayer) {
-      spriteC.spriteIndex = stateToPlayerSpriteIndex(this.state);
+      spriteC.spriteIndex = stateToPlayerSpriteIndex(
+        this.state,
+        spriteC.orientation
+      );
     } else {
       spriteC.spriteIndex = stateToHenchmanSpriteIndex(this.state, this.traits);
     }

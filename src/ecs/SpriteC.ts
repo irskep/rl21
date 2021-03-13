@@ -1,6 +1,7 @@
 import { Component } from "@nova-engine/ecs";
 import { Sprite, Text } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
+import { CombatState, stateToPlayerSpriteIndex } from "./combat/CombatState";
 import { DIRECTIONS } from "./direction";
 
 export class SpriteC implements Component {
@@ -17,6 +18,9 @@ export class SpriteC implements Component {
   // text: Text | null = null;
   stunSprite?: Sprite;
   zIndex = 0;
+
+  isPlayer = false;
+  combatState = CombatState.Standing;
 
   hasColorLayer = false;
 
@@ -73,6 +77,12 @@ export class SpriteC implements Component {
         this.orientation = d2[1];
         break;
       }
+    }
+    if (this.isPlayer) {
+      this.spriteIndex = stateToPlayerSpriteIndex(
+        this.combatState,
+        this.orientation
+      );
     }
   }
 

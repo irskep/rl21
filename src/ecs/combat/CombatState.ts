@@ -45,10 +45,44 @@ export function getStateHelpText(
   }
 }
 
-export function stateToPlayerSpriteIndex(state: CombatState): number {
+export function getRealOrientation(
+  spriteIndex: number,
+  orientation: number
+): number {
+  switch (spriteIndex) {
+    case SpriteIndices.BM_STAND_N:
+      return (4 + orientation - 2) % 4;
+    case SpriteIndices.BM_STAND_S:
+      return orientation;
+    case SpriteIndices.BM_STAND_E:
+      return (4 + orientation - 3) % 4;
+    default:
+      return orientation;
+  }
+}
+
+export function stateToPlayerSpriteIndex(
+  state: CombatState,
+  orientation: number
+): number {
   switch (state) {
     case CombatState.Standing:
-      return SpriteIndices.BM_STAND;
+      switch (orientation) {
+        case 0:
+          return SpriteIndices.BM_STAND_S;
+        case 2.5:
+        case 3:
+        case 3.5:
+          return SpriteIndices.BM_STAND_E;
+        case 0.5:
+        case 1:
+        case 1.5:
+          return SpriteIndices.BM_STAND_E;
+        case 2:
+          return SpriteIndices.BM_STAND_N;
+        default:
+          return SpriteIndices.BM_STAND_S;
+      }
     case CombatState.PunchTelegraph:
       return SpriteIndices.BM_PUNCH_BEFORE;
     case CombatState.PunchFollowthrough:
@@ -57,8 +91,6 @@ export function stateToPlayerSpriteIndex(state: CombatState): number {
       return SpriteIndices.BM_PUNCH_BEFORE;
     case CombatState.SuperpunchFollowthrough:
       return SpriteIndices.BM_PUNCH_AFTER;
-    // case CombatState.Punched:
-    //   return SpriteIndices.STUMBLING;
     case CombatState.Prone:
       return SpriteIndices.BM_DEAD;
     case CombatState.Stunned:

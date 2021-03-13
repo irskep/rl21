@@ -39,9 +39,10 @@ function makePlayer(pos: AbstractVector, orientation: number): Entity {
     "The caped crusader",
     pos,
     "sprites",
-    SpriteIndices.BM_STAND
+    SpriteIndices.BM_STAND_S
   );
   e.getComponent(SpriteC).orientation = orientation;
+  e.getComponent(SpriteC).isPlayer = true;
   e.putComponent(CombatC).build(10, makePlayerMoves(), []);
   e.getComponent(CombatC).isPlayer = true;
 

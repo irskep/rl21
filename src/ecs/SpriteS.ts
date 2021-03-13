@@ -9,6 +9,7 @@ import { Container, Sprite, Text } from "pixi.js";
 import { AbstractVector } from "vector2d";
 import { GameInterface, TILE_SIZE } from "../types";
 import { CombatC } from "./combat/CombatC";
+import { getRealOrientation } from "./combat/CombatState";
 import { ItemC } from "./ItemC";
 import { SpriteC } from "./SpriteC";
 
@@ -54,7 +55,16 @@ export class SpriteSystem extends System {
     // spriteC.sprite.tint = spriteC.tint;
 
     this.setPosition(spriteC.sprite, spriteC.pos);
-    spriteC.sprite.angle = 90 * spriteC.orientation;
+
+    let orientation = spriteC.orientation;
+    if (spriteC.isPlayer) {
+      // lol
+      orientation = getRealOrientation(
+        spriteC.spriteIndex,
+        spriteC.orientation
+      );
+    }
+    spriteC.sprite.angle = 90 * orientation;
 
     if (spriteC.needsTextureReplacement) {
       spriteC.needsTextureReplacement = false;
