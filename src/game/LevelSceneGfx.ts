@@ -21,6 +21,7 @@ import { GameInterface, TILE_SIZE } from "../types";
 import { Move } from "../ecs/moves/_types";
 import { Action } from "./input";
 import RNG from "./RNG";
+import { Upgrade } from "../ecs/upgrades";
 
 const consoleStyle: Partial<ITextStyle> = {
   fontSize: 18,
@@ -66,7 +67,11 @@ export class LevelSceneGfx {
   app: Application;
   animationHandler = new AnimationManager();
 
-  constructor(private game: GameInterface, private map: Tilemap) {
+  constructor(
+    private game: GameInterface,
+    private map: Tilemap,
+    private upgrades: Upgrade[]
+  ) {
     this.app = game.app;
     this.container.interactive = true;
   }
@@ -172,7 +177,7 @@ export class LevelSceneGfx {
     const sidebarX = this.screenSize.x - METRICS.sidebarWidth;
 
     // debug text
-    this.dbgText.position.set(10, 10);
+    this.dbgText.position.set(10, 8);
 
     // input area
 
@@ -207,7 +212,7 @@ export class LevelSceneGfx {
     messageLogMask.endFill();
     this.messageLog.mask = messageLogMask;
 
-    this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
+    this.heartsContainer.position.set(this.messageLogBg.x - 150, 7);
   }
 
   rng = new RNG(`${Date.now()}`);
@@ -366,6 +371,11 @@ export class LevelSceneGfx {
     if (moves.length === 0) {
       this.inputHintText.text =
         "No moves available at selected position. Try moving your mouse around. Sometimes you need to click yourself.";
+      if (this.upgrades.length) {
+        this.inputHintText.text += `\n\nAtman's upgrades: ${this.upgrades
+          .map((u) => u.name)
+          .join(", ")}`;
+      }
     } else {
       this.inputHintText.text = "Possible moves:";
     }

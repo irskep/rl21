@@ -43,7 +43,7 @@ export class LevelScene implements GameScene {
     public n: number,
     private upgrades: Upgrade[]
   ) {
-    this.gfx = new LevelSceneGfx(game, this.map);
+    this.gfx = new LevelSceneGfx(game, this.map, this.upgrades);
     (window as any).levelScene = this;
   }
 
@@ -99,11 +99,6 @@ export class LevelScene implements GameScene {
     this.gfx.dbgText.text = `Stage ${this.n + 1}`;
     this.gfx.writeMessage("Newest messages are at the top.");
     this.gfx.writeMessage("Atman enters the room.");
-    if (this.upgrades.length) {
-      this.gfx.writeMessage(
-        `Atman's upgrades: ${this.upgrades.map((u) => u.name).join(", ")}`
-      );
-    }
   }
 
   exit() {

@@ -54,7 +54,7 @@ export class SpriteSystem extends System {
     // spriteC.sprite.tint = spriteC.tint;
 
     this.setPosition(spriteC.sprite, spriteC.pos);
-    spriteC.sprite.angle = 90 * (spriteC.orientation + 2);
+    spriteC.sprite.angle = 90 * spriteC.orientation;
 
     if (spriteC.needsTextureReplacement) {
       spriteC.needsTextureReplacement = false;
