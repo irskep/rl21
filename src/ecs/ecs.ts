@@ -212,7 +212,7 @@ export function makeECS(
   let bossPos: AbstractVector = new Vector(-1, -1);
   switch (difficulty.mapgenAlgo) {
     case "basic":
-      availableCells = generateMap(tilemap, rng);
+      availableCells = generateMap(tilemap, rng, difficulty.hasPits);
       playerPos = availableCells.shift()!;
       break;
     case "prefab1":

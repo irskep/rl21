@@ -4,7 +4,11 @@ import { Tilemap, CellTag } from "../game/tilemap";
 import RNG from "../game/RNG";
 import { getNeighbors } from "./direction";
 
-export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
+export function generateMap(
+  tilemap: Tilemap,
+  rng: RNG,
+  hasPits: boolean = false
+): Vector[] {
   const skipSize = 5;
   let availableCells = new Array<Vector>();
 
@@ -30,7 +34,11 @@ export function generateMap(tilemap: Tilemap, rng: RNG): Vector[] {
         for (let i = 0; i < 8; i++) {
           const wallPos = areaCells.shift()!;
           const cell = tilemap.getCell(wallPos)!;
-          cell.tag = CellTag.Wall;
+          if (hasPits) {
+            cell.tag = rng.choice([CellTag.Wall, CellTag.Wall, CellTag.Pit]);
+          } else {
+            cell.tag = CellTag.Wall;
+          }
         }
 
         availableCells = availableCells.concat(areaCells);

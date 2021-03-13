@@ -84,7 +84,7 @@ export const SpriteIndicesOld = {
 export const EnvIndices = {
   FLOOR: 0,
   WALL: 34,
-  DOOR: 35,
+  DOOR: 32,
   PIT: 4,
   HOVER: 8,
   BOX: 56,

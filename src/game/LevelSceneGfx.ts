@@ -9,7 +9,7 @@ import {
   Texture,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
-import { CellTag, Tilemap } from "./tilemap";
+import { Cell, CellTag, Tilemap } from "./tilemap";
 import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/SpriteC";
@@ -22,6 +22,7 @@ import { Move } from "../ecs/moves/_types";
 import { Action } from "./input";
 import RNG from "./RNG";
 import { Upgrade } from "../ecs/upgrades";
+import { EnvIndices } from "../assets";
 
 const consoleStyle: Partial<ITextStyle> = {
   fontSize: 18,
@@ -164,7 +165,6 @@ export class LevelSceneGfx {
     );
     const mapWidth = TILE_SIZE * this.map.size.x;
     const scale = availableGameSpace.x / mapWidth;
-    console.log(scale);
 
     this.gameAreaContainer;
     this.gameAreaContainer.setTransform(0, METRICS.topbarHeight, scale, scale);
@@ -273,7 +273,7 @@ export class LevelSceneGfx {
             cell.fgSprite!.visible = true;
             break;
           case CellTag.Door:
-            cell.fgSprite!.texture = this.game.filmstrips.env[20 * 1 + 10 + 5];
+            cell.fgSprite!.texture = this.game.filmstrips.env[EnvIndices.DOOR];
             cell.fgSprite!.visible = true;
             break;
         }
@@ -281,11 +281,9 @@ export class LevelSceneGfx {
     }
   }
 
-  updateHoveredEntity(e: Entity | null) {
-    if (!e) {
-      this.mouseoverContainer.visible = false;
-      return;
-    }
+  updateHoveredEntity(e: Entity | null, cell: Cell | null = null) {
+    let text = "";
+    let tilePos!: AbstractVector;
 
     this.mouseoverText.style.wordWrapWidth = 220;
     const size = new Vector(
@@ -293,15 +291,37 @@ export class LevelSceneGfx {
       Math.max(this.mouseoverText.height + 8, 320)
     );
 
+    if (e) {
+      text = e.getComponent(SpriteC).hoverText;
+      tilePos = e.getComponent(SpriteC).pos;
+      if (e.hasComponent(CombatC))
+        text += `\n\n${e.getComponent(CombatC).hoverText}`;
+    } else if (cell) {
+      tilePos = cell.pos;
+      size.y = 120;
+      switch (cell.tag) {
+        case CellTag.Door:
+          text = "Manhole cover. Enemies spawn from here.";
+          break;
+        case CellTag.Pit:
+          text =
+            "Debris. You can't move here, but enemies can shoot bullets over it.";
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (!text) {
+      this.mouseoverContainer.visible = false;
+      return;
+    }
+
     const gfx = this.mouseoverBg;
 
-    let text = e.getComponent(SpriteC).hoverText;
-    if (e.hasComponent(CombatC))
-      text += `\n\n${e.getComponent(CombatC).hoverText}`;
     this.mouseoverText.text = text;
     this.mouseoverText.position.set(4, 4);
 
-    const tilePos = e.getComponent(SpriteC).pos;
     const scale = this.gameAreaContainer.scale;
     const pos = new Vector(
       (tilePos.x + 1) * TILE_SIZE * scale.x + 10,
@@ -312,7 +332,10 @@ export class LevelSceneGfx {
     } else {
       pos.x += TILE_SIZE * 0.5 * scale.x;
     }
-    this.mouseoverContainer.position.set(pos.x, Math.min(this.app.screen.height - size.y, pos.y);
+    this.mouseoverContainer.position.set(
+      pos.x,
+      Math.min(this.app.screen.height - size.y, pos.y)
+    );
     this.mouseoverContainer.visible = true;
 
     gfx.clear();

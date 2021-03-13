@@ -272,7 +272,8 @@ export class LevelScene implements GameScene {
       this.gfx.updateHoveredEntity(
         this.ecs.spriteSystem.findCombatEntity(pos) ||
           this.ecs.spriteSystem.findInterestingObject(pos) ||
-          null
+          null,
+        this.map.getCell(pos)
       );
     } else {
       this.gfx.updateHoveredEntity(null);

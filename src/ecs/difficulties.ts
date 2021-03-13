@@ -6,6 +6,7 @@ export interface Difficulty {
   numGuns: [number, number] | 0;
   isBoss?: boolean;
   winCondition?: "boss";
+  hasPits?: boolean;
 }
 
 export const DIFFICULTIES: Difficulty[] = [
@@ -42,6 +43,7 @@ export const DIFFICULTIES: Difficulty[] = [
     numArmoredThugs: [2, 4],
     numTitanThugs: [0, 0],
     mapgenAlgo: "basic",
+    hasPits: true,
     numGuns: [1, 2],
   },
   {
@@ -49,6 +51,7 @@ export const DIFFICULTIES: Difficulty[] = [
     numArmoredThugs: [1, 3],
     numTitanThugs: [1, 2],
     mapgenAlgo: "basic",
+    hasPits: true,
     numGuns: [1, 2],
   },
   {
