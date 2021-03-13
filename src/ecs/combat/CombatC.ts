@@ -123,7 +123,11 @@ export class CombatC implements Component {
         spriteC.orientation
       );
     } else {
-      spriteC.spriteIndex = stateToHenchmanSpriteIndex(this.state, this.traits);
+      spriteC.spriteIndex = stateToHenchmanSpriteIndex(
+        this.state,
+        this.traits,
+        this.gunCooldown
+      );
     }
   }
 }

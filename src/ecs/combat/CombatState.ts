@@ -51,11 +51,11 @@ export function getRealOrientation(
 ): number {
   switch (spriteIndex) {
     case SpriteIndices.BM_STAND_N:
-      return (4 + orientation - 2) % 4;
+      return (orientation - 2) % 4;
     case SpriteIndices.BM_STAND_S:
       return orientation;
     case SpriteIndices.BM_STAND_E:
-      return (4 + orientation - 3) % 4;
+      return (orientation - 3) % 4;
     default:
       return orientation;
   }
@@ -94,7 +94,7 @@ export function stateToPlayerSpriteIndex(
     case CombatState.Prone:
       return SpriteIndices.BM_DEAD;
     case CombatState.Stunned:
-      return SpriteIndices.STUNNED;
+      return SpriteIndices.BM_STUNNED;
     default:
       throw new UnreachableCaseError(state);
   }
@@ -102,12 +102,17 @@ export function stateToPlayerSpriteIndex(
 
 export function stateToHenchmanSpriteIndex(
   state: CombatState,
-  traits: CombatTrait[]
+  traits: CombatTrait[],
+  gunCooldown: number
 ): number {
   switch (state) {
     case CombatState.Standing:
       if (traits.indexOf(CombatTrait.WieldingGun) !== -1) {
-        return SpriteIndices.SHOOT_BEFORE;
+        if (gunCooldown > 1) {
+          return SpriteIndices.SHOOT_HOLD;
+        } else {
+          return SpriteIndices.SHOOT_BEFORE;
+        }
       } else {
         return SpriteIndices.STAND;
       }

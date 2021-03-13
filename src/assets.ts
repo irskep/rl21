@@ -7,7 +7,7 @@ export interface Asset {
   isFilmstrip: boolean;
 }
 
-const bmStart = 24;
+const bmStart = 26;
 export const SpriteIndices = {
   STAND: 0,
   STUNNED: 2,
@@ -19,12 +19,14 @@ export const SpriteIndices = {
   PUNCH_BEFORE: 14,
   PRONE: 18,
 
+  SHOOT_HOLD: 24,
   SHOOT_BEFORE: 20,
   SHOOT_AFTER: 22,
 
   SUPERPUNCH_BEFORE: 12,
   SUPERPUNCH_AFTER: 14,
 
+  BM_STUNNED: 2,
   BM_STUN_AFTER: bmStart + 0,
   BM_STUN_BEFORE: bmStart + 0,
   BM_PUNCH_BEFORE: bmStart + 1,
