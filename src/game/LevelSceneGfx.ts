@@ -9,7 +9,6 @@ import {
   Texture,
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
-import { EnvIndices } from "../assets";
 import { CellTag, Tilemap } from "./tilemap";
 import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
@@ -426,6 +425,17 @@ export class LevelSceneGfx {
       this.hudContainer.height / 2
     );
     this.hudContainer.addChild(victorySprite);
+  }
+
+  showFloatingImage(sourceSprite: Sprite, image: string) {
+    const sprite = new Sprite(this.game.images[image]);
+    sprite.anchor.set(0.5, 0.5);
+    sprite.setTransform(0, 0, 0.2, 0.2);
+    sprite.position.set(sourceSprite.position.x, sourceSprite.position.y - 10);
+    sourceSprite.parent.addChild(sprite);
+    this.animationHandler.add(
+      makeDriftAndFadeAnimation(sprite, 1, new Vector(0, 0))
+    );
   }
 
   showFloatingText(sourceSprite: Sprite, textValue: string, fill: string) {

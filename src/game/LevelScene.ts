@@ -139,17 +139,27 @@ export class LevelScene implements GameScene {
   }
 
   handleCombatEvent(event: CombatEvent) {
-    console.log("Combat event:", event);
     switch (event.type) {
       case CombatEventType.HPChanged:
         if (event.subject === this.ecs.player) {
           this.updateHearts();
         }
-        this.gfx.showFloatingText(
-          event.subject!.getComponent(SpriteC)!.sprite!,
-          `${event.value}`,
-          "#ff6666"
-        );
+
+        const sourceSprite = event.subject!.getComponent(SpriteC)!.sprite!;
+
+        switch (event.value) {
+          case -1:
+            this.gfx.showFloatingImage(sourceSprite, "-1hp");
+            break;
+          case -2:
+            this.gfx.showFloatingImage(sourceSprite, "-2hp");
+            break;
+        }
+        // this.gfx.showFloatingText(
+        //   event.subject!.getComponent(SpriteC)!.sprite!,
+        //   `${event.value}`,
+        //   "#ff6666"
+        // );
         break;
       case CombatEventType.Die:
         if (event.subject === this.ecs.player) {

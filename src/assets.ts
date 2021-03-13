@@ -132,6 +132,18 @@ export const ALL_ASSETS: Asset[] = [
     cellSize: new Vector(80, 32),
   },
   {
+    name: "-1hp",
+    url: "-1hp.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
+  {
+    name: "-2hp",
+    url: "-2hp.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
+  {
     name: "stagecomplete",
     url: "stagecomplete.png",
     isFilmstrip: false,
