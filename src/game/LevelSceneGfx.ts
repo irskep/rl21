@@ -158,11 +158,6 @@ export class LevelSceneGfx {
     /* set up whole-screen layout */
 
     // game area
-    // const gameAreaMask = new Graphics();
-    // gameAreaMask.beginFill(0xffffff);
-    // gameAreaMask.drawRect(0, 0, this.screenSize.x - METRICS.sidebarWidth, this.screenSize.y);
-    // gameAreaMask.endFill();
-    // this.gameAreaContainer.mask = gameAreaMask;
     const availableGameSpace = new Vector(
       this.game.app.screen.width - METRICS.sidebarWidth,
       this.game.app.screen.height - METRICS.topbarHeight
@@ -292,7 +287,7 @@ export class LevelSceneGfx {
     this.mouseoverText.style.wordWrapWidth = 220;
     const size = new Vector(
       this.mouseoverText.style.wordWrapWidth + 8,
-      Math.max(this.mouseoverText.height + 8, 220)
+      Math.max(this.mouseoverText.height + 8, 320)
     );
 
     const gfx = this.mouseoverBg;
@@ -314,7 +309,7 @@ export class LevelSceneGfx {
     } else {
       pos.x += TILE_SIZE * 0.5 * scale.x;
     }
-    this.mouseoverContainer.position.set(pos.x, pos.y);
+    this.mouseoverContainer.position.set(pos.x, Math.min(this.app.screen.height - size.y, pos.y);
     this.mouseoverContainer.visible = true;
 
     gfx.clear();

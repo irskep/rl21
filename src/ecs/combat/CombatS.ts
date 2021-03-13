@@ -388,7 +388,7 @@ export class CombatSystem extends System {
       case CombatState.SuperpunchFollowthrough:
         if (defenderCombatC.hasTrait(CombatTrait.Armored)) {
           this.events.emit({
-            type: CombatEventType.Punch,
+            type: CombatEventType.BlockedPunch,
             subject: attacker,
             object: defender,
           });

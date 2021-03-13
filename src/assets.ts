@@ -149,6 +149,12 @@ export const ALL_ASSETS: Asset[] = [
     cellSize: noSize,
   },
   {
+    name: "blocked",
+    url: "blocked.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
+  {
     name: "stun",
     url: "stun.png",
     isFilmstrip: false,

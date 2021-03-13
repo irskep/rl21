@@ -222,6 +222,11 @@ export class LevelScene implements GameScene {
         break;
       case CombatEventType.BlockedPunch:
         SoundManager.shared.play("blocked_punch");
+        this.gfx.showFloatingImage(
+          objectSprite!,
+          "blocked",
+          new Vector(0, -10)
+        );
         break;
       case CombatEventType.Counter:
         SoundManager.shared.play("counter");
