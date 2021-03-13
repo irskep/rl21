@@ -25,13 +25,17 @@ export default class Game implements GameInterface {
 
     this.app = new PIXI.Application({
       // autoDensity: true,
-      // resolution: window.devicePixelRatio,
+      resolution: window.devicePixelRatio,
       // resizeTo: document.getElementById("#app")!,
       width: 1024,
       height: 768,
       // width: window.innerWidth,
       // height: window.innerHeight,
     });
+    const appEl = document.getElementById("app")!;
+    appEl.style.transform = "scale(0.5)";
+    appEl.style.width = `${1024 * window.devicePixelRatio}px`;
+    appEl.style.height = `${768 * window.devicePixelRatio}px`;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.app.ticker.autoStart = true;
     this.app.loader.baseUrl = `//${location.host}/${pathname}`;
