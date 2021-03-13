@@ -65,7 +65,7 @@ export class LevelSceneGfx {
   heartSprites: Sprite[] = [];
 
   app: Application;
-  animationHandler = new AnimationManager();
+  animationManager = new AnimationManager();
 
   constructor(
     private game: GameInterface,
@@ -93,7 +93,7 @@ export class LevelSceneGfx {
   }
 
   tick = (dt: number) => {
-    this.animationHandler.tick(dt);
+    this.animationManager.tick(dt);
   };
 
   addChildren() {
@@ -454,7 +454,7 @@ export class LevelSceneGfx {
       0.2
     );
     sourceSprite.parent.addChild(sprite);
-    this.animationHandler.add(
+    this.animationManager.add(
       makeDriftAndFadeAnimation(sprite, 1, new Vector(0, 0))
     );
   }
@@ -467,7 +467,7 @@ export class LevelSceneGfx {
     });
     text.position.set(sourceSprite.position.x, sourceSprite.position.y);
     sourceSprite.parent.addChild(text);
-    this.animationHandler.add(
+    this.animationManager.add(
       makeDriftAndFadeAnimation(text, 3, new Vector(-100, -100))
     );
   }

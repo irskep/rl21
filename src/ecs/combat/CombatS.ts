@@ -170,7 +170,6 @@ export class CombatSystem extends System {
   }
 
   private kill(e: Entity) {
-    const combatC = e.getComponent(CombatC);
     const spriteC = e.getComponent(SpriteC);
     spriteC.teardown();
     this.ecs.writeMessage(

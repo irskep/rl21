@@ -22,6 +22,7 @@ import { SoundManager } from "../SoundManager";
 import { Atarangs } from "../ecs/moves/Atarangs";
 import { WinScene } from "../WinScene";
 import { CombatTrait } from "../ecs/combat/CombatTrait";
+import { SpriteIndices } from "../assets";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -172,7 +173,9 @@ export class LevelScene implements GameScene {
           setTimeout(() => {
             this.game.replaceScenes([new MenuScene(this.game)]);
           }, 2000);
+          return;
         }
+
         if (
           event.subject
             ?.getComponent(CombatC)
@@ -184,6 +187,30 @@ export class LevelScene implements GameScene {
             this.goToNextScene();
           }, 2000);
         }
+
+        const spriteC = event.subject!.getComponent(SpriteC);
+        const deathSprite = new Sprite(
+          this.game.filmstrips[spriteC.spriteSheet][SpriteIndices.DEAD]
+        );
+        deathSprite.anchor.set(
+          spriteC.sprite!.anchor.x,
+          spriteC.sprite!.anchor.y
+        );
+        deathSprite.position.set(
+          spriteC.sprite!.position.x,
+          spriteC.sprite!.position.y
+        );
+        this.gfx.arena.addChild(deathSprite);
+        this.gfx.animationManager.add({
+          duration: 2,
+          apply: (dt, timePassed) => {
+            deathSprite.alpha = 1 - timePassed / 2;
+          },
+          finish: () => {
+            this.gfx.arena.removeChild(deathSprite);
+          },
+        });
+
         break;
       case CombatEventType.AllEnemiesDead:
         this.isOver = true;
