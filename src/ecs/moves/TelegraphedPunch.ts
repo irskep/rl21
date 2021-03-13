@@ -79,7 +79,7 @@ export class TelegraphedPunchFollowthroughHit implements Move {
     const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
     const enemySpriteC = enemy.getComponent(SpriteC);
     // face attacker
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    enemySpriteC.turnToward(spriteC.pos);
     ctx.ecs.combatSystem.applyPunch(ctx.entity, enemy, ctx.ecs);
     ctx.ecs.spriteSystem.cowboyUpdate();
 
