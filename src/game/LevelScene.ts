@@ -74,7 +74,7 @@ export class LevelScene implements GameScene {
     if (!this.isInitialized) {
       this.isInitialized = true;
       this.map.updateCells((cell) => {
-        this.bindCellEvents(cell, cell.sprite!);
+        this.bindCellEvents(cell, cell.bgSprite!);
       });
 
       this.ecs = makeECS(

@@ -9,6 +9,35 @@ export interface Asset {
 
 export const SpriteIndices = {
   STAND: 0,
+  STUNNED: 2,
+  DODGING: 4,
+  PUNCH_MISS: 6,
+  BLOCKING: 8,
+  DEAD: 10,
+  PUNCH_AFTER: 12,
+  PUNCH_BEFORE: 14,
+  PRONE: 18,
+
+  SHOOT_BEFORE: 16,
+  SHOOT_AFTER: 16, // replace me
+
+  SUPERPUNCH_BEFORE: 12,
+  SUPERPUNCH_AFTER: 14,
+
+  BM_STAND: 20 + 0,
+  BM_STUN_AFTER: 20 + 0,
+  BM_STUN_BEFORE: 20 + 0,
+  BM_THROW_BEFORE: 20 + 0,
+  BM_THROW_AFTER: 20 + 0,
+  BM_PUNCH_BEFORE: 20 + 0,
+  BM_PUNCH_AFTER: 20 + 0,
+  BM_TAKING_WEAPON: 20 + 0,
+  BM_DISABLING_WEAPON: 20 + 0,
+  BM_DEAD: 20 + 0,
+};
+
+export const SpriteIndicesOld = {
+  STAND: 0,
   STUMBLING: 1,
   STUNNED: 2,
   CHARGING: 3,
@@ -49,7 +78,7 @@ export const SpriteIndices = {
 
 export const EnvIndices = {
   FLOOR: 0,
-  WALL: 1,
+  WALL: 34,
   DOOR: 2,
   PIT: 4,
   HOVER: 8,
@@ -62,15 +91,21 @@ const noSize = new Vector(-1, -1);
 export const ALL_ASSETS: Asset[] = [
   {
     name: "sprites",
-    url: "sprites.png",
+    url: "lizsprites.png",
     isFilmstrip: true,
-    cellSize: new Vector(128, 128),
+    cellSize: new Vector(32, 32),
   },
   {
     name: "env",
-    url: "env.png",
+    url: "lizenv.png",
     isFilmstrip: true,
-    cellSize: new Vector(128, 128),
+    cellSize: new Vector(32, 32),
+  },
+  {
+    name: "hover",
+    url: "hover.png",
+    isFilmstrip: false,
+    cellSize: noSize,
   },
   {
     name: "heart",

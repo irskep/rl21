@@ -10,12 +10,9 @@ export enum CellTag {
 }
 
 export class Cell {
-  sprite: Sprite | null = null;
-  spriteSheet: string = "env";
-  spriteIndex: number = 0;
-  constructor(public pos: Vector, private _tag: CellTag = CellTag.Wall) {
-    this.updateSprite();
-  }
+  bgSprite: Sprite | null = null;
+  fgSprite: Sprite | null = null;
+  constructor(public pos: Vector, private _tag: CellTag = CellTag.Wall) {}
 
   get isFloor(): boolean {
     return this.tag === CellTag.Floor;
@@ -27,24 +24,7 @@ export class Cell {
 
   set tag(value: CellTag) {
     this._tag = value;
-    this.updateSprite();
-  }
-
-  updateSprite() {
-    switch (this.tag) {
-      case CellTag.Wall:
-        this.spriteIndex = EnvIndices.WALL;
-        break;
-      case CellTag.Floor:
-        this.spriteIndex = EnvIndices.FLOOR;
-        break;
-      case CellTag.Door:
-        this.spriteIndex = EnvIndices.DOOR;
-        break;
-      case CellTag.Pit:
-        this.spriteIndex = EnvIndices.PIT;
-        break;
-    }
+    // this.updateSprite();
   }
 }
 

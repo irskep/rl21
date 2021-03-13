@@ -5,7 +5,7 @@ import {
   Family,
   Entity,
 } from "@nova-engine/ecs";
-import { Container, DisplayObject, Sprite, Text } from "pixi.js";
+import { Container, Sprite, Text } from "pixi.js";
 import { AbstractVector } from "vector2d";
 import { GameInterface, TILE_SIZE } from "../types";
 import { CombatC } from "./combat/CombatC";
@@ -39,9 +39,47 @@ export class SpriteSystem extends System {
 
   setPosition(obj: Sprite, pos: AbstractVector) {
     obj.position.set(
-      pos.x * obj.width + TILE_SIZE / 2,
-      pos.y * obj.height + TILE_SIZE / 2
+      pos.x * TILE_SIZE + TILE_SIZE / 2,
+      pos.y * TILE_SIZE + TILE_SIZE / 2
     );
+  }
+
+  updateSprite(spriteC: SpriteC) {
+    if (!spriteC.sprite) {
+      throw new Error("Must make sprite first");
+    }
+
+    spriteC.sprite.zIndex = spriteC.zIndex;
+    // ignoring tint for now
+    // spriteC.sprite.tint = spriteC.tint;
+
+    this.setPosition(spriteC.sprite, spriteC.pos);
+    spriteC.sprite.angle = 90 * (spriteC.orientation + 2);
+
+    if (spriteC.needsTextureReplacement) {
+      spriteC.needsTextureReplacement = false;
+      spriteC.sprite.texture = this.game.filmstrips[spriteC.spriteSheet][
+        spriteC.spriteIndex
+      ];
+    }
+
+    if (spriteC.needsLabelUpdate) {
+      spriteC.needsLabelUpdate = false;
+      if (spriteC.text === null) {
+        spriteC.text = new Text(spriteC.label, {
+          fontSize: 9,
+          fontFamily: "Barlow Condensed",
+          fill: "red",
+          align: "left",
+        });
+        spriteC.text.position.set(0, 0);
+        spriteC.sprite.addChild(spriteC.text);
+      }
+      spriteC.text.text = spriteC.label;
+    }
+    if (spriteC.text) {
+      spriteC.text.angle = 90 * (4 - spriteC.orientation);
+    }
   }
 
   update(engine: Engine, delta: number) {
@@ -52,39 +90,10 @@ export class SpriteSystem extends System {
           spriteC.spriteIndex
         ];
         spriteC.sprite = new Sprite(texture);
-        spriteC.sprite.zIndex = spriteC.zIndex;
-        spriteC.sprite.tint = spriteC.tint;
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
       }
-
-      this.setPosition(spriteC.sprite, spriteC.pos);
-      spriteC.sprite.angle = 90 * spriteC.orientation;
-
-      if (spriteC.needsTextureReplacement) {
-        spriteC.needsTextureReplacement = false;
-        spriteC.sprite.texture = this.game.filmstrips[spriteC.spriteSheet][
-          spriteC.spriteIndex
-        ];
-      }
-
-      if (spriteC.needsLabelUpdate) {
-        spriteC.needsLabelUpdate = false;
-        if (spriteC.text === null) {
-          spriteC.text = new Text(spriteC.label, {
-            fontSize: 36,
-            fontFamily: "Barlow Condensed",
-            fill: "red",
-            align: "left",
-          });
-          spriteC.text.position.set(4, 4);
-          spriteC.sprite.addChild(spriteC.text);
-        }
-        spriteC.text.text = spriteC.label;
-      }
-      if (spriteC.text) {
-        spriteC.text.angle = 90 * (4 - spriteC.orientation);
-      }
+      this.updateSprite(spriteC);
     }
     this.container.sortChildren();
   }

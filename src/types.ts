@@ -15,4 +15,4 @@ export interface GameInterface {
   images: Record<string, Texture>;
 }
 
-export const TILE_SIZE = 128;
+export const TILE_SIZE = 32;

@@ -10,7 +10,7 @@ import {
 } from "pixi.js";
 import { AbstractVector, Vector } from "vector2d";
 import { EnvIndices } from "../assets";
-import { Tilemap } from "./tilemap";
+import { CellTag, Tilemap } from "./tilemap";
 import { CombatC } from "../ecs/combat/CombatC";
 import { Entity } from "@nova-engine/ecs";
 import { SpriteC } from "../ecs/SpriteC";
@@ -20,7 +20,8 @@ import {
 } from "./AnimationManager";
 import { GameInterface, TILE_SIZE } from "../types";
 import { Move } from "../ecs/moves/_types";
-import { Action, getActionText } from "./input";
+import { Action } from "./input";
+import RNG from "./RNG";
 
 const consoleStyle: Partial<ITextStyle> = {
   fontSize: 18,
@@ -100,7 +101,7 @@ export class LevelSceneGfx {
 
     this.tilemapContainer.interactive = true;
 
-    this.hoverSprite.texture = this.game.filmstrips.env[EnvIndices.HOVER];
+    this.hoverSprite.texture = this.game.images["hover"];
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
 
@@ -126,15 +127,21 @@ export class LevelSceneGfx {
 
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
-        const cellSprite = new Sprite();
         const cell = this.map.contents[y][x];
-        cellSprite.texture = this.game.filmstrips[cell.spriteSheet][
-          cell.spriteIndex
-        ];
-        cell.sprite = cellSprite;
-        cellSprite.position.set(x * cellSprite.width, y * cellSprite.height);
-        cellSprite.interactive = true;
-        this.tilemapContainer.addChild(cellSprite);
+        cell.bgSprite = new Sprite(this.game.filmstrips.env[0]);
+        cell.fgSprite = new Sprite(this.game.filmstrips.env[0]);
+        cell.fgSprite.visible = false;
+        cell.bgSprite.position.set(
+          x * cell.bgSprite.width,
+          y * cell.bgSprite.height
+        );
+        cell.fgSprite.position.set(
+          x * cell.fgSprite.width,
+          y * cell.fgSprite.height
+        );
+        cell.bgSprite.interactive = true;
+        this.tilemapContainer.addChild(cell.bgSprite);
+        this.tilemapContainer.addChild(cell.fgSprite);
       }
     }
 
@@ -203,13 +210,66 @@ export class LevelSceneGfx {
     this.heartsContainer.position.set(this.messageLogBg.x - 150, 10);
   }
 
+  rng = new RNG(`${Date.now()}`);
+
   updateTileSprites() {
+    const floorTexture = (pos: AbstractVector): Texture => {
+      return this.game.filmstrips.env[pos.y * 20 + pos.x];
+    };
+
+    const wallTexture = (pos: AbstractVector): Texture => {
+      let x = 0;
+      let y = 0;
+
+      x = 2;
+      y = 4;
+
+      const index = this.rng.choice([
+        20 * 1 + 10 + 0,
+        20 * 1 + 10 + 2,
+        20 * 1 + 10 + 4,
+      ]);
+      return this.game.filmstrips.env[index];
+    };
+
+    const pitTexture = (pos: AbstractVector): Texture => {
+      let x = 0;
+      let y = 0;
+
+      x = 2;
+      y = 4;
+
+      const index = this.rng.choice([
+        20 * 1 + 10 + 3,
+        20 * 1 + 10 + 5,
+        20 * 1 + 10 + 6,
+      ]);
+      return this.game.filmstrips.env[index];
+    };
+
     for (let y = 0; y < this.map.size.y; y++) {
       for (let x = 0; x < this.map.size.x; x++) {
         const cell = this.map.contents[y][x];
-        cell.sprite!.texture = this.game.filmstrips[cell.spriteSheet][
-          cell.spriteIndex
-        ];
+
+        cell.bgSprite!.texture = floorTexture(cell.pos);
+
+        switch (cell.tag) {
+          case CellTag.Floor:
+            cell.fgSprite!.visible = false;
+            break;
+          case CellTag.Wall:
+            cell.fgSprite!.texture = wallTexture(cell.pos);
+            cell.fgSprite!.visible = true;
+            break;
+          case CellTag.Pit:
+            cell.fgSprite!.texture = pitTexture(cell.pos);
+            cell.fgSprite!.visible = true;
+            break;
+          case CellTag.Door:
+            cell.fgSprite!.texture = this.game.filmstrips.env[5 * 8 + 3];
+            cell.fgSprite!.visible = true;
+            break;
+        }
       }
     }
   }
