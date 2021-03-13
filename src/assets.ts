@@ -7,6 +7,7 @@ export interface Asset {
   isFilmstrip: boolean;
 }
 
+const bmStart = 24;
 export const SpriteIndices = {
   STAND: 0,
   STUNNED: 2,
@@ -18,22 +19,22 @@ export const SpriteIndices = {
   PUNCH_BEFORE: 14,
   PRONE: 18,
 
-  SHOOT_BEFORE: 16,
-  SHOOT_AFTER: 16, // replace me
+  SHOOT_BEFORE: 20,
+  SHOOT_AFTER: 22,
 
   SUPERPUNCH_BEFORE: 12,
   SUPERPUNCH_AFTER: 14,
 
-  BM_STAND: 20 + 0,
-  BM_STUN_AFTER: 20 + 0,
-  BM_STUN_BEFORE: 20 + 0,
-  BM_THROW_BEFORE: 20 + 0,
-  BM_THROW_AFTER: 20 + 0,
-  BM_PUNCH_BEFORE: 20 + 0,
-  BM_PUNCH_AFTER: 20 + 0,
-  BM_TAKING_WEAPON: 20 + 0,
-  BM_DISABLING_WEAPON: 20 + 0,
-  BM_DEAD: 20 + 0,
+  BM_STAND: bmStart + 0,
+  BM_STUN_AFTER: bmStart + 0,
+  BM_STUN_BEFORE: bmStart + 0,
+  BM_THROW_BEFORE: bmStart + 0,
+  BM_THROW_AFTER: bmStart + 0,
+  BM_PUNCH_BEFORE: bmStart + 0,
+  BM_PUNCH_AFTER: bmStart + 0,
+  BM_TAKING_WEAPON: bmStart + 0,
+  BM_DISABLING_WEAPON: bmStart + 0,
+  BM_DEAD: bmStart + 0,
 };
 
 export const SpriteIndicesOld = {
@@ -140,6 +141,12 @@ export const ALL_ASSETS: Asset[] = [
   {
     name: "-2hp",
     url: "-2hp.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
+  {
+    name: "stun",
+    url: "stun.png",
     isFilmstrip: false,
     cellSize: noSize,
   },

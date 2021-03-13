@@ -35,7 +35,7 @@ export function makeUpgradePool(): Upgrade[] {
     {
       name: "Leg Sweep",
       exclusive: true,
-      description: "Knock adjacent enemies prone, but take lots of damage.",
+      description: "Knock adjacent enemies prone. 10 turn cooldown.",
       apply: (player: Entity) => {
         player.getComponent(CombatC).moves.push(new LegSweep());
       },

@@ -119,7 +119,6 @@ export class ShootGun implements Move {
   apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const combatC = ctx.entity.getComponent(CombatC);
     const spriteC = ctx.entity.getComponent(SpriteC);
-    const pos = spriteC.pos;
 
     const path = this.getPathToEnemy(ctx);
 
@@ -131,7 +130,7 @@ export class ShootGun implements Move {
     }
 
     const displays: DisplayObject[] = path.map((p) => {
-      const sprite = new Sprite(Game.shared.filmstrips.env[EnvIndices.HOVER]);
+      const sprite = new Sprite(Game.shared.images.hover);
       sprite.anchor.set(0.5, 0.5);
       ctx.ecs.spriteSystem.setPosition(sprite, p);
       ctx.ecs.spriteSystem.container.addChild(sprite);

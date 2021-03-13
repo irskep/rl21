@@ -24,8 +24,20 @@ export class LegSweep implements Move {
       .map((p) => p!);
   }
 
+  getStatusText(ctx: MoveContext) {
+    return `Leg Sweep cooldown: ${
+      ctx.entity.getComponent(CombatC).legSweepCooldown
+    }`;
+  }
+
   check(ctx: MoveContext, target: AbstractVector): MoveCheckResult {
-    const state = ctx.entity.getComponent(CombatC).state;
+    const combatC = ctx.entity.getComponent(CombatC);
+    const state = combatC.state;
+
+    if (combatC.gunCooldown > 0) {
+      return { success: false, message: "Waiting on cooldown" };
+    }
+
     if (state !== CombatState.Standing) {
       return { success: false, message: "Must be standing" };
     }
@@ -52,11 +64,11 @@ export class LegSweep implements Move {
     const pos = spriteC.pos;
     const adjacentEnemies = this.getAdjacentEnemies(ctx.ecs.spriteSystem, pos);
     const numEnemies = adjacentEnemies.length;
-    const numHP = Math.min(Math.floor(combatC.hp / 2), 3);
+
+    combatC.legSweepCooldown = 10;
 
     const process = () => {
       if (!adjacentEnemies.length) {
-        ctx.ecs.combatSystem.changeHP(ctx.entity, -numHP);
         ctx.ecs.combatSystem.events.emit({
           type: CombatEventType.Punch,
           object: ctx.entity,
@@ -64,10 +76,9 @@ export class LegSweep implements Move {
 
         const enemiesString =
           numEnemies === 1 ? "1 enemy" : `${numEnemies} enemies`;
-        const hpString = numHP === 1 ? "1 hit point" : `${numHP} hit points`;
 
         ctx.ecs.writeMessage(
-          `${spriteC.flavorName} knocks down ${enemiesString}, but loses ${hpString}!`
+          `${spriteC.flavorName} knocks down ${enemiesString}!`
         );
 
         doNext();

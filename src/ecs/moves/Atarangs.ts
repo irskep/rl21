@@ -16,7 +16,7 @@ export class Atarangs implements Move {
 
   atarangsRemaining = 6;
 
-  getStatusText(): string | null {
+  getStatusText(ctx: MoveContext): string | null {
     return `Atarangs remaining: ${this.atarangsRemaining}`;
   }
 

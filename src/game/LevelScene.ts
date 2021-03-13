@@ -139,20 +139,28 @@ export class LevelScene implements GameScene {
   }
 
   handleCombatEvent(event: CombatEvent) {
+    const subjectSprite = event.subject?.getComponent(SpriteC)!.sprite!;
+    const objectSprite = event.object?.getComponent(SpriteC)!.sprite!;
     switch (event.type) {
       case CombatEventType.HPChanged:
         if (event.subject === this.ecs.player) {
           this.updateHearts();
         }
 
-        const sourceSprite = event.subject!.getComponent(SpriteC)!.sprite!;
-
         switch (event.value) {
           case -1:
-            this.gfx.showFloatingImage(sourceSprite, "-1hp");
+            this.gfx.showFloatingImage(
+              subjectSprite!,
+              "-1hp",
+              new Vector(0, -10)
+            );
             break;
           case -2:
-            this.gfx.showFloatingImage(sourceSprite, "-2hp");
+            this.gfx.showFloatingImage(
+              subjectSprite!,
+              "-2hp",
+              new Vector(0, -10)
+            );
             break;
         }
         // this.gfx.showFloatingText(
@@ -205,6 +213,9 @@ export class LevelScene implements GameScene {
         break;
       case CombatEventType.Stun:
         SoundManager.shared.play("stun");
+        break;
+      case CombatEventType.BecomeStunned:
+        this.gfx.showFloatingImage(subjectSprite!, "stun", new Vector(0, 10));
         break;
       case CombatEventType.Shoot:
         SoundManager.shared.play("shoot");
@@ -281,7 +292,10 @@ export class LevelScene implements GameScene {
     let statusText = `Stage ${this.n + 1}`;
     for (const m of this.ecs.player.getComponent(CombatC).moves) {
       if (!m.getStatusText) continue;
-      const moveText = m.getStatusText();
+      const moveText = m.getStatusText({
+        ecs: this.ecs,
+        entity: this.ecs.player,
+      });
       if (moveText) {
         statusText += `    ${moveText}`;
       }

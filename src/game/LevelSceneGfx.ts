@@ -105,7 +105,7 @@ export class LevelSceneGfx {
     this.hoverSprite.visible = false;
     this.overlayContainer.addChild(this.hoverSprite);
 
-    this.dbgText.style = new TextStyle(consoleStyle);
+    this.dbgText.style = new TextStyle({ ...consoleStyle, wordWrap: false });
     this.hudContainer.addChild(this.dbgText);
 
     this.inputHintText.style = new TextStyle(consoleStyle);
@@ -427,11 +427,19 @@ export class LevelSceneGfx {
     this.hudContainer.addChild(victorySprite);
   }
 
-  showFloatingImage(sourceSprite: Sprite, image: string) {
+  showFloatingImage(
+    sourceSprite: Sprite,
+    image: string,
+    offset: AbstractVector = new Vector(0, -10)
+  ) {
     const sprite = new Sprite(this.game.images[image]);
     sprite.anchor.set(0.5, 0.5);
-    sprite.setTransform(0, 0, 0.2, 0.2);
-    sprite.position.set(sourceSprite.position.x, sourceSprite.position.y - 10);
+    sprite.setTransform(
+      sourceSprite.position.x + offset.x,
+      sourceSprite.position.y + offset.y,
+      0.2,
+      0.2
+    );
     sourceSprite.parent.addChild(sprite);
     this.animationHandler.add(
       makeDriftAndFadeAnimation(sprite, 1, new Vector(0, 0))

@@ -33,6 +33,7 @@ export enum CombatEventType {
   Superpunch = "Superpunch",
   Counter = "Counter",
   Stun = "Stun",
+  BecomeStunned = "BecomeStunned",
   Die = "Die",
   Shoot = "Shoot",
   AllEnemiesDead = "AllEnemiesDead",
@@ -187,6 +188,7 @@ export class CombatSystem extends System {
     if (combatC.isPlayer) return this.processNextEntity();
 
     combatC.gunCooldown = Math.max(0, combatC.gunCooldown - 1);
+    combatC.legSweepCooldown = Math.max(0, combatC.legSweepCooldown - 1);
 
     if (!combatC.needsToMove) return this.processNextEntity();
 
@@ -329,6 +331,12 @@ export class CombatSystem extends System {
             );
           } else {
             defenderCombatC.becomeStunned(1, defender.getComponent(SpriteC));
+            setTimeout(() => {
+              this.events.emit({
+                type: CombatEventType.BecomeStunned,
+                subject: defender,
+              });
+            }, 300);
             ecs.writeMessage(
               `${attackerName} lands a punch on ${defenderName}! They are knocked back for 1 turn. (33% chance to stun succeeded.)`
             );
@@ -391,6 +399,10 @@ export class CombatSystem extends System {
             : this.STUN_TIMER_NORMAL,
           defender.getComponent(SpriteC)
         );
+        this.events.emit({
+          type: CombatEventType.BecomeStunned,
+          subject: defender,
+        });
         ecs.writeMessage(`${attackerName} stuns ${defenderName}!`);
         break;
       case CombatState.SuperpunchTelegraph:

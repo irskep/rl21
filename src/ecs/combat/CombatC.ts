@@ -22,6 +22,7 @@ export class CombatC implements Component {
   hp = 10;
   goal: Goal | null = null;
   gunCooldown = 0;
+  legSweepCooldown = 0;
   upgrades = new Array<string>();
 
   superpunchTarget: Entity | null = null;
