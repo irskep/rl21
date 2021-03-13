@@ -245,9 +245,12 @@ export class LevelSceneGfx {
       y = 4;
 
       const index = this.rng.choice([
+        20 * 0 + 10 + 8,
         20 * 1 + 10 + 0,
-        20 * 1 + 10 + 2,
-        20 * 1 + 10 + 4,
+        20 * 1 + 10 + 6,
+        20 * 1 + 10 + 7,
+        20 * 1 + 10 + 8,
+        20 * 1 + 10 + 9,
       ]);
       return this.game.filmstrips.env[index];
     };
@@ -272,7 +275,7 @@ export class LevelSceneGfx {
             cell.fgSprite!.visible = true;
             break;
           case CellTag.Door:
-            cell.fgSprite!.texture = this.game.filmstrips.env[5 * 8 + 3];
+            cell.fgSprite!.texture = this.game.filmstrips.env[20 * 1 + 10 + 5];
             cell.fgSprite!.visible = true;
             break;
         }

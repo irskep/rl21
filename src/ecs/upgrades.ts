@@ -60,10 +60,10 @@ export function makeUpgradePool(): Upgrade[] {
     {
       name: "Toughen Up",
       exclusive: false,
-      description: "2 extra hit points.",
+      description: "4 extra hit points.",
       apply: (player: Entity) => {
-        player.getComponent(CombatC).hpMax += 2;
-        player.getComponent(CombatC).hp += 2;
+        player.getComponent(CombatC).hpMax += 4;
+        player.getComponent(CombatC).hp += 4;
       },
     },
   ];

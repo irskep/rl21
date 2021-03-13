@@ -110,6 +110,30 @@ export class CombatSystem extends System {
       return; // never say processing is finished, so LevelScene doesn't allow more events
     }
 
+    // prevent player from being infinitely stunned
+    const playerCombatC = this.ecs.player.getComponent(CombatC);
+    if (
+      playerCombatC.state === CombatState.Stunned ||
+      playerCombatC.state === CombatState.Prone
+    ) {
+      playerCombatC.numTurnsStunned += 1;
+      console.log("Player is stunned", playerCombatC.numTurnsStunned);
+
+      if (playerCombatC.numTurnsStunned >= 3) {
+        const playerSpriteC = this.ecs.player.getComponent(SpriteC);
+        playerCombatC.recoveryTimer = 0;
+        playerSpriteC.label = "";
+        this.ecs.writeMessage(
+          `${playerSpriteC.flavorName} shakes it off and stands up.`
+        );
+        playerCombatC.setState(CombatState.Standing, playerSpriteC);
+        this.ecs.spriteSystem.cowboyUpdate();
+      }
+    } else {
+      playerCombatC.numTurnsStunned = 0;
+    }
+
+    // boss fight: spawn
     this.spawnTimer -= 1;
     if (this.spawnTimer <= 0) {
       this.spawnTimer = this.SPAWN_TIMER_START;
