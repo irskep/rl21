@@ -45,7 +45,7 @@ export class Counter implements Move {
   apply(ctx: MoveContext, target: AbstractVector, doNext: () => void): boolean {
     const spriteC = ctx.entity.getComponent(SpriteC);
     const combatC = ctx.entity.getComponent(CombatC);
-    spriteC.turnToward(target);
+    // spriteC.turnToward(target);
 
     // swap positions, prone the enemy
     const enemy = ctx.ecs.spriteSystem.findCombatEntity(target)!;
@@ -53,11 +53,12 @@ export class Counter implements Move {
     const enemySpriteC = enemy.getComponent(SpriteC);
 
     // const orientation = spriteC.orientation;
-    const enemyOrientation = enemySpriteC.orientation;
-    spriteC.orientation = enemyOrientation;
+    // const enemyOrientation = enemySpriteC.orientation;
+    // spriteC.orientation = enemyOrientation;
     const playerPos = spriteC.pos;
     spriteC.pos = enemySpriteC.pos;
     enemySpriteC.pos = playerPos;
+    spriteC.turnToward(enemySpriteC.pos);
 
     ctx.ecs.spriteSystem.cowboyUpdate();
 
