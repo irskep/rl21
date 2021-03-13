@@ -100,6 +100,7 @@ export class LevelSceneGfx {
     this.container.addChild(this.hudContainer);
 
     this.tilemapContainer.interactive = true;
+    this.tilemapContainer.sortableChildren = true;
 
     this.hoverSprite.texture = this.game.images["hover"];
     this.hoverSprite.visible = false;
@@ -229,7 +230,7 @@ export class LevelSceneGfx {
         20 * 1 + 10 + 2,
         20 * 1 + 10 + 4,
       ]);
-      return this.game.filmstrips.env[index];
+      return this.game.filmstrips.walls[this.rng.choice([0, 1])];
     };
 
     const pitTexture = (pos: AbstractVector): Texture => {
@@ -240,9 +241,9 @@ export class LevelSceneGfx {
       y = 4;
 
       const index = this.rng.choice([
-        20 * 1 + 10 + 3,
-        20 * 1 + 10 + 5,
-        20 * 1 + 10 + 6,
+        20 * 1 + 10 + 0,
+        20 * 1 + 10 + 2,
+        20 * 1 + 10 + 4,
       ]);
       return this.game.filmstrips.env[index];
     };
@@ -251,6 +252,7 @@ export class LevelSceneGfx {
       for (let x = 0; x < this.map.size.x; x++) {
         const cell = this.map.contents[y][x];
 
+        cell.bgSprite!.zIndex = -1;
         cell.bgSprite!.texture = floorTexture(cell.pos);
 
         switch (cell.tag) {

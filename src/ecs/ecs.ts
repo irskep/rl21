@@ -130,7 +130,8 @@ function makeGun(pos: AbstractVector): Entity {
 }
 
 function makePrefab1Map(
-  tilemap: Tilemap
+  tilemap: Tilemap,
+  rng: RNG
 ): {
   bossPos: AbstractVector;
   playerPos: AbstractVector;
@@ -176,6 +177,7 @@ function makePrefab1Map(
       }
     }
   }
+  rng.shuffle(freeCells);
   return {
     bossPos,
     playerPos,
@@ -213,7 +215,7 @@ export function makeECS(
       playerPos = availableCells.shift()!;
       break;
     case "prefab1":
-      const result = makePrefab1Map(tilemap);
+      const result = makePrefab1Map(tilemap, rng);
       availableCells = result.freeCells;
       playerPos = result.playerPos;
       bossPos = result.bossPos;

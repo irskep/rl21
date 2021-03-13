@@ -108,6 +108,12 @@ export const ALL_ASSETS: Asset[] = [
     cellSize: new Vector(32, 32),
   },
   {
+    name: "walls",
+    url: "walls.png",
+    isFilmstrip: true,
+    cellSize: new Vector(24, 40),
+  },
+  {
     name: "hover",
     url: "hover.png",
     isFilmstrip: false,
