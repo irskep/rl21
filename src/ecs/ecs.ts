@@ -58,7 +58,8 @@ export function makeThug(pos: AbstractVector, orientation: number): Entity {
     SpriteIndices.STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
-  e.getComponent(SpriteC).tint = 0x8888ff;
+  e.getComponent(SpriteC).hasColorLayer = true;
+  e.getComponent(SpriteC).tint = 0x88ff88;
   e.putComponent(CombatC).build(STATS.LOW_HP, makeHenchmanMoves(), [
     CombatTrait.MayUseEquipment,
   ]);
@@ -103,6 +104,7 @@ export function makeBoss(pos: AbstractVector, orientation: number): Entity {
     SpriteIndices.STAND
   );
   e.getComponent(SpriteC).orientation = orientation;
+  e.getComponent(SpriteC).hasColorLayer = true;
   e.getComponent(SpriteC).tint = 0xff88ff;
   e.putComponent(CombatC).build(STATS.BOSS_HP, makeBossMoves(), [
     CombatTrait.WieldingGun,

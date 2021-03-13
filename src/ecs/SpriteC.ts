@@ -12,9 +12,12 @@ export class SpriteC implements Component {
   private _label = "";
   needsLabelUpdate = false;
   sprite?: Sprite;
+  colorSprite?: Sprite;
   tint = 0xffffff;
   text: Text | null = null;
   zIndex = 0;
+
+  hasColorLayer = false;
 
   flavorName = ""; // sprites have names too, why not
   flavorDesc = "";

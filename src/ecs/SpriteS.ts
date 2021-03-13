@@ -92,6 +92,17 @@ export class SpriteSystem extends System {
         spriteC.sprite = new Sprite(texture);
         spriteC.sprite.anchor.set(0.5, 0.5);
         this.container.addChild(spriteC.sprite);
+
+        if (spriteC.hasColorLayer) {
+          const colorSprite = new Sprite(
+            this.game.filmstrips[spriteC.spriteSheet][spriteC.spriteIndex + 1]
+          );
+          colorSprite.tint = spriteC.tint;
+          colorSprite.anchor.set(0.5, 0.5);
+          colorSprite.position.set(0, 0);
+          spriteC.colorSprite = colorSprite;
+          spriteC.sprite!.addChild(colorSprite);
+        }
       }
       this.updateSprite(spriteC);
     }
