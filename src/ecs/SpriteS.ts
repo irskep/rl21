@@ -65,20 +65,33 @@ export class SpriteSystem extends System {
 
     if (spriteC.needsLabelUpdate) {
       spriteC.needsLabelUpdate = false;
-      if (spriteC.text === null) {
-        spriteC.text = new Text(spriteC.label, {
-          fontSize: 9,
-          fontFamily: "Barlow Condensed",
-          fill: "red",
-          align: "left",
-        });
-        spriteC.text.position.set(0, 0);
-        spriteC.sprite.addChild(spriteC.text);
+      if (!spriteC.stunSprite) {
+        spriteC.stunSprite = new Sprite(this.game.filmstrips.stuns[0]);
+        spriteC.stunSprite.visible = false;
+        spriteC.stunSprite.anchor.set(0.5, 0.5);
+        spriteC.sprite.addChild(spriteC.stunSprite);
       }
-      spriteC.text.text = spriteC.label;
+      switch (spriteC.label) {
+        case "1":
+          spriteC.stunSprite.visible = true;
+          spriteC.stunSprite.texture = this.game.filmstrips.stuns[0];
+          break;
+        case "2":
+          spriteC.stunSprite.visible = true;
+          spriteC.stunSprite.texture = this.game.filmstrips.stuns[1];
+          break;
+        case "":
+        case null:
+          spriteC.stunSprite.visible = false;
+          break;
+        default:
+          throw new Error(
+            "What am I supposed to do with this? " + spriteC.label
+          );
+      }
     }
-    if (spriteC.text) {
-      spriteC.text.angle = 90 * (4 - spriteC.orientation);
+    if (spriteC.stunSprite) {
+      spriteC.stunSprite.angle = -spriteC.sprite.angle;
     }
   }
 

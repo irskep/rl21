@@ -14,7 +14,8 @@ export class SpriteC implements Component {
   sprite?: Sprite;
   colorSprite?: Sprite;
   tint = 0xffffff;
-  text: Text | null = null;
+  // text: Text | null = null;
+  stunSprite?: Sprite;
   zIndex = 0;
 
   hasColorLayer = false;
