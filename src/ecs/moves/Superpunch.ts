@@ -99,7 +99,7 @@ export class SuperpunchFollowthroughHit implements Move {
     spriteC.orientation = getOrientation(
       enemySpriteC.pos.clone().subtract(spriteC.pos)
     );
-    enemySpriteC.orientation = (spriteC.orientation + 2) % 4;
+    enemySpriteC.turnToward(spriteC.pos);
 
     combatC.setState(CombatState.SuperpunchFollowthrough, spriteC);
     enemyCombatC.becomeStunned(1, enemySpriteC);
