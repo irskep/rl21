@@ -61,6 +61,11 @@ export class SpriteSystem extends System {
       spriteC.sprite.texture = this.game.filmstrips[spriteC.spriteSheet][
         spriteC.spriteIndex
       ];
+      if (spriteC.colorSprite) {
+        spriteC.colorSprite.texture = this.game.filmstrips[spriteC.spriteSheet][
+          spriteC.spriteIndex + 1
+        ];
+      }
     }
 
     if (spriteC.needsLabelUpdate) {

@@ -9,13 +9,13 @@ export interface Difficulty {
 }
 
 export const DIFFICULTIES: Difficulty[] = [
-  // {
-  //   numThugs: [1, 1],
-  //   numArmoredThugs: 0,
-  //   numTitanThugs: 0,
-  //   mapgenAlgo: "basic",
-  //   numGuns: [1, 1],
-  // },
+  {
+    numThugs: [1, 1],
+    numArmoredThugs: 0,
+    numTitanThugs: 0,
+    mapgenAlgo: "basic",
+    numGuns: [1, 1],
+  },
   {
     numThugs: [3, 5],
     numArmoredThugs: 0,
