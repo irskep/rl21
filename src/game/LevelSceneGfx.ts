@@ -450,8 +450,8 @@ export class LevelSceneGfx {
     sprite.setTransform(
       sourceSprite.position.x + offset.x,
       sourceSprite.position.y + offset.y,
-      0.2,
-      0.2
+      0.15,
+      0.15
     );
     sourceSprite.parent.addChild(sprite);
     this.animationManager.add(

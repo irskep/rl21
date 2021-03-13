@@ -25,6 +25,7 @@ export class LegSweep implements Move {
   }
 
   getStatusText(ctx: MoveContext) {
+    console.log(ctx.entity.getComponent(CombatC).legSweepCooldown);
     return `Leg Sweep cooldown: ${
       ctx.entity.getComponent(CombatC).legSweepCooldown
     }`;
@@ -34,7 +35,7 @@ export class LegSweep implements Move {
     const combatC = ctx.entity.getComponent(CombatC);
     const state = combatC.state;
 
-    if (combatC.gunCooldown > 0) {
+    if (combatC.legSweepCooldown > 0) {
       return { success: false, message: "Waiting on cooldown" };
     }
 

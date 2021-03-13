@@ -112,6 +112,11 @@ export class CombatSystem extends System {
 
     // prevent player from being infinitely stunned
     const playerCombatC = this.ecs.player.getComponent(CombatC);
+    playerCombatC.gunCooldown = Math.max(0, playerCombatC.gunCooldown - 1);
+    playerCombatC.legSweepCooldown = Math.max(
+      0,
+      playerCombatC.legSweepCooldown - 1
+    );
     if (
       playerCombatC.state === CombatState.Stunned ||
       playerCombatC.state === CombatState.Prone
