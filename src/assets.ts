@@ -167,4 +167,10 @@ export const ALL_ASSETS: Asset[] = [
     isFilmstrip: false,
     cellSize: noSize,
   },
+  {
+    name: "title",
+    url: "title.png",
+    isFilmstrip: false,
+    cellSize: noSize,
+  },
 ];

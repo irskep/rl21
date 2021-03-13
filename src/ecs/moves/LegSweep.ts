@@ -25,7 +25,6 @@ export class LegSweep implements Move {
   }
 
   getStatusText(ctx: MoveContext) {
-    console.log(ctx.entity.getComponent(CombatC).legSweepCooldown);
     return `Leg Sweep cooldown: ${
       ctx.entity.getComponent(CombatC).legSweepCooldown
     }`;

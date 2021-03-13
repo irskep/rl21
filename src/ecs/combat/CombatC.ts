@@ -55,6 +55,7 @@ export class CombatC implements Component {
 
     if (this.hasTrait(CombatTrait.WieldingGun)) {
       text += `Turns until gun reload: ${this.gunCooldown}`;
+      text += `\nStun this enemy twice in a row to destroy the gun.`;
     }
     return text;
   }

@@ -1,54 +1,32 @@
 import Mousetrap from "mousetrap";
-import * as PIXI from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 import { InstructionsScene } from "./InstructionsScene";
 import { SoundManager } from "./SoundManager";
 import { GameScene, GameInterface } from "./types";
+
 export class MenuScene implements GameScene {
-  container = new PIXI.Container();
+  container = new Container();
+  sprite: Sprite;
 
   constructor(private game: GameInterface) {
     this.container.interactive = true;
+    this.sprite = new Sprite(game.images.title);
   }
 
   enter() {
     console.log("enter", this);
-    Mousetrap.bind(["enter", "space"], this.handleKeyPress);
+    Mousetrap.bind(["enter", "space"], this.go);
     this.game.app.ticker.add(this.gameLoop);
 
     if (!this.container.children.length) {
-      const title = new PIXI.Text("vigil@nte");
-      title.style = new PIXI.TextStyle({
-        fontSize: this.game.app.screen.width / 10,
-        fontFamily: "Barlow Condensed",
-        fill: "white",
-        align: "center",
-      });
-      title.anchor.x = 0.5;
-      title.anchor.y = 0.5;
-      title.position.set(
+      this.sprite.position.set(
         this.game.app.screen.width / 2,
-        this.game.app.screen.height / 4
+        this.game.app.screen.height / 2
       );
-      this.container.addChild(title);
-
-      const instructions = new PIXI.Text("Click here to start");
-      instructions.style = new PIXI.TextStyle({
-        fontSize: this.game.app.screen.width / 40,
-        fontFamily: "Barlow Condensed",
-        fill: "white",
-        align: "center",
-      });
-      instructions.anchor.x = 0.5;
-      instructions.anchor.y = 0.5;
-      instructions.position.set(
-        this.game.app.screen.width / 2,
-        this.game.app.screen.height * 0.66
-      );
-      this.container.addChild(instructions);
-
-      instructions.interactive = true;
-      title.interactive = true;
-      (instructions as any).on("click", this.handleTouchStart);
+      this.sprite.anchor.set(0.5, 0.5);
+      this.sprite.interactive = true;
+      this.container.addChild(this.sprite);
+      this.sprite.on("click", this.go);
     }
 
     this.game.app.stage.addChild(this.container);
@@ -65,12 +43,7 @@ export class MenuScene implements GameScene {
     /* hi */
   };
 
-  handleTouchStart = () => {
-    SoundManager.shared.init();
-    this.game.replaceScenes([new InstructionsScene(this.game)]);
-  };
-
-  handleKeyPress = () => {
+  go = () => {
     SoundManager.shared.init();
     this.game.replaceScenes([new InstructionsScene(this.game)]);
   };
