@@ -78,9 +78,11 @@ export class SoundManager {
     if (localStorage.disableMusic) return;
     this.playingMusic?.stop();
     this.playingMusic = this.musics[this.musicTrack];
-    this.musicTrack += 1;
+    this.musicTrack = (this.musicTrack + 1) % this.musics.length;
     try {
       this.playingMusic.play();
+    } catch {
+      // whatever
     }
   }
 
