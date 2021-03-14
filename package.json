@@ -19,7 +19,7 @@
     "clean": "rm -rf dist/*",
     "copyfiles": "rsync -avzh static/ dist/",
     "prepare": "yarn clean && yarn copyfiles",
-    "watch": "yarn copyfiles && parcel serve index.html",
+    "watch": "parcel serve index.html",
     "build": "yarn prepare && parcel build index.html --public-url .",
     "deploy": " yarn build && gh-pages -d dist && butler push dist irskep/vigilante:web"
   },

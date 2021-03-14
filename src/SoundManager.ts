@@ -56,7 +56,7 @@ export class SoundManager {
         preload: false,
         html5: true,
       });
-      s.volume(0.7);
+      s.volume(0.5);
       return s;
     });
   }
