@@ -7,7 +7,7 @@ import { CombatTrait } from "../combat/CombatTrait";
 import { BresenhamRasterizer } from "../../bresenham";
 import { DisplayObject } from "@pixi/display";
 import { Sprite } from "@pixi/sprite";
-import { EnvIndices, SpriteIndices } from "../../assets";
+import { SpriteIndices } from "../../assets";
 import Game from "../../game";
 import { CombatEventType } from "../combat/CombatS";
 import { ensureStandingAndTargetIsAdjacentEnemy } from "./_helpers";
@@ -30,6 +30,9 @@ export class PickUpGun implements Move {
     const combatC = ctx.entity.getComponent(CombatC);
     if (combatC.state !== CombatState.Standing) {
       return { success: false, message: "Must be standing" };
+    }
+    if (!combatC.hasTrait(CombatTrait.MayUseEquipment)) {
+      return { success: false, message: "Cannot use equipment" };
     }
 
     return { success: true };

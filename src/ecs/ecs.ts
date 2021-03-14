@@ -195,6 +195,7 @@ export function makeECS(
   upgrades: Upgrade[]
 ): ECS {
   const rng = new RNG(`${Date.now()}`);
+  // const rng = new RNG("1615694814782");
   console.log("Map RNG seed:", rng.seed);
   const engine = new Engine();
 
@@ -236,7 +237,6 @@ export function makeECS(
       difficulty.numThugs[0],
       difficulty.numThugs[1] + 1
     );
-    console.log(difficulty, numThugs);
     for (let i = 0; i < numThugs; i++) {
       engine.addEntity(
         makeThug(availableCells.shift()!, rng.choice(orientations))

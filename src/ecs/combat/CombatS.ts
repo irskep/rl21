@@ -110,6 +110,15 @@ export class CombatSystem extends System {
       return; // never say processing is finished, so LevelScene doesn't allow more events
     }
 
+    // If player is on a gun, destroy it
+    const gun = this.ecs.spriteSystem.findInterestingObject(
+      this.ecs.player.getComponent(SpriteC).pos
+    );
+    if (gun) {
+      this.ecs.remove(gun);
+      this.ecs.writeMessage("Atman disables the gun.");
+    }
+
     // prevent player from being infinitely stunned
     const playerCombatC = this.ecs.player.getComponent(CombatC);
     playerCombatC.gunCooldown = Math.max(0, playerCombatC.gunCooldown - 1);

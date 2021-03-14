@@ -154,8 +154,10 @@ export class SpriteSystem extends System {
   }
 
   findInterestingObject(pos: AbstractVector): Entity | null {
-    const objects = this.findInterestingObjects().filter((o) =>
-      o.getComponent(SpriteC).pos.equals(pos)
+    const objects = this.findInterestingObjects().filter(
+      (o) =>
+        o.getComponent(SpriteC).pos.equals(pos) &&
+        !o.getComponent(SpriteC).isPlayer
     );
     return objects.length ? objects[0] : null;
   }

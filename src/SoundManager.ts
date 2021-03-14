@@ -49,15 +49,16 @@ export class SoundManager {
       this.sounds[soundNames[i]] = this.soundList[i];
     }
 
-    this.musics = musicNames.map(
-      (name) =>
-        new Howl({
-          src: `./${name}.mp3`,
-          loop: true,
-          preload: false,
-          html5: true,
-        })
-    );
+    this.musics = musicNames.map((name) => {
+      const s = new Howl({
+        src: `./${name}.mp3`,
+        loop: true,
+        preload: false,
+        html5: true,
+      });
+      s.volume(0.7);
+      return s;
+    });
   }
 
   play(name: string) {
