@@ -20,8 +20,8 @@
     "copyfiles": "rsync -avzh static/ dist/",
     "prepare": "yarn clean && yarn copyfiles",
     "watch": "yarn copyfiles && parcel serve index.html",
-    "gh": "yarn prepare && parcel build index.html --public-url . && gh-pages -d dist",
-    "itch": "yarn prepare && parcel build index.html --public-url . && butler push dist irskep/vigilante:web"
+    "build": "yarn prepare && parcel build index.html --public-url .",
+    "deploy": " yarn build && gh-pages -d dist && butler push dist irskep/vigilante:web"
   },
   "devDependencies": {
     "@parcel/transformer-typescript-tsc": "^2.0.0-beta.1",
