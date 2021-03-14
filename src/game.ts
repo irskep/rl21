@@ -34,7 +34,7 @@ export default class Game implements GameInterface {
     appEl.style.height = `${768 * window.devicePixelRatio}px`;
     PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.app.ticker.autoStart = true;
-    this.app.loader.baseUrl = `//${location.host}/${pathname}`;
+    this.app.loader.baseUrl = "";
 
     webfontloader.load({
       google: {
