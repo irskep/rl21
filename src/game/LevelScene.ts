@@ -50,9 +50,15 @@ export class LevelScene implements GameScene {
 
   goToNextScene() {
     if (this.n < DIFFICULTIES.length - 1) {
-      this.game.replaceScenes([
-        new UpgradeScene(this.game, this.n + 1, this.upgrades, this.ecs.rng),
-      ]);
+      if (this.n % 2 === 0) {
+        this.game.replaceScenes([
+          new UpgradeScene(this.game, this.n + 1, this.upgrades, this.ecs.rng),
+        ]);
+      } else {
+        this.game.replaceScenes([
+          new LevelScene(this.game, this.n + 1, this.upgrades),
+        ]);
+      }
     } else {
       this.game.replaceScenes([new WinScene(this.game)]);
     }

@@ -126,7 +126,7 @@ export class ShootGun implements Move {
     if (combatC.hasTrait(CombatTrait.ReloadsSlowly)) {
       combatC.gunCooldown = 8;
     } else {
-      combatC.gunCooldown = 3;
+      combatC.gunCooldown = 5;
     }
 
     combatC.setState(CombatState.Standing, spriteC, SpriteIndices.SHOOT_AFTER);
