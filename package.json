@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "rm -rf dist/*",
     "copyfiles": "rsync -avzh static/ dist/",
-    "deploy": "yarn clean && yarn copyfiles && parcel build index.html --public-url /rl21/ && gh-pages -d dist",
+    "deploy": "yarn clean && yarn copyfiles && parcel build index.html --public-url ./ && gh-pages -d dist",
     "watch": "parcel serve index.html",
     "build": "parcel build index.html"
   },
