@@ -37,7 +37,7 @@ export class SoundManager {
     if (this.soundList.length) return;
     this.soundList = soundNames.map((name) => {
       const s = new Howl({
-        src: `${name}.wav`,
+        src: `./${name}.wav`,
         preload: true,
         html5: true,
         onload: this.onload,
@@ -52,7 +52,7 @@ export class SoundManager {
     this.musics = musicNames.map(
       (name) =>
         new Howl({
-          src: `${name}.mp3`,
+          src: `./${name}.mp3`,
           loop: true,
           preload: false,
           html5: true,
