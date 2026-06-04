@@ -4,7 +4,8 @@
     "module": "esnext",
     "strictNullChecks": true,
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true
   }
 }
