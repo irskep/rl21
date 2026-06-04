@@ -12,6 +12,7 @@ old_overlay_frames="${build_dir}/old_overlay"
 liz_sheet="${repo_root}/static/sprites_liz_reformatted.png"
 hybrid_sheet="${repo_root}/static/sprites_hybrid.png"
 manifest="${work_dir}/sprites_hybrid_manifest.json"
+layout_doc="${work_dir}/sprites_hybrid_layout.md"
 
 cols=32
 rows=5
@@ -205,6 +206,64 @@ make_contact_sheet() {
     "${out}"
 }
 
+make_layout_doc() {
+  cat > "${layout_doc}" <<'EOF'
+# Hybrid Sprite Atlas Layout
+
+All cells are 16x16. The atlas is 32 columns by 5 rows.
+
+## Rows
+
+- Row 0: `henchman_base`
+- Row 1: `henchman_overlay`
+- Row 2: `batman`
+- Row 3: `batman_interact`
+- Row 4: `objects_future`
+
+## Columns
+
+| Col | Pose |
+|---:|---|
+| 0 | stand_s |
+| 1 | stand_e |
+| 2 | stand_n |
+| 3 | stumble |
+| 4 | charge |
+| 5 | dodge_forward |
+| 6 | dodge_backward |
+| 7 | dodging |
+| 8 | stunned |
+| 9 | stun_before |
+| 10 | stun_after |
+| 11 | prone |
+| 12 | dead |
+| 13 | block |
+| 14 | punch_before |
+| 15 | punch_after |
+| 16 | punch_miss |
+| 17 | super_before |
+| 18 | super_after |
+| 19 | knife_before |
+| 20 | knife_after |
+| 21 | shoot_hold |
+| 22 | shoot_before |
+| 23 | shoot_after |
+| 24 | pickup |
+| 25 | take_weapon |
+| 26 | disable_weapon |
+| 27 | throw_before |
+| 28 | throw_after |
+| 29 | catch |
+| 30 | lose_weapon |
+| 31 | box_flying |
+
+## Notes
+
+- `shoot_hold` is intentionally a Liz missing/redraw target in `sprites_hybrid.png`.
+- Row 1 cells are henchman tint-overlay cells. Some are only a few hair/accent pixels, so they can look like stray dots when viewed alone.
+EOF
+}
+
 require_file "${repo_root}/static/lizsprites.png"
 require_file "${repo_root}/static/sprites.png"
 
@@ -319,6 +378,7 @@ manifest_finish
 
 make_contact_sheet "${liz_sheet}" "${work_dir}/sprites_liz_reformatted_contact.png" "${build_dir}/liz_contact_cells"
 make_contact_sheet "${hybrid_sheet}" "${work_dir}/sprites_hybrid_contact.png" "${build_dir}/hybrid_contact_cells"
+make_layout_doc
 
 missing_cells=()
 while IFS= read -r line; do

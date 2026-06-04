@@ -38,6 +38,7 @@ export class LevelScene implements GameScene {
   hoveredPosDuringUpdate: AbstractVector | null = null;
   hoveredEntity: Entity | null = null;
   isOver = false;
+  isAltDown = false;
 
   constructor(
     private game: GameInterface,
@@ -72,6 +73,9 @@ export class LevelScene implements GameScene {
     Mousetrap.bind(["space"], () =>
       this.handleClick(this.ecs.player.getComponent(SpriteC).pos, Action.X)
     );
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
+    window.addEventListener("blur", this.handleWindowBlur);
     this.game.app.ticker.add(this.gameLoop);
 
     this.gfx.enter();
@@ -113,8 +117,35 @@ export class LevelScene implements GameScene {
     this.game.app.ticker.remove(this.gameLoop);
     this.gfx.exit();
     Mousetrap.unbind(["n"]);
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
+    window.removeEventListener("blur", this.handleWindowBlur);
     SoundManager.shared.stopMusic();
   }
+
+  private setAltDown(isAltDown: boolean) {
+    if (this.isAltDown === isAltDown) return;
+    this.isAltDown = isAltDown;
+    if (this.isInitialized) {
+      this.updateHUDText();
+    }
+  }
+
+  handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Alt") {
+      this.setAltDown(true);
+    }
+  };
+
+  handleKeyUp = (event: KeyboardEvent) => {
+    if (event.key === "Alt") {
+      this.setAltDown(false);
+    }
+  };
+
+  handleWindowBlur = () => {
+    this.setAltDown(false);
+  };
 
   bindCellEvents(cell: Cell, cellSprite: Sprite) {
     (cellSprite as any).on("mouseover", (e: InteractionEvent) => {
@@ -321,7 +352,10 @@ export class LevelScene implements GameScene {
 
   updateHUDText() {
     const okMoves = this.possibleMoves.filter((x) => x[1].success);
-    this.gfx.showPossibleMoves(okMoves.map((m) => m[0]));
+    this.gfx.showPossibleMoves(
+      okMoves.map((m) => m[0]),
+      this.isAltDown
+    );
     const atarangMove = this.ecs.player
       .getComponent(CombatC)
       .moves.find((m) => m.name === "Throw Atarang") as Atarangs;
@@ -378,9 +412,9 @@ export class LevelScene implements GameScene {
       console.log(actionMoves);
       throw new Error(`Conflicting moves: ${actionMoves}`);
     }
-    this.hoveredPosDuringUpdate = this.hoveredPos;
-    this.gfx.writeMessage("-----------------");
     if (actionMoves.length === 1) {
+      this.hoveredPosDuringUpdate = this.hoveredPos;
+      this.gfx.writeMessage("-----------------");
       this.updateHoverCell(null);
       this.ecs.combatSystem.reset(this.ecs.engine);
       this.ecs.combatSystem.isProcessing = true;

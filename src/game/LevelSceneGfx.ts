@@ -391,7 +391,7 @@ export class LevelSceneGfx {
     this.messageLog.text = this.messages.join("\n");
   };
 
-  showPossibleMoves(moves: Move[]) {
+  showPossibleMoves(moves: Move[], isAltDown = false) {
     if (moves.length === 0) {
       this.inputHintText.text =
         "No moves available at selected position. Try moving your mouse around. Sometimes you need to click yourself.";
@@ -428,6 +428,9 @@ export class LevelSceneGfx {
       if (!texture) throw new Error("?");
       const inputSprite = new Sprite(texture);
       inputSprite.position.set(10, i * 32);
+      if (isAltDown && (m.action === Action.A || m.action === Action.B)) {
+        inputSprite.tint = 0xffff66;
+      }
       const moveText =
         m.name === "Wait" ? "Wait (you can also press Space)" : m.name;
       const inputText = new Text(moveText, {
