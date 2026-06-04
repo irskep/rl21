@@ -7,6 +7,7 @@ import {
 } from "@nova-engine/ecs";
 import { Container, Sprite, Text } from "pixi.js";
 import { AbstractVector } from "vector2d";
+import { getSpriteColorOverlay, getSpriteDisplayScale } from "../assets";
 import { GameInterface, TILE_SIZE } from "../types";
 import { CombatC } from "./combat/CombatC";
 import { getRealOrientation } from "./combat/CombatState";
@@ -45,6 +46,19 @@ export class SpriteSystem extends System {
     );
   }
 
+  updateSpriteScale(spriteC: SpriteC) {
+    const scale = getSpriteDisplayScale(spriteC.spriteSheet);
+    spriteC.sprite?.scale.set(scale, scale);
+    spriteC.stunSprite?.scale.set(1 / scale, 1 / scale);
+  }
+
+  getColorTextureIndex(spriteC: SpriteC): number | null {
+    if (!spriteC.hasColorLayer) {
+      return null;
+    }
+    return getSpriteColorOverlay(spriteC.spriteIndex);
+  }
+
   updateSprite(spriteC: SpriteC) {
     if (!spriteC.sprite) {
       throw new Error("Must make sprite first");
@@ -56,14 +70,10 @@ export class SpriteSystem extends System {
 
     this.setPosition(spriteC.sprite, spriteC.pos);
 
-    let orientation = spriteC.orientation;
-    if (spriteC.isPlayer) {
-      // lol
-      orientation = getRealOrientation(
-        spriteC.spriteIndex,
-        spriteC.orientation
-      );
-    }
+    const orientation = getRealOrientation(
+      spriteC.spriteIndex,
+      spriteC.orientation
+    );
     spriteC.sprite.angle = 90 * orientation;
 
     if (spriteC.needsTextureReplacement) {
@@ -71,10 +81,17 @@ export class SpriteSystem extends System {
       spriteC.sprite.texture = this.game.filmstrips[spriteC.spriteSheet][
         spriteC.spriteIndex
       ];
+      this.updateSpriteScale(spriteC);
       if (spriteC.colorSprite) {
-        spriteC.colorSprite.texture = this.game.filmstrips[spriteC.spriteSheet][
-          spriteC.spriteIndex + 1
-        ];
+        const colorIndex = this.getColorTextureIndex(spriteC);
+        if (colorIndex === null) {
+          spriteC.colorSprite.visible = false;
+        } else {
+          spriteC.colorSprite.visible = true;
+          spriteC.colorSprite.texture = this.game.filmstrips[
+            spriteC.spriteSheet
+          ][colorIndex];
+        }
       }
     }
 
@@ -84,6 +101,7 @@ export class SpriteSystem extends System {
         spriteC.stunSprite = new Sprite(this.game.filmstrips.stuns[0]);
         spriteC.stunSprite.visible = false;
         spriteC.stunSprite.anchor.set(0.5, 0.5);
+        this.updateSpriteScale(spriteC);
         spriteC.sprite.addChild(spriteC.stunSprite);
       }
       switch (spriteC.label) {
@@ -119,11 +137,13 @@ export class SpriteSystem extends System {
         ];
         spriteC.sprite = new Sprite(texture);
         spriteC.sprite.anchor.set(0.5, 0.5);
+        this.updateSpriteScale(spriteC);
         this.container.addChild(spriteC.sprite);
 
-        if (spriteC.hasColorLayer) {
+        const colorIndex = this.getColorTextureIndex(spriteC);
+        if (colorIndex !== null) {
           const colorSprite = new Sprite(
-            this.game.filmstrips[spriteC.spriteSheet][spriteC.spriteIndex + 1]
+            this.game.filmstrips[spriteC.spriteSheet][colorIndex]
           );
           colorSprite.tint = spriteC.tint;
           colorSprite.anchor.set(0.5, 0.5);

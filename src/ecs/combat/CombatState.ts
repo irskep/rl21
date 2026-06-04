@@ -50,6 +50,14 @@ export function getRealOrientation(
   orientation: number
 ): number {
   switch (spriteIndex) {
+    case SpriteIndices.PUNCH_BEFORE:
+    case SpriteIndices.SUPERPUNCH_BEFORE:
+    case SpriteIndices.BM_PUNCH_BEFORE:
+    case SpriteIndices.STUNNED:
+    case SpriteIndices.BM_STUNNED:
+    case SpriteIndices.BM_STUN_BEFORE:
+    case SpriteIndices.BM_STUN_AFTER:
+      return (orientation + 2) % 4;
     case SpriteIndices.BM_STAND_N:
       return (orientation - 2) % 4;
     case SpriteIndices.BM_STAND_S:

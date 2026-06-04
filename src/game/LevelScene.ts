@@ -22,7 +22,7 @@ import { SoundManager } from "../SoundManager";
 import { Atarangs } from "../ecs/moves/Atarangs";
 import { WinScene } from "../WinScene";
 import { CombatTrait } from "../ecs/combat/CombatTrait";
-import { SpriteIndices } from "../assets";
+import { getSpriteDisplayScale, SpriteIndices } from "../assets";
 
 export class LevelScene implements GameScene {
   gfx: LevelSceneGfx;
@@ -202,6 +202,8 @@ export class LevelScene implements GameScene {
           spriteC.sprite!.anchor.x,
           spriteC.sprite!.anchor.y
         );
+        const deathScale = getSpriteDisplayScale(spriteC.spriteSheet);
+        deathSprite.scale.set(deathScale, deathScale);
         deathSprite.position.set(
           spriteC.sprite!.position.x,
           spriteC.sprite!.position.y

@@ -18,6 +18,9 @@ export default class Game implements GameInterface {
   static shared: Game;
 
   constructor() {
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    PIXI.settings.ROUND_PIXELS = true;
+
     let pathname = location.pathname;
     if (pathname[pathname.length - 1] === "/") {
       pathname = pathname.slice(0, pathname.length - 1);
@@ -32,7 +35,6 @@ export default class Game implements GameInterface {
     appEl.style.transform = `scale(${1 / window.devicePixelRatio})`;
     appEl.style.width = `${1024 * window.devicePixelRatio}px`;
     appEl.style.height = `${768 * window.devicePixelRatio}px`;
-    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     this.app.ticker.autoStart = true;
     this.app.loader.baseUrl = "";
 
@@ -66,6 +68,7 @@ export default class Game implements GameInterface {
     const loadFilmstrip = (name: string, cellSize: AbstractVector) => {
       const texture = (this.app.loader.resources[name] as any)
         ?.texture as PIXI.Texture;
+      texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
 
       return filmstrip(texture, cellSize.x, cellSize.y);
     };
@@ -74,8 +77,10 @@ export default class Game implements GameInterface {
       if (asset.isFilmstrip) {
         this.filmstrips[asset.name] = loadFilmstrip(asset.name, asset.cellSize);
       } else if (asset.url.endsWith(".png")) {
-        this.images[asset.name] = (this.app.loader.resources[asset.name] as any)
+        const texture = (this.app.loader.resources[asset.name] as any)
           ?.texture as Texture;
+        texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+        this.images[asset.name] = texture;
       } else {
         console.warn("Unknown asset:", asset);
       }

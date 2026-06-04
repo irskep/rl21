@@ -12,6 +12,7 @@ function frames(
       y = position[1];
     const imageFrame = new PIXI.Rectangle(x, y, frameWidth, frameHeight);
     const frameTexture = new PIXI.Texture(baseTexture.baseTexture);
+    frameTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
     frameTexture.frame = imageFrame;
     return frameTexture;
   });

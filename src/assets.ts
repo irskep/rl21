@@ -7,39 +7,132 @@ export interface Asset {
   isFilmstrip: boolean;
 }
 
-const bmStart = 26;
-export const SpriteIndices = {
-  STAND: 0,
-  STUNNED: 2,
-  DODGING: 4,
-  PUNCH_MISS: 6,
-  BLOCKING: 8,
-  DEAD: 10,
-  PUNCH_AFTER: 12,
+const SPRITE_COLS = 32;
+const HENCHMAN_BASE_ROW = 0;
+const HENCHMAN_OVERLAY_ROW = 1;
+const BATMAN_ROW = 2;
+const BATMAN_INTERACT_ROW = 3;
+
+const spriteCell = (row: number, col: number): number =>
+  row * SPRITE_COLS + col;
+
+const PoseCols = {
+  STAND_S: 0,
+  STAND_E: 1,
+  STAND_N: 2,
+  STUMBLE: 3,
+  CHARGE: 4,
+  DODGE_FORWARD: 5,
+  DODGE_BACKWARD: 6,
+  DODGING: 7,
+  STUNNED: 8,
+  STUN_BEFORE: 9,
+  STUN_AFTER: 10,
+  PRONE: 11,
+  DEAD: 12,
+  BLOCK: 13,
   PUNCH_BEFORE: 14,
-  PRONE: 18,
-
-  SHOOT_HOLD: 24,
-  SHOOT_BEFORE: 20,
-  SHOOT_AFTER: 22,
-
-  SUPERPUNCH_AFTER: 12,
-  SUPERPUNCH_BEFORE: 14,
-
-  BM_STUN_AFTER: bmStart + 0,
-  BM_STUN_BEFORE: bmStart + 0,
-  BM_PUNCH_BEFORE: bmStart + 1,
-  BM_PUNCH_AFTER: bmStart + 2,
-  // BM_THROW_BEFORE: bmStart + 3,
-  // BM_THROW_AFTER: bmStart + 4,
-  BM_STAND_S: bmStart + 5,
-  BM_STUNNED: bmStart + 6,
-  BM_STAND_E: bmStart + 7,
-  BM_STAND_N: bmStart + 8,
-  BM_TAKING_WEAPON: bmStart + 0,
-  BM_DISABLING_WEAPON: bmStart + 0,
-  BM_DEAD: bmStart + 0,
+  PUNCH_AFTER: 15,
+  PUNCH_MISS: 16,
+  SUPER_BEFORE: 17,
+  SUPER_AFTER: 18,
+  KNIFE_BEFORE: 19,
+  KNIFE_AFTER: 20,
+  SHOOT_HOLD: 21,
+  SHOOT_BEFORE: 22,
+  SHOOT_AFTER: 23,
+  PICKUP: 24,
+  TAKE_WEAPON: 25,
+  DISABLE_WEAPON: 26,
+  THROW_BEFORE: 27,
+  THROW_AFTER: 28,
+  CATCH: 29,
+  LOSE_WEAPON: 30,
+  BOX_FLYING: 31,
 };
+
+export const SpriteIndices = {
+  STAND: spriteCell(HENCHMAN_BASE_ROW, PoseCols.STAND_S),
+  STUNNED: spriteCell(HENCHMAN_BASE_ROW, PoseCols.STUNNED),
+  DODGING: spriteCell(HENCHMAN_BASE_ROW, PoseCols.DODGING),
+  PUNCH_MISS: spriteCell(HENCHMAN_BASE_ROW, PoseCols.PUNCH_MISS),
+  BLOCKING: spriteCell(HENCHMAN_BASE_ROW, PoseCols.BLOCK),
+  DEAD: spriteCell(HENCHMAN_BASE_ROW, PoseCols.DEAD),
+  PUNCH_AFTER: spriteCell(HENCHMAN_BASE_ROW, PoseCols.PUNCH_AFTER),
+  PUNCH_BEFORE: spriteCell(HENCHMAN_BASE_ROW, PoseCols.PUNCH_BEFORE),
+  PRONE: spriteCell(HENCHMAN_BASE_ROW, PoseCols.PRONE),
+
+  SHOOT_HOLD: spriteCell(HENCHMAN_BASE_ROW, PoseCols.SHOOT_HOLD),
+  SHOOT_BEFORE: spriteCell(HENCHMAN_BASE_ROW, PoseCols.SHOOT_BEFORE),
+  SHOOT_AFTER: spriteCell(HENCHMAN_BASE_ROW, PoseCols.SHOOT_AFTER),
+
+  SUPERPUNCH_AFTER: spriteCell(HENCHMAN_BASE_ROW, PoseCols.SUPER_AFTER),
+  SUPERPUNCH_BEFORE: spriteCell(HENCHMAN_BASE_ROW, PoseCols.SUPER_BEFORE),
+
+  BM_STUN_AFTER: spriteCell(BATMAN_ROW, PoseCols.STUN_AFTER),
+  BM_STUN_BEFORE: spriteCell(BATMAN_ROW, PoseCols.STUN_BEFORE),
+  BM_PUNCH_BEFORE: spriteCell(BATMAN_ROW, PoseCols.PUNCH_BEFORE),
+  BM_PUNCH_AFTER: spriteCell(BATMAN_ROW, PoseCols.PUNCH_AFTER),
+  BM_THROW_BEFORE: spriteCell(BATMAN_INTERACT_ROW, PoseCols.THROW_BEFORE),
+  BM_THROW_AFTER: spriteCell(BATMAN_INTERACT_ROW, PoseCols.THROW_AFTER),
+  BM_STAND_S: spriteCell(BATMAN_ROW, PoseCols.STAND_S),
+  BM_STUNNED: spriteCell(BATMAN_ROW, PoseCols.STUNNED),
+  BM_STAND_E: spriteCell(BATMAN_ROW, PoseCols.STAND_E),
+  BM_STAND_N: spriteCell(BATMAN_ROW, PoseCols.STAND_N),
+  BM_TAKING_WEAPON: spriteCell(BATMAN_INTERACT_ROW, PoseCols.TAKE_WEAPON),
+  BM_DISABLING_WEAPON: spriteCell(
+    BATMAN_INTERACT_ROW,
+    PoseCols.DISABLE_WEAPON
+  ),
+  BM_DEAD: spriteCell(BATMAN_ROW, PoseCols.DEAD),
+};
+
+export const SpriteColorOverlays: Record<number, number> = {
+  [SpriteIndices.STAND]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.STAND_S),
+  [SpriteIndices.STUNNED]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.STUNNED),
+  [SpriteIndices.DODGING]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.DODGING),
+  [SpriteIndices.PUNCH_MISS]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.PUNCH_MISS
+  ),
+  [SpriteIndices.BLOCKING]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.BLOCK),
+  [SpriteIndices.DEAD]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.DEAD),
+  [SpriteIndices.PUNCH_AFTER]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.PUNCH_AFTER
+  ),
+  [SpriteIndices.PUNCH_BEFORE]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.PUNCH_BEFORE
+  ),
+  [SpriteIndices.PRONE]: spriteCell(HENCHMAN_OVERLAY_ROW, PoseCols.PRONE),
+  [SpriteIndices.SHOOT_HOLD]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.SHOOT_HOLD
+  ),
+  [SpriteIndices.SHOOT_BEFORE]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.SHOOT_BEFORE
+  ),
+  [SpriteIndices.SHOOT_AFTER]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.SHOOT_AFTER
+  ),
+  [SpriteIndices.SUPERPUNCH_AFTER]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.SUPER_AFTER
+  ),
+  [SpriteIndices.SUPERPUNCH_BEFORE]: spriteCell(
+    HENCHMAN_OVERLAY_ROW,
+    PoseCols.SUPER_BEFORE
+  ),
+};
+
+export const getSpriteColorOverlay = (spriteIndex: number): number | null =>
+  SpriteColorOverlays[spriteIndex] ?? null;
+
+export const getSpriteDisplayScale = (spriteSheet: string): number =>
+  spriteSheet === "sprites" ? 2 : 1;
 
 export const SpriteIndicesOld = {
   STAND: 0,
@@ -96,9 +189,9 @@ const noSize = new Vector(-1, -1);
 export const ALL_ASSETS: Asset[] = [
   {
     name: "sprites",
-    url: "lizsprites.png",
+    url: "sprites_hybrid.png",
     isFilmstrip: true,
-    cellSize: new Vector(32, 32),
+    cellSize: new Vector(16, 16),
   },
   {
     name: "env",
